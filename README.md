@@ -16,7 +16,7 @@ a ui config object and events.
 Each objectModel instance would handle creating it's own attributes and handle
 signally the ui for refresh.
 
-x
+
 
 
 ###### Objects ######
