@@ -61,7 +61,7 @@ class Application(application.UIApplication):
             return uiNode
 
     def registerdNodes(self):
-        return self._apiApplication._nodeRegistry.nodes.keys()
+        return self._apiApplication.nodeRegistry.nodes.keys()
 
 
 class SlitherUIObject(graphicsdatamodel.ObjectModel):

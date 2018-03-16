@@ -2,6 +2,9 @@ from qt import QtCore, QtWidgets
 
 
 class UIApplication(QtCore.QObject):
+    # list(objectModel)
+    onSelectionChanged = QtCore.Signal(list)
+    
     # from api to ui signals
     onNewNodeRequested = QtCore.Signal(dict)
     onNodeDeleteRequested = QtCore.Signal(object)
@@ -27,6 +30,6 @@ class UIApplication(QtCore.QObject):
         :return:
         :rtype: list(str)
         """
-        return ["node1", "node2", "sum"]
+        return []
 
 
