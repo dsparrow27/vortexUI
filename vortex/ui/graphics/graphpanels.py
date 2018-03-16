@@ -17,14 +17,15 @@ class Panel(QtWidgets.QGraphicsWidget):
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         layout.addItem(self.attributeContainer)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding))
-
+        self.setFlags(self.ItemIgnoresTransformations)
         self.setMinimumWidth(maximumWidth)
         self.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
+        self.setFlags(self.flags() & QtCore.Qt.ItemIsSelectable)
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.RightButton:
-            self._contextMenu(QtCore.QPoint(event.pos().x(), event.pos().y()))
+            self._contextMenu(QtGui.QCursor.pos())
             return
         super(Panel, self).mousePressEvent(event)
 
@@ -45,5 +46,4 @@ class Panel(QtWidgets.QGraphicsWidget):
         rect = self.windowFrameRect()
         painter.fillRect(rect, self.color)
         painter.setPen(QtGui.QPen(self.color, 3))
-
         super(Panel, self).paint(painter, option, widget)

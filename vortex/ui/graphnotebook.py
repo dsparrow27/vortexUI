@@ -1,4 +1,4 @@
-from qt import QtWidgets, QtCore
+from qt import QtWidgets, QtCore, QtGui
 from vortex.ui import grapheditor
 from vortex.ui.graphics import graphicsnode
 
@@ -22,7 +22,7 @@ class GraphNotebook(QtWidgets.QWidget):
 
         else:
             editor = self.currentPage()
-            graphNode = graphicsnode.GraphicsNode(data["model"])
+            graphNode = graphicsnode.GraphicsNode(data["model"], position=editor.view.centerPosition())
             editor.scene.addItem(graphNode)
 
     def initLayout(self):
@@ -38,7 +38,7 @@ class GraphNotebook(QtWidgets.QWidget):
     def addPage(self, label):
         # self.uiApplication.onBeforeNewTab.emit(self.currentPage())
         editor = grapheditor.GraphEditor(self.uiApplication, parent=self)
-        editor.setGraph(grapheditor.GraphWidget())
+        editor.showPanels(True)
         self.pages.append(editor)
         self.notebook.insertTab(0, editor, label)
         # self.uiApplication.onAfterNewTab.emit(self.currentPage())

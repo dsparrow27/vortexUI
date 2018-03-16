@@ -1,18 +1,8 @@
 from slither import api
 from qt import QtGui
 from vortex.ui.graphics import graphicsdatamodel
-from zoo.libs.pyqt.widgets.graphics import graphviewconfig
 from vortex.ui import application
-from vortex import run as uirun
 
-
-def launchSlitherUI():
-    uiConfig = graphviewconfig.Config()
-    app = Application(uiConfig)
-    ui = uirun.embed()
-    ui.bindApplication(app)
-    ui.show()
-    return ui
 
 
 ATTRIBUTETYPEMAP = {'Quaternion': QtGui.QColor(126.999945, 24.999944999999997, 24.999944999999997),
@@ -60,7 +50,7 @@ class Application(application.UIApplication):
             uiNode = SlitherUIObject(newNode, self.config, parent=self.currentModel)
             return uiNode
 
-    def registerdNodes(self):
+    def registeredNodes(self):
         return self._apiApplication.nodeRegistry.nodes.keys()
 
 
@@ -116,7 +106,7 @@ class AttributeModel(graphicsdatamodel.AttributeModel):
         self.internalAttr.setName(str(text))
 
     def canAcceptConnection(self, plug):
-        return self.internalAttr.isConnectedTo(plug.internalAttr)
+        return self.internalAttr.canConnect(plug.internalAttr)
 
     def createConnection(self, attribute):
         if self.internalAttr.isInput():

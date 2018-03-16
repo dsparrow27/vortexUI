@@ -1,8 +1,8 @@
 import logging
 import sys
-from zoo.libs.pyqt.widgets import mainwindow
+
+from vortex import slithermodel
 from vortex.ui import graphnotebook
-from vortex.ui import application
 from zoo.libs.pyqt.widgets.graphics import graphviewconfig
 
 from qt import QtWidgets, QtCore
@@ -17,11 +17,8 @@ _instance = None
 
 def standalone():
     app = QtWidgets.QApplication(sys.argv)
-    uiConfig = graphviewconfig.Config()
-    uiapp = application.UIApplication(uiConfig, None)
-    win = mainwindow.MainWindow()
-    book = graphnotebook.GraphNotebook(uiapp, win)
-    win.setCustomCentralWidget(book)
+    win = embed()
+    win.show()
     sys.exit(app.exec_())
 
 
@@ -32,10 +29,19 @@ def embed():
     except:
         pass
 
-    book = graphnotebook.GraphNotebook()
-    _instance = book
-    return book
+    uiConfig = graphviewconfig.Config()
+    uiConfig.drawMainGridAxis = False
+    app = slithermodel.Application(uiConfig)
+    ui = graphnotebook.GraphNotebook()
+    ui.bindApplication(app)
+    ui.resize(2000,2500)
+    ui.show()
 
+    _instance = ui
+    return ui
+
+if __name__ == "__main__":
+    standalone()
 # console = user level interactation
 # uiSide(rightclick etc) -> objectModel
 # uiApplication -> application

@@ -192,8 +192,6 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
                     self._currentConnection.destinationPlug = endItem
                     self.connections.add(self._currentConnection)
                     self.scene().update()
-                    # self._currentConnection = None
-                    print "added connection"
                     return
 
             self.scene().removeItem(self._currentConnection)

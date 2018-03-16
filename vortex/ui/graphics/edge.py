@@ -144,7 +144,7 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         """
         self._sourcePlug = plug
         self._sourcePoint = plug.center()
-        self._sourcePlug.parent().parent().connections.add(plug)
+        self._sourcePlug.parentObject().parentObject().connections.add(plug)
         self.updatePath()
 
     @property
@@ -158,7 +158,7 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
     def destinationPlug(self, plug):
         self._destinationPlug = plug
         self._destinationPoint = plug.center()
-        self._destinationPlug.parent().parent().connections.add(self)
+        self._destinationPlug.parentObject().parentObject().connections.add(self)
         self.updatePath()
 
     def close(self):
@@ -180,13 +180,6 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
 
     def mouseMoveEvent(self, event):
         self._destinationPoint = self.mapToScene(event.pos())
-
-    def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Delete or event.key() == QtCore.Qt.Key_Backspace:
-            self.close()
-            event.accept()
-            return
-        event.ignore()
 
     def contextMenuEvent(self, event):
         menu = QtWidgets.QMenu(self)

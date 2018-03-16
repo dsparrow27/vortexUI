@@ -19,7 +19,7 @@ class PopupCompleter(combobox.ExtendedComboBox):
 
     def keyPressEvent(self, event):
         super(PopupCompleter, self).keyPressEvent(event)
-        if event.key() ==  QtCore.Qt.Key_Escape:
+        if event.key() == QtCore.Qt.Key_Escape:
             self.close()
             self.parent().setFocus()
         elif event.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return):
@@ -35,30 +35,31 @@ class GraphEditor(QtWidgets.QWidget):
         self.uiApplication = uiApplication
         self.init()
         self.view.tabPress.connect(self.tabPress)
-        # self.view.deletePress.connect(self.onDelete)
+        self.view.deletePress.connect(self.onDelete)
 
     def tabPress(self, point):
-        registeredItems = self.uiApplication.registerdNodes()
+        registeredItems = self.uiApplication.registeredNodes()
         if not registeredItems:
             raise ValueError("No registered nodes to display")
+        registeredItems.append("Group")
         self.box = PopupCompleter(point, registeredItems, parent=self)
-        # self.box.itemSelected.connect(self.uiApplication.)
-        self.box.itemSelected.connect(self.onCreateNode)
 
-    def onCreateNode(self, Type):
-        objectModel = self.uiApplication.onNodeCreated(Type)
-        # if objectModel is not None:
-        #     graphNode = graphicsnode.GraphicsNode(objectModel)
-        #     self.scene.addItem(graphNode)
+        self.box.itemSelected.connect(self.onLibraryRequestNode)
 
-    def setGraph(self, graphWidget):
-        self.graphWidget = graphWidget
-        self.view.graphWidget = self.graphWidget
-        self.graphWidget.setGeometry(0, 0, self.view.size().width(), self.view.size().height())
-        self.scene.addItem(self.graphWidget)
+    def onLibraryRequestNode(self, Type):
+
+        if Type == "Group":
+            from zoo.libs.pyqt.widgets.graphics import graphbackdrop
+            drop = graphbackdrop.BackDrop("test backdrop")
+            self.scene.addItem(drop)
+        else:
+            self.uiApplication.onNodeCreated(Type)
 
     def showPanels(self, state):
-        self.graphWidget.showPanels(state)
+        self.view.showPanels(state)
+
+    def onDelete(self):
+        print "deleting"
 
     def init(self):
         self.editorLayout = QtWidgets.QVBoxLayout()
@@ -67,7 +68,7 @@ class GraphEditor(QtWidgets.QWidget):
         # constructor view and set scene
         self.scene = graphicsscene.GraphicsScene(parent=self)
 
-        self.view = View(self.graphWidget, self.uiApplication.config, parent=self)
+        self.view = View(self.uiApplication.config, parent=self)
         self.view.setScene(self.scene)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
@@ -77,51 +78,50 @@ class GraphEditor(QtWidgets.QWidget):
 class View(graphicsview.GraphicsView):
     onTabPress = QtCore.Signal(object)
 
-    def __init__(self, graphWidget, config, parent=None, setAntialiasing=True):
+    def __init__(self, config, parent=None, setAntialiasing=True):
         super(View, self).__init__(config, parent, setAntialiasing)
-        self.graphWidget = graphWidget
         self.newScale = None
         self.updateRequested.connect(self.rescaleGraphWidget)
-
-    def resizeEvent(self, event):
-        super(View, self).resizeEvent(event)
-        size = event.size()
-        self.setSceneRect(0, 0, size.width(), size.height())
-        if self.graphWidget:
-            pos = self.mapToScene(0, 0)
-            self.graphWidget.setGeometry(pos.x(), pos.y(), size.width(), size.height())
-
-    def rescaleGraphWidget(self):
-        if self.graphWidget:
-            self.graphWidget.setPos(self.mapToScene(0, 0))
-            self.graphWidget.resize(self.size())
-
-
-class GraphWidget(QtWidgets.QGraphicsWidget):
-    def __init__(self, showPanels=True, parent=None):
-        super(GraphWidget, self).__init__(parent)
-        self._showPanels = showPanels
-        self.rightPanel = None
         self.leftPanel = None
-        layout = QtWidgets.QGraphicsLinearLayout(parent=self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.setOrientation(QtCore.Qt.Horizontal)
-        self.setFlag(QtWidgets.QGraphicsWidget.ItemIgnoresTransformations)
-        self.setLayout(layout)
-        self.showPanels(showPanels)
+        self.rightPanel = None
 
     def showPanels(self, state):
         if state and self.leftPanel is None and self.rightPanel is None:
-            self.leftPanel = graphpanels.Panel(maximumWidth=200, parent=self)
-            self.rightPanel = graphpanels.Panel(maximumWidth=200, parent=self)
-            layout = self.layout()
-            layout.addItem(self.leftPanel)
-            layout.addStretch(1)
-            layout.addItem(self.rightPanel)
+            self.leftPanel = graphpanels.Panel(maximumWidth=200)
+            self.rightPanel = graphpanels.Panel(maximumWidth=200)
+            self.scene().addItem(self.leftPanel)
+            self.scene().addItem(self.rightPanel)
 
         elif not state:
             if self.leftPanel is not None:
                 self.layout().takeAt(self.leftPanel)
             if self.rightPanel is not None:
                 self.layout().takeAt(self.leftPanel)
+
+    def resizeEvent(self, event):
+        """Override to rescale the side panels"""
+        super(View, self).resizeEvent(event)
+        size = event.size()
+        self.setSceneRect(0, 0, size.width(), size.height())
+        if self.leftPanel:
+            pos = self.mapToScene(0, 0)
+            self.leftPanel.setGeometry(pos.x(), pos.y(), 200, size.height())
+        if self.rightPanel:
+            pos = self.mapToScene(size.width(), 0)
+            self.rightPanel.setGeometry(size.width() - 200, pos.y(), 200, size.height())
+
+    def mouseMoveEvent(self, event):
+        """ Overriden to rescale the side panels
+        """
+        super(View, self).mouseMoveEvent(event)
+        self.rescaleGraphWidget()
+
+    def rescaleGraphWidget(self):
+        size = self.size()
+        width = size.width()
+        if self.rightPanel:
+            scenePosition = self.mapToScene(width - 200, 0)
+            self.rightPanel.setPos(scenePosition)
+        if self.leftPanel:
+            scenePosition = self.mapToScene(0, 0)
+            self.leftPanel.setPos(scenePosition)

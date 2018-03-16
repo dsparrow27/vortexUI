@@ -29,3 +29,7 @@ ObjectModel
 AttributeModel
     Attribute level object
 
+##### Dependencies #####
+zoocore
+slither #temp
+PySide 1.2.2 or PySide2 # note pyside 1.2.4 has a qgraphicWidget bug which draws widgets with 100% transparent.

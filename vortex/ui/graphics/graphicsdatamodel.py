@@ -56,7 +56,7 @@ class ObjectModel(QtCore.QObject):
         return QtGui.QColor(31, 33, 34, 255)
 
     def selectedNodeColour(self):
-        return QtGui.QColor(80, 80, 80, 255)
+        return QtGui.QColor(255, 120, 100, 255)
 
     def unSelectedNodeColour(self):
         return self.backgroundColour()

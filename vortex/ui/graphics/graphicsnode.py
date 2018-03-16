@@ -6,8 +6,8 @@ from qt import QtWidgets, QtCore, QtGui
 class GraphicsNode(QtWidgets.QGraphicsWidget):
     requestExpansion = QtCore.Signal()
 
-    def __init__(self, objectModel, parent=None, *args, **kwargs):
-        super(GraphicsNode, self).__init__(parent=parent, *args, **kwargs)
+    def __init__(self, objectModel, position=(0,0,0)):
+        super(GraphicsNode, self).__init__()
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setMinimumWidth(objectModel.minimumWidth())
@@ -18,7 +18,8 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
 
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
-
+        self.setZValue(1)
+        self.setPos(position)
         self.init()
 
     def init(self):
@@ -46,7 +47,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
-            self._selected = True
+            self.setSelected(True)
 
     def mouseMoveEvent(self, event):
         pos = self.pos() + self.mapToParent(event.pos()) - self.mapToParent(event.lastPos())
@@ -62,7 +63,10 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
 
     def paint(self, painter, option, widget):
         # main rounded rect
-        standardPen = QtGui.QPen(self.model.edgeColour(), 3)
+        if self.isSelected():
+            standardPen = QtGui.QPen(self.model.selectedNodeColour(), 4)
+        else:
+            standardPen = QtGui.QPen(self.model.edgeColour(), 3)
         rect = self.windowFrameRect()
         rounded_rect = QtGui.QPainterPath()
         roundingX = int(150.0 * self.cornerRounding / rect.width())
