@@ -197,3 +197,4 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
             self.scene().removeItem(self._currentConnection)
             self._currentConnection = None
         self.scene().update()
+

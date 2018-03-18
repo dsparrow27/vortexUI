@@ -3,7 +3,7 @@ import sys
 
 from vortex import slithermodel
 from vortex.ui import graphnotebook
-from zoo.libs.pyqt.widgets.graphics import graphviewconfig
+from vortex.ui import config
 
 from qt import QtWidgets, QtCore
 
@@ -29,20 +29,17 @@ def embed():
     except:
         pass
 
-    uiConfig = graphviewconfig.Config()
-    uiConfig.drawMainGridAxis = False
+    uiConfig = config.VortexConfig()
+
     app = slithermodel.Application(uiConfig)
     ui = graphnotebook.GraphNotebook()
     ui.bindApplication(app)
-    ui.resize(2000,2500)
+    ui.resize(2000, 2500)
     ui.show()
 
     _instance = ui
     return ui
 
+
 if __name__ == "__main__":
     standalone()
-# console = user level interactation
-# uiSide(rightclick etc) -> objectModel
-# uiApplication -> application
-# tab->graphBook->

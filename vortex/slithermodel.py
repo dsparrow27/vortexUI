@@ -3,8 +3,7 @@ from qt import QtGui
 from vortex.ui.graphics import graphicsdatamodel
 from vortex.ui import application
 
-
-
+print api
 ATTRIBUTETYPEMAP = {'Quaternion': QtGui.QColor(126.999945, 24.999944999999997, 24.999944999999997),
                     'color': QtGui.QColor(22.999980000000015, 255, 255),
                     'matrix4': QtGui.QColor(174.99987000000002, 130.00001999999998, 114.99990000000001),
@@ -40,15 +39,13 @@ class Application(application.UIApplication):
         :return:
         :rtype:
         """
-        self.onNewNodeRequested.emit({"model": SlitherUIObject(node, self.config),
+
+        self.onNewNodeRequested.emit({"model": SlitherUIObject(node, self.config, parent=self.currentModel),
                                       "newTab": node.isCompound()})
 
     def onNodeCreated(self, Type):
         name = Type
-        newNode = self._apiApplication.createNode(name, Type, parent=self.currentModel.slitherNode)
-        if newNode:
-            uiNode = SlitherUIObject(newNode, self.config, parent=self.currentModel)
-            return uiNode
+        self._apiApplication.createNode(name, Type, parent=self.currentModel.slitherNode)
 
     def registeredNodes(self):
         return self._apiApplication.nodeRegistry.nodes.keys()
@@ -59,19 +56,18 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
     def __init__(self, slitherNode, config, parent=None):
         super(SlitherUIObject, self).__init__(config, parent)
         self.slitherNode = slitherNode
+
         if self.isCompound():
-            self.children = map(SlitherUIObject,slitherNode.children)
+
+            self._children = map(SlitherUIObject, slitherNode.children)
         else:
-            self.children = []
+            self._children = []
 
     def isCompound(self):
         return self.slitherNode.isCompound()
 
-    def parent(self):
-        return self._parent
-
     def children(self):
-        return self.children
+        return self._children
 
     def __hash__(self):
         return id(self)
@@ -92,6 +88,22 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
 
     def deleteAttribute(self, attribute):
         pass
+
+    def deleteChild(self, child):
+
+        if self.isCompound():
+            result = self.slitherNode.removeChild(child.slitherNode)
+            if result:
+                self._children.remove(child)
+                return True
+        return False
+
+    def delete(self):
+        parent = self.parentObject()
+        # print parent, self.text()
+        if parent is not None:
+            return parent.deleteChild(self)
+        return False
 
 
 class AttributeModel(graphicsdatamodel.AttributeModel):

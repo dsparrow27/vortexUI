@@ -1,4 +1,4 @@
-from zoo.libs.pyqt.widgets.graphics import graphicitems
+from zoo.libs.pyqt.widgets.graphics import graphicitems, graphbackdrop
 from vortex.ui.graphics import plugwidget
 from qt import QtWidgets, QtCore, QtGui
 
@@ -28,10 +28,8 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         layout.setSpacing(0)
         layout.setOrientation(QtCore.Qt.Vertical)
         self.headerText = graphicitems.TextContainer(self.model.text(), parent=self)
-        self.headerText.title.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable |
-                                           QtWidgets.QGraphicsItem.ItemIsFocusable &
+        self.headerText.title.setTextFlags(QtWidgets.QGraphicsItem.ItemIsFocusable &
                                            QtWidgets.QGraphicsItem.ItemIsMovable)
-        self.headerText
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         self.setToolTip(self.model.toolTip())
         layout.addItem(self.headerText)
@@ -64,7 +62,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
     def paint(self, painter, option, widget):
         # main rounded rect
         if self.isSelected():
-            standardPen = QtGui.QPen(self.model.selectedNodeColour(), 4)
+            standardPen = QtGui.QPen(self.model.selectedNodeColour(), 3)
         else:
             standardPen = QtGui.QPen(self.model.edgeColour(), 3)
         rect = self.windowFrameRect()
@@ -79,6 +77,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         # horizontal line
         labelRect = QtCore.QRectF(rect.left(), rect.top(), rect.width(), 20)
         painter.strokePath(rounded_rect, standardPen)
+        painter.setPen(standardPen)
         painter.drawLine(labelRect.bottomLeft(), labelRect.bottomRight())
 
         super(GraphicsNode, self).paint(painter, option, widget)

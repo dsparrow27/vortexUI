@@ -3,18 +3,18 @@ from qt import QtGui, QtCore
 
 class ObjectModel(QtCore.QObject):
     def __init__(self, config, parent=None):
-        super(ObjectModel, self).__init__(parent=parent)
+        super(ObjectModel, self).__init__()
         self.config = config
         self._parent = parent
 
     def isCompound(self):
         return False
 
-    def parent(self):
+    def parentObject(self):
         return self._parent
 
     def children(self):
-        return [ObjectModel(self.config, parent=self)]
+        return self._children
 
     def __hash__(self):
         return id(self)
@@ -56,13 +56,17 @@ class ObjectModel(QtCore.QObject):
         return QtGui.QColor(31, 33, 34, 255)
 
     def selectedNodeColour(self):
-        return QtGui.QColor(255, 120, 100, 255)
+        return QtGui.QColor(180, 255, 180, 255)
 
     def unSelectedNodeColour(self):
         return self.backgroundColour()
 
     def edgeColour(self):
-        return QtGui.QColor(255, 65, 68, 255)
+        return QtGui.QColor(0.0, 0.0, 0.0, 255)
+
+    def deleteChild(self, child):
+
+        return False
 
 
 class AttributeModel(QtCore.QObject):
