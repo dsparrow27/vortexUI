@@ -12,7 +12,6 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setMinimumWidth(objectModel.minimumWidth())
         self.setMinimumHeight(objectModel.minimumHeight())
-
         self.model = objectModel
         self._selected = False
 
@@ -65,6 +64,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             standardPen = QtGui.QPen(self.model.selectedNodeColour(), 3)
         else:
             standardPen = QtGui.QPen(self.model.edgeColour(), 3)
+
         rect = self.windowFrameRect()
         rounded_rect = QtGui.QPainterPath()
         roundingX = int(150.0 * self.cornerRounding / rect.width())
@@ -75,9 +75,6 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         painter.setBrush(self.backgroundColour)
         painter.fillPath(rounded_rect, painter.brush())
         # horizontal line
-        labelRect = QtCore.QRectF(rect.left(), rect.top(), rect.width(), 20)
         painter.strokePath(rounded_rect, standardPen)
-        painter.setPen(standardPen)
-        painter.drawLine(labelRect.bottomLeft(), labelRect.bottomRight())
 
         super(GraphicsNode, self).paint(painter, option, widget)

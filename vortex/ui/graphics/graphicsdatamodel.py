@@ -6,6 +6,8 @@ class ObjectModel(QtCore.QObject):
         super(ObjectModel, self).__init__()
         self.config = config
         self._parent = parent
+        if parent is not None and self not in parent.children():
+            parent._children.append(self)
 
     def isCompound(self):
         return False
@@ -43,10 +45,10 @@ class ObjectModel(QtCore.QObject):
         return "hello world"
 
     def minimumHeight(self):
-        return 150
+        return 80
 
     def minimumWidth(self):
-        return 200
+        return 150
 
     def cornerRounding(self):
         return 10

@@ -43,7 +43,7 @@ class Plug(QtWidgets.QGraphicsWidget):
 
     @property
     def color(self):
-        return self._item.brush.color()
+        return self._item.brush().color()
 
     @color.setter
     def color(self, color):
@@ -189,7 +189,7 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
                 model = endItem.parentObject().parentObject().model
                 if self.model.canAcceptConnection(model):
                     self.model.createConnection(model)
-                    self._currentConnection.destinationPlug = endItem
+                    self._currentConnection.destinationPlug = endItem.parentObject()
                     self.connections.add(self._currentConnection)
                     self.scene().update()
                     return

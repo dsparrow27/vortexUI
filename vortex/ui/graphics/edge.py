@@ -1,5 +1,10 @@
 from qt import QtGui, QtCore, QtWidgets
+
+
 class ConnectionEdge(QtWidgets.QGraphicsPathItem):
+    """Class to deal with the Connection path between two plugs
+    You set the style of the path with setLineStyle(QtCore.Qt.Style)
+    """
     contextMenuRequested = QtCore.Signal(object)
     defaultColor = QtGui.QColor(138, 200, 0)
     selectedColor = QtGui.QColor(255, 255, 255)
@@ -14,7 +19,7 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         self._destinationPlug = destination
         self._sourcePoint = source.center()
         self._destinationPoint = destination.center() if destination is not None else None
-        self.defaultPen = QtGui.QPen(self.defaultColor, 1.25, style=QtCore.Qt.DashLine)
+        self.defaultPen = QtGui.QPen(source.color, 1.25, style=QtCore.Qt.DashLine)
         self.defaultPen.setDashPattern([1, 2, 2, 1])
         self.selectedPen = QtGui.QPen(self.selectedColor, 1.7, style=QtCore.Qt.DashLine)
         self.selectedPen.setDashPattern([1, 2, 2, 1])
@@ -29,6 +34,11 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         if self._sourcePlug and self._destinationPlug:
             self.connect(self._sourcePlug, self._destinationPlug)
         self.update()
+
+    def setLineStyle(self, qStyle):
+        self.defaultPen.setStyle(qStyle)
+        self.selectedPen.setStyle(qStyle)
+        self.hoverPen.setStyle(qStyle)
 
     def setAsLinearPath(self):
         path = QtGui.QPainterPath()
@@ -144,7 +154,7 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         """
         self._sourcePlug = plug
         self._sourcePoint = plug.center()
-        self._sourcePlug.parentObject().parentObject().connections.add(plug)
+        self._sourcePlug.parentObject().connections.add(plug)
         self.updatePath()
 
     @property
@@ -158,7 +168,7 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
     def destinationPlug(self, plug):
         self._destinationPlug = plug
         self._destinationPoint = plug.center()
-        self._destinationPlug.parentObject().parentObject().connections.add(self)
+        self._destinationPlug.parentObject().connections.add(self)
         self.updatePath()
 
     def close(self):

@@ -3,7 +3,6 @@ from qt import QtGui
 from vortex.ui.graphics import graphicsdatamodel
 from vortex.ui import application
 
-print api
 ATTRIBUTETYPEMAP = {'Quaternion': QtGui.QColor(126.999945, 24.999944999999997, 24.999944999999997),
                     'color': QtGui.QColor(22.999980000000015, 255, 255),
                     'matrix4': QtGui.QColor(174.99987000000002, 130.00001999999998, 114.99990000000001),
@@ -58,7 +57,6 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
         self.slitherNode = slitherNode
 
         if self.isCompound():
-
             self._children = map(SlitherUIObject, slitherNode.children)
         else:
             self._children = []
@@ -90,7 +88,6 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
         pass
 
     def deleteChild(self, child):
-
         if self.isCompound():
             result = self.slitherNode.removeChild(child.slitherNode)
             if result:
@@ -100,7 +97,6 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
 
     def delete(self):
         parent = self.parentObject()
-        # print parent, self.text()
         if parent is not None:
             return parent.deleteChild(self)
         return False
