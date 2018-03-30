@@ -57,9 +57,11 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
         self.slitherNode = slitherNode
 
         if self.isCompound():
-            self._children = map(SlitherUIObject, slitherNode.children)
+            self._children = [SlitherUIObject(slitherNode=i, config=self.config, parent=self) for i in
+                              slitherNode.children]
         else:
             self._children = []
+        self._attributes = []
 
     def isCompound(self):
         return self.slitherNode.isCompound()
@@ -80,12 +82,14 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
         return self.slitherNode.documentation
 
     def attributes(self, inputs=True, outputs=True):
-        attrs = []
-        if inputs:
-            attrs.extend([AttributeModel(i, self) for i in self.slitherNode.inputs()])
-        if outputs:
-            attrs.extend([AttributeModel(i, self) for i in self.slitherNode.outputs()])
-        return attrs
+        if not self._attributes:
+            attrs = []
+            if inputs:
+                attrs.extend([AttributeModel(i, self) for i in self.slitherNode.inputs()])
+            if outputs:
+                attrs.extend([AttributeModel(i, self) for i in self.slitherNode.outputs()])
+            self._attributes = attrs
+        return self._attributes
 
     def createAttribute(self, **kwargs):
         pass
@@ -124,6 +128,9 @@ class AttributeModel(graphicsdatamodel.AttributeModel):
 
     def toolTip(self):
         return self.internalAttr.__doc__
+
+    def isConnected(self):
+        return self.internalAttr.hasUpstream()
 
     def canAcceptConnection(self, plug):
         return self.internalAttr.canConnect(plug.internalAttr)

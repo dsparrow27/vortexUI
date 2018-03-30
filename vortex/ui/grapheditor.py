@@ -150,6 +150,10 @@ class Scene(graphicsscene.GraphicsScene):
         destinationModel = destination.model
         if not sourceModel.canAcceptConnection(destinationModel):
             return
+        if destinationModel.isConnected() and not destinationModel.acceptsMultipleConnections():
+            connection = self.connectionForPlug(destination)
+            self.deleteConnection(connection)
+            destinationModel.deleteConnection(sourceModel)
         result = sourceModel.createConnection(destinationModel)
         if not result:
             return
@@ -165,12 +169,16 @@ class Scene(graphicsscene.GraphicsScene):
         for connection in self.connections:
             connection.updatePosition()
 
-    def updateConnectionsForPlug(self, plug):
-        for connection in self.connections:
+    def connectionForPlug(self, plug):
+        for connection in iter(self.connections):
             source = connection.sourcePlug.parentObject()
-            destination = connection.destinationPlug.parentObject()
-            if source == plug or destination == plug:
-                connection.updatePosition()
+            if source == plug or connection.destinationPlug.parentObject() == plug:
+                return connection
+
+    def updateConnectionsForPlug(self, plug):
+        connection = self.connectionForPlug(plug)
+        if connection:
+            connection.updatePosition()
 
     def deleteNode(self, node):
         if node in self.nodes:
@@ -179,17 +187,29 @@ class Scene(graphicsscene.GraphicsScene):
             return True
         return False
 
+    def deleteConnection(self, connection):
+        if connection in self.connections:
+            self.connections.remove(connection)
+            self.removeItem(connection)
+            self.update()
+            return True
+        return False
+
     def onDelete(self, selection):
         for sel in selection:
+
             if isinstance(sel, edge.ConnectionEdge):
-                deleted = sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model)
-                self.removeConnection(sel)
+                sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model)
+                self.deleteConnection(sel)
+                continue
             elif isinstance(sel, graphicsnode.GraphicsNode):
                 deleted = sel.model.delete()
                 self.removeNode(sel)
             elif isinstance(sel, graphbackdrop.BackDrop):
                 deleted = True
                 self.removeBackDrop(sel)
+            else:
+                continue
             if deleted:
                 self.removeItem(sel)
 

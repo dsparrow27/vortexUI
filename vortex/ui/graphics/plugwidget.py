@@ -136,11 +136,11 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
 
     def addConnection(self, plug):
         if self.model.isInput():
-            source = self
-            dest = plug.parentObject().parentObject()
-        else:
             source = plug.parentObject().parentObject()
             dest = self
+        else:
+            source = self
+            dest = plug.parentObject().parentObject()
         self.scene().removeItem(self._currentConnection)
         self._currentConnection = None
         self.scene().createConnection(source, dest)

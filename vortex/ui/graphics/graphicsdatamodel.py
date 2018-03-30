@@ -28,12 +28,10 @@ class ObjectModel(QtCore.QObject):
         return ""
 
     def attributes(self, inputs=True, outputs=True):
-        attrs = []
-        if inputs:
-            attrs.extend([OutAttributeModel(self)] * 10)
-        if outputs:
-            attrs.extend([InAttributeModel(self)] * 10)
-        return attrs
+        return []
+
+    def canCreateAttributes(self):
+        return False
 
     def createAttribute(self, **kwargs):
         pass
@@ -101,6 +99,14 @@ class AttributeModel(QtCore.QObject):
 
     def canAcceptConnection(self, plug):
         return True
+
+    def acceptsMultipleConnections(self):
+        if self.isInput():
+            return False
+        return True
+
+    def isConnected(self):
+        return False
 
     def createConnection(self, attribute):
         return False
