@@ -24,6 +24,9 @@ class ObjectModel(QtCore.QObject):
     def text(self):
         return "primary header"
 
+    def secondaryText(self):
+        return ""
+
     def attributes(self, inputs=True, outputs=True):
         attrs = []
         if inputs:
@@ -73,8 +76,13 @@ class ObjectModel(QtCore.QObject):
         return 2
 
     def deleteChild(self, child):
-
         return False
+
+    def supportsContextMenu(self):
+        return False
+
+    def contextMenu(self, menu):
+        pass
 
 
 class AttributeModel(QtCore.QObject):

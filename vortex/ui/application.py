@@ -4,7 +4,7 @@ from qt import QtCore, QtWidgets
 class UIApplication(QtCore.QObject):
     # list(objectModel)
     onSelectionChanged = QtCore.Signal(list)
-    
+
     # from api to ui signals
     onNewNodeRequested = QtCore.Signal(dict)
     onNodeDeleteRequested = QtCore.Signal(object)
@@ -24,6 +24,12 @@ class UIApplication(QtCore.QObject):
             if wid.objectName() == "SlitherMainWindow":
                 return wid
 
+    def customToolbarActions(self, parent):
+        pass
+
+    def onNodeCreated(self, Type):
+        pass
+
     def registerdNodes(self):
         """Returns a full list of registered nodes
 
@@ -31,5 +37,3 @@ class UIApplication(QtCore.QObject):
         :rtype: list(str)
         """
         return []
-
-

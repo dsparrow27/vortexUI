@@ -44,6 +44,7 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         path = QtGui.QPainterPath()
         path.moveTo(self._sourcePoint)
         path.lineTo(self._destinationPoint)
+        self.curveType = ConnectionEdge.LINEAR
         self.setPath(path)
 
     def setAsCubicPath(self):
@@ -55,7 +56,9 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         ctrl1 = QtCore.QPointF(self._sourcePoint.x() + dx * 0.50, self._sourcePoint.y() + dy * 0.1)
         ctrl2 = QtCore.QPointF(self._sourcePoint.x() + dx * 0.50, self._sourcePoint.y() + dy * 0.9)
         path.cubicTo(ctrl1, ctrl2, self._destinationPoint)
+        self.curveType = ConnectionEdge.CUBIC
         self.setPath(path)
+
 
     def hoverLeaveEvent(self, event):
         super(ConnectionEdge, self).hoverEnterEvent(event)

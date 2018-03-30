@@ -73,6 +73,12 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
     def text(self):
         return self.slitherNode.name
 
+    def secondaryText(self):
+        return self.slitherNode.type()
+
+    def toolTip(self):
+        return self.slitherNode.documentation
+
     def attributes(self, inputs=True, outputs=True):
         attrs = []
         if inputs:
@@ -101,6 +107,9 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
             return parent.deleteChild(self)
         return False
 
+    def contextMenu(self, menu):
+        pass
+
 
 class AttributeModel(graphicsdatamodel.AttributeModel):
     def __init__(self, slitherAttribute, objectModel):
@@ -112,6 +121,9 @@ class AttributeModel(graphicsdatamodel.AttributeModel):
 
     def setText(self, text):
         self.internalAttr.setName(str(text))
+
+    def toolTip(self):
+        return self.internalAttr.__doc__
 
     def canAcceptConnection(self, plug):
         return self.internalAttr.canConnect(plug.internalAttr)

@@ -1,9 +1,12 @@
+import os
+from functools import partial
+
 from qt import QtWidgets, QtCore, QtGui
 
 from zoo.libs.pyqt.widgets.graphics import graphicsview
 from zoo.libs.pyqt.widgets.graphics import graphicsscene
 from zoo.libs.pyqt.extended import combobox
-from zoo.libs.pyqt.widgets import dialog
+from vortex.ui import utils
 from vortex.ui.graphics import graphpanels, edge, graphicsnode
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop
 
@@ -46,27 +49,76 @@ class GraphEditor(QtWidgets.QWidget):
         self.view.showPanels(state)
 
     def init(self):
+
         self.editorLayout = QtWidgets.QVBoxLayout()
         self.editorLayout.setContentsMargins(0, 0, 0, 0)
         self.editorLayout.setSpacing(0)
+        self.toolbar = QtWidgets.QToolBar(parent=self)
+        self.createAlignmentActions(self.toolbar)
+        self.toolbar.addSeparator()
+        self.uiApplication.customToolbarActions(self.toolbar)
+        self.editorLayout.addWidget(self.toolbar)
         # constructor view and set scene
         self.scene = Scene(parent=self)
 
         self.view = View(self.uiApplication, parent=self)
         self.view.setScene(self.scene)
-        self.view.contextMenuRequest.connect(self._onContextMenu)
+        self.view.contextMenuRequest.connect(self._onViewContextMenu)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
         self.setLayout(self.editorLayout)
 
-    def _onContextMenu(self, menu):
+    def createAlignmentActions(self, parent):
+        icons = os.environ["VORTEX_ICONS"]
+        iconsData = {
+            "horizontalAlignCenter.png": ("Aligns the selected nodes to the horizontal center", utils.CENTER | utils.X),
+            "horizontalAlignLeft.png": ("Aligns the selected nodes to the Left", utils.LEFT),
+            "horizontalAlignRight.png": ("Aligns the selected nodes to the Right", utils.RIGHT),
+            "verticalAlignBottom.png": ("Aligns the selected nodes to the bottom", utils.BOTTOM),
+            "verticalAlignCenter.png": ("Aligns the selected nodes to the vertical center", utils.CENTER | utils.Y),
+            "verticalAlignTop.png": ("Aligns the selected nodes to the Top", utils.TOP)}
+        for name, tip in iconsData.items():
+            act = QtWidgets.QAction(QtGui.QIcon(os.path.join(icons, name)), "", self)
+            act.setStatusTip(tip[0])
+            act.setToolTip(tip[0])
+            act.triggered.connect(partial(self.alignSelectedNodes, tip[1]))
+            parent.addAction(act)
+
+    def _onViewContextMenu(self, menu, item):
+        if item:
+            if isinstance(item, (graphicsnode.GraphicsNode, graphpanels.Panel)) and item.model.supportsContextMenu():
+                item.model.contextMenu(menu)
+            return
         edgeStyle = menu.addMenu("ConnectionStyle")
         for i in ("SolidLine",
                   "DashLine",
                   "DotLine",
                   "DashDotLine",
-                  "DashDotDotLine"):
+                  "DashDotDotLine",
+                  "Linear",
+                  "Cubic"):
             edgeStyle.addAction(i, self.scene.onSetConnectionStyle)
+        alignment = menu.addMenu("Alignment")
+        self.createAlignmentActions(alignment)
+
+    def alignSelectedNodes(self, direction):
+        nodes = self.scene.selectedNodes()
+        if len(nodes) < 2:
+            return
+        if direction == utils.CENTER | utils.X:
+            utils.nodesAlignX(nodes, utils.CENTER)
+        elif direction == utils.CENTER | utils.Y:
+            utils.nodesAlignY(nodes, utils.CENTER)
+        elif direction == utils.RIGHT:
+            utils.nodesAlignX(nodes, utils.RIGHT)
+        elif direction == utils.LEFT:
+            utils.nodesAlignX(nodes, utils.LEFT)
+        elif direction == utils.TOP:
+            utils.nodesAlignY(nodes, utils.TOP)
+        else:
+            utils.nodesAlignY(nodes, utils.BOTTOM)
+        # :todo: only update the selected nodes
+        self.scene.updateAllConnections()
 
 
 class Scene(graphicsscene.GraphicsScene):
@@ -75,6 +127,17 @@ class Scene(graphicsscene.GraphicsScene):
         self.nodes = set()
         self.backdrops = set()
         self.connections = set()
+
+    def selectedNodes(self):
+        return [i for i in self.nodes if i.isSelected()]
+
+    def selectionConnections(self):
+        return [i for i in self.connections if i.isSelected()]
+
+    def createNode(self, model, position):
+        graphNode = graphicsnode.GraphicsNode(model, position=position)
+        self.nodes.add(graphNode)
+        self.addItem(graphNode)
 
     def createBackDrop(self):
         drop = graphbackdrop.BackDrop()
@@ -97,6 +160,10 @@ class Scene(graphicsscene.GraphicsScene):
         connection.updatePosition()
         self.connections.add(connection)
         self.addItem(connection)
+
+    def updateAllConnections(self):
+        for connection in self.connections:
+            connection.updatePosition()
 
     def updateConnectionsForPlug(self, plug):
         for connection in self.connections:
@@ -138,6 +205,16 @@ class Scene(graphicsscene.GraphicsScene):
             style = QtCore.Qt.DashDotLine
         elif style == "DashDotDotLine":
             style = QtCore.Qt.DashDotDotLine
+        elif style == "Linear":
+            for conn in self.connections:
+                conn.setAsLinearPath()
+            self.update()
+            return
+        elif style == "Cubic":
+            for conn in self.connections:
+                conn.setAsCubicPath()
+            self.update()
+            return
         for conn in self.connections:
             conn.setLineStyle(style)
         self.update()

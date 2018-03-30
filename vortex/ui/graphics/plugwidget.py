@@ -110,6 +110,8 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
             self.inCircle.hide()
             if attributeModel.isOutput():
                 layout.addStretch(1)
+        self.inCircle.setToolTip(self.model.toolTip())
+        self.outCircle.setToolTip(self.model.toolTip())
         layout.addItem(self.label)
         layout.addItem(self.outCircle)
         layout.setAlignment(self.label, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
@@ -146,7 +148,6 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
     def updateConnections(self):
         self.scene().updateConnectionsForPlug(self)
 
-
     # handle connection methods
     def onPlugClicked(self, plug, event):
         """Trigger when either the inCircle or outCircle is clicked, this method will handle setup of the connection
@@ -173,6 +174,7 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
             if isinstance(endItem, PlugItem):
                 self.addConnection(endItem)
                 return
+
             self.scene().removeItem(self._currentConnection)
             self._currentConnection = None
         self.scene().update()

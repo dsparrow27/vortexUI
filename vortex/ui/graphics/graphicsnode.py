@@ -5,7 +5,7 @@ from qt import QtWidgets, QtCore, QtGui
 
 class NodeHeader(QtWidgets.QGraphicsWidget):
 
-    def __init__(self, text, parent=None):
+    def __init__(self, text, secondaryText="", parent=None):
         super(NodeHeader, self).__init__(parent)
 
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
@@ -16,11 +16,12 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
         layout.setOrientation(QtCore.Qt.Vertical)
         self.setLayout(layout)
         self._titleWidget = graphicitems.GraphicsText(text, self)
-        self._titleWidget.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
-                          QtWidgets.QGraphicsItem.ItemIsMovable)
+        self._titleWidget.setTextFlags(
+            QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
+            QtWidgets.QGraphicsItem.ItemIsMovable)
         _font = QtGui.QFont("Roboto-Bold.ttf", 10)
         self._titleWidget.font = _font
-        self._secondarytitle = graphicitems.GraphicsText(text, self)
+        self._secondarytitle = graphicitems.GraphicsText(secondaryText, self)
         self._secondarytitle.setTextFlags(
             QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
             QtWidgets.QGraphicsItem.ItemIsMovable)
@@ -59,7 +60,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.setOrientation(QtCore.Qt.Vertical)
-        self.header = NodeHeader(self.model.text(), parent=self)
+        self.header = NodeHeader(self.model.text(), self.model.secondaryText(), parent=self)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         self.setToolTip(self.model.toolTip())
         layout.addItem(self.header)
@@ -78,11 +79,14 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             self.setSelected(True)
 
     def mouseMoveEvent(self, event):
-        pos = self.pos() + self.mapToParent(event.pos()) - self.mapToParent(event.lastPos())
-        self.setPos(pos)
-        for item in self.attributeContainer.items():
-            if isinstance(item, plugwidget.PlugContainer):
-                item.updateConnections()
+        scene = self.scene()
+        items = scene.selectedNodes()
+        for i in items:
+            pos = i.pos() + i.mapToParent(event.pos()) - i.mapToParent(event.lastPos())
+            i.setPos(pos)
+            for item in i.attributeContainer.items():
+                if isinstance(item, plugwidget.PlugContainer):
+                    item.updateConnections()
 
     def doubleClickEvent(self, event):
         if self.model.isCompound():
