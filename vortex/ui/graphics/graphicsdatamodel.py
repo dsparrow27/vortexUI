@@ -57,6 +57,9 @@ class ObjectModel(QtCore.QObject):
     def backgroundColour(self):
         return QtGui.QColor(31, 33, 34, 255)
 
+    def headerColor(self):
+        return QtGui.QColor("#4A71AB")
+
     def selectedNodeColour(self):
         return QtGui.QColor(180, 255, 180, 255)
 
@@ -65,6 +68,9 @@ class ObjectModel(QtCore.QObject):
 
     def edgeColour(self):
         return QtGui.QColor(0.0, 0.0, 0.0, 255)
+
+    def edgeThickness(self):
+        return 2
 
     def deleteChild(self, child):
 

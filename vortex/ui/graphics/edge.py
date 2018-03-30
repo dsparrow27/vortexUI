@@ -31,8 +31,8 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         self.setPen(self.defaultPen)
         self.setZValue(-1)
         self.setFlags(self.ItemIsFocusable | self.ItemIsSelectable | self.ItemIsMovable)
-        if self._sourcePlug and self._destinationPlug:
-            self.connect(self._sourcePlug, self._destinationPlug)
+        # if self._sourcePlug and self._destinationPlug:
+        #     self.connect(self._sourcePlug, self._destinationPlug)
         self.update()
 
     def setLineStyle(self, qStyle):
@@ -68,6 +68,7 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         self.update()
 
     def paint(self, painter, option, widget):
+
         if self.isSelected():
             painter.setPen(self.selectedPen)
         elif self.hovering:
@@ -106,7 +107,7 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         """Remove the connection between the source and destination plug
         """
         self._sourcePlug.removeConnection(self)
-        self._sourcePlug.removeConnection(self)
+        self._destinationPlug.removeConnection(self)
         self._sourcePlug = None
         self._destinationPlug = None
 

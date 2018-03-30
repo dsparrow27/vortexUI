@@ -3,10 +3,43 @@ from vortex.ui.graphics import plugwidget
 from qt import QtWidgets, QtCore, QtGui
 
 
+class NodeHeader(QtWidgets.QGraphicsWidget):
+
+    def __init__(self, text, parent=None):
+        super(NodeHeader, self).__init__(parent)
+
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
+
+        layout = QtWidgets.QGraphicsLinearLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.setOrientation(QtCore.Qt.Vertical)
+        self.setLayout(layout)
+        self._titleWidget = graphicitems.GraphicsText(text, self)
+        self._titleWidget.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
+                          QtWidgets.QGraphicsItem.ItemIsMovable)
+        _font = QtGui.QFont("Roboto-Bold.ttf", 10)
+        self._titleWidget.font = _font
+        self._secondarytitle = graphicitems.GraphicsText(text, self)
+        self._secondarytitle.setTextFlags(
+            QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
+            QtWidgets.QGraphicsItem.ItemIsMovable)
+        _font = QtGui.QFont("Roboto-Bold.ttf", 6)
+        self._secondarytitle.font = _font
+        layout.addItem(self._titleWidget)
+        layout.addItem(self._secondarytitle)
+
+        layout.setAlignment(self._titleWidget, QtCore.Qt.AlignCenter | QtCore.Qt.AlignTop)
+        layout.setAlignment(self._secondarytitle, QtCore.Qt.AlignCenter | QtCore.Qt.AlignTop)
+
+    def setText(self, text):
+        self._titleWidget.setText(text)
+
+
 class GraphicsNode(QtWidgets.QGraphicsWidget):
     requestExpansion = QtCore.Signal()
 
-    def __init__(self, objectModel, position=(0,0,0)):
+    def __init__(self, objectModel, position=(0, 0, 0)):
         super(GraphicsNode, self).__init__()
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
@@ -26,12 +59,10 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.setOrientation(QtCore.Qt.Vertical)
-        self.headerText = graphicitems.TextContainer(self.model.text(), parent=self)
-        self.headerText.title.setTextFlags(QtWidgets.QGraphicsItem.ItemIsFocusable &
-                                           QtWidgets.QGraphicsItem.ItemIsMovable)
+        self.header = NodeHeader(self.model.text(), parent=self)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         self.setToolTip(self.model.toolTip())
-        layout.addItem(self.headerText)
+        layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
 
         self.setLayout(layout)
@@ -50,7 +81,6 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         pos = self.pos() + self.mapToParent(event.pos()) - self.mapToParent(event.lastPos())
         self.setPos(pos)
         for item in self.attributeContainer.items():
-
             if isinstance(item, plugwidget.PlugContainer):
                 item.updateConnections()
 
@@ -60,20 +90,28 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
 
     def paint(self, painter, option, widget):
         # main rounded rect
+        thickness = self.model.edgeThickness()
         if self.isSelected():
-            standardPen = QtGui.QPen(self.model.selectedNodeColour(), 3)
+            standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness)
         else:
-            standardPen = QtGui.QPen(self.model.edgeColour(), 3)
+            standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
 
         rect = self.windowFrameRect()
         rounded_rect = QtGui.QPainterPath()
-        roundingX = int(150.0 * self.cornerRounding / rect.width())
+        roundingX = 0.0
         roundingY = int(150.0 * self.cornerRounding / rect.height())
         rounded_rect.addRoundRect(rect,
                                   roundingX,
-                                  roundingY)
+                                  )
         painter.setBrush(self.backgroundColour)
         painter.fillPath(rounded_rect, painter.brush())
+        # Title BG
+        titleHeight = self.header.size().height()
+        #
+        painter.setBrush(self.model.headerColor())
+        painter.drawRoundedRect(0, 0, rect.width(), titleHeight, 0.0, roundingY, QtCore.Qt.AbsoluteSize)
+        painter.drawRect(0, 0, rect.width(), titleHeight)
+
         # horizontal line
         painter.strokePath(rounded_rect, standardPen)
 

@@ -123,8 +123,6 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.outCircle.moveEventRequested.connect(self.onPlugMove)
         self.inCircle.releaseEventRequested.connect(self.onPlugRelease)
         self.outCircle.releaseEventRequested.connect(self.onPlugRelease)
-        # stores the plug to plug connections
-        self.connections = set()
         # used purely to store the connection request transaction
         self._currentConnection = None
 
@@ -135,32 +133,19 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.layout().setAlignment(self.outCircle, alignment)
 
     def addConnection(self, plug):
-        plugModel = plug.parentObject().model
-        if not self.model.canAcceptConnection(plugModel):
-            return
-        result = self.model.createConnection(plugModel)
-        if not result:
-            return
         if self.model.isInput():
-            connection = edge.ConnectionEdge(self, plug)
+            source = self
+            dest = plug.parentObject().parentObject()
         else:
-            connection = edge.ConnectionEdge(plug, self)
-        self.connections.add(connection)
-        self.connectionAdded.emit(connection)
-
-
-    def removeConnection(self, edge):
-        self.connections.remove(edge)
-        self.connectionRemoved.emit(edge)
-
-    def disconnectAll(self):
-        self.connections.clear()
-        self.cleared.emit()
+            source = plug.parentObject().parentObject()
+            dest = self
+        self.scene().removeItem(self._currentConnection)
+        self._currentConnection = None
+        self.scene().createConnection(source, dest)
 
     def updateConnections(self):
+        self.scene().updateConnectionsForPlug(self)
 
-        for connection in self.connections:
-            connection.updatePosition()
 
     # handle connection methods
     def onPlugClicked(self, plug, event):
@@ -186,15 +171,8 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
             end = self._currentConnection.path().pointAtPercent(1)
             endItem = self.scene().itemAt(end, QtGui.QTransform())
             if isinstance(endItem, PlugItem):
-                model = endItem.parentObject().parentObject().model
-                if self.model.canAcceptConnection(model):
-                    self.model.createConnection(model)
-                    self._currentConnection.destinationPlug = endItem.parentObject()
-                    self.connections.add(self._currentConnection)
-                    self.scene().update()
-                    return
-
+                self.addConnection(endItem)
+                return
             self.scene().removeItem(self._currentConnection)
             self._currentConnection = None
         self.scene().update()
-

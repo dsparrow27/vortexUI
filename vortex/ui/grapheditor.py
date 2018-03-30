@@ -1,8 +1,9 @@
-from qt import QtWidgets, QtCore
+from qt import QtWidgets, QtCore, QtGui
 
 from zoo.libs.pyqt.widgets.graphics import graphicsview
 from zoo.libs.pyqt.widgets.graphics import graphicsscene
 from zoo.libs.pyqt.extended import combobox
+from zoo.libs.pyqt.widgets import dialog
 from vortex.ui.graphics import graphpanels, edge, graphicsnode
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop
 
@@ -12,7 +13,7 @@ class PopupCompleter(combobox.ExtendedComboBox):
     def __init__(self, position, items, parent):
         super(PopupCompleter, self).__init__(items, parent)
         self.move(position)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Popup);
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Popup)
         self.setSizeAdjustPolicy(self.AdjustToContents)
         self.show()
 
@@ -23,7 +24,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.uiApplication = uiApplication
         self.init()
         self.view.tabPress.connect(self.tabPress)
-        self.view.deletePress.connect(self.onDelete)
+        self.view.deletePress.connect(self.scene.onDelete)
 
     def tabPress(self, point):
         registeredItems = self.uiApplication.registeredNodes()
@@ -31,13 +32,11 @@ class GraphEditor(QtWidgets.QWidget):
             raise ValueError("No registered nodes to display")
         registeredItems.append("Group")
         self.box = PopupCompleter(point, registeredItems, parent=self)
-
         self.box.itemSelected.connect(self.onLibraryRequestNode)
 
     def onLibraryRequestNode(self, Type):
         if Type == "Group":
-            drop = graphbackdrop.BackDrop()
-            self.scene.addItem(drop)
+            drop = self.scene.createBackDrop()
             drop.setPos(self.view.centerPosition())
         else:
             self.uiApplication.onNodeCreated(Type)
@@ -46,22 +45,12 @@ class GraphEditor(QtWidgets.QWidget):
     def showPanels(self, state):
         self.view.showPanels(state)
 
-    def onDelete(self, selection):
-        for sel in selection:
-            if isinstance(sel, edge.ConnectionEdge):
-                deleted = sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model)
-            elif isinstance(sel, graphicsnode.GraphicsNode):
-                deleted = sel.model.delete()
-
-            if deleted:
-                self.scene.removeItem(sel)
-
     def init(self):
         self.editorLayout = QtWidgets.QVBoxLayout()
         self.editorLayout.setContentsMargins(0, 0, 0, 0)
         self.editorLayout.setSpacing(0)
         # constructor view and set scene
-        self.scene = graphicsscene.GraphicsScene(parent=self)
+        self.scene = Scene(parent=self)
 
         self.view = View(self.uiApplication, parent=self)
         self.view.setScene(self.scene)
@@ -77,7 +66,65 @@ class GraphEditor(QtWidgets.QWidget):
                   "DotLine",
                   "DashDotLine",
                   "DashDotDotLine"):
-            edgeStyle.addAction(i, self.onSetConnectionStyle)
+            edgeStyle.addAction(i, self.scene.onSetConnectionStyle)
+
+
+class Scene(graphicsscene.GraphicsScene):
+    def __init__(self, *args, **kwargs):
+        super(Scene, self).__init__(*args, **kwargs)
+        self.nodes = set()
+        self.backdrops = set()
+        self.connections = set()
+
+    def createBackDrop(self):
+        drop = graphbackdrop.BackDrop()
+        self.backdrops.add(drop)
+        self.addItem(drop)
+        return drop
+
+    def createConnection(self, source, destination):
+        sourceModel = source.model
+        destinationModel = destination.model
+        if not sourceModel.canAcceptConnection(destinationModel):
+            return
+        result = sourceModel.createConnection(destinationModel)
+        if not result:
+            return
+        if sourceModel.isInput():
+            connection = edge.ConnectionEdge(destination.outCircle, source.inCircle)
+        else:
+            connection = edge.ConnectionEdge(source.outCircle, destination.inCircle)
+        connection.updatePosition()
+        self.connections.add(connection)
+        self.addItem(connection)
+
+    def updateConnectionsForPlug(self, plug):
+        for connection in self.connections:
+            source = connection.sourcePlug.parentObject()
+            destination = connection.destinationPlug.parentObject()
+            if source == plug or destination == plug:
+                connection.updatePosition()
+
+    def deleteNode(self, node):
+        if node in self.nodes:
+            self.removeItem(node)
+            self.nodes.remove(node)
+            return True
+        return False
+
+    def onDelete(self, selection):
+        for sel in selection:
+            if isinstance(sel, edge.ConnectionEdge):
+                deleted = sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model)
+                self.removeConnection(sel)
+            elif isinstance(sel, graphicsnode.GraphicsNode):
+                deleted = sel.model.delete()
+                self.removeNode(sel)
+            elif isinstance(sel, graphbackdrop.BackDrop):
+                deleted = True
+                self.removeBackDrop(sel)
+            if deleted:
+                self.removeItem(sel)
 
     def onSetConnectionStyle(self):
         style = self.sender().text()
@@ -91,11 +138,15 @@ class GraphEditor(QtWidgets.QWidget):
             style = QtCore.Qt.DashDotLine
         elif style == "DashDotDotLine":
             style = QtCore.Qt.DashDotDotLine
-        # @todo: modify the connections edge
+        for conn in self.connections:
+            conn.setLineStyle(style)
+        self.update()
 
 
 class View(graphicsview.GraphicsView):
     onTabPress = QtCore.Signal(object)
+    requestCopy = QtCore.Signal()
+    requestPaste = QtCore.Signal(object)
 
     def __init__(self, application, parent=None, setAntialiasing=True):
         super(View, self).__init__(application.config, parent, setAntialiasing)
@@ -119,6 +170,15 @@ class View(graphicsview.GraphicsView):
                 self.layout().takeAt(self.leftPanel)
             if self.rightPanel is not None:
                 self.layout().takeAt(self.leftPanel)
+
+    def keyPressEvent(self, event):
+        ctrl = event.modifiers() == QtCore.Qt.ControlModifier
+        key = event.key()
+        if key == QtCore.Qt.Key_C and ctrl:
+            self.requestCopy.emit()
+        elif key == QtCore.Qt.Key_V and ctrl:
+            self.requestPaste.emit(QtGui.QCursor.pos())
+        super(View, self).keyPressEvent(event)
 
     def resizeEvent(self, event):
         super(View, self).resizeEvent(event)
