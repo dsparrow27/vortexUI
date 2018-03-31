@@ -1,5 +1,8 @@
 from qt import QtWidgets, QtCore, QtGui
 from vortex.ui import grapheditor
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class GraphNotebook(QtWidgets.QWidget):
@@ -10,6 +13,7 @@ class GraphNotebook(QtWidgets.QWidget):
         self.initLayout()
 
     def bindApplication(self, uiApplication):
+        logger.debug("Binding UIApplication to notebook")
         self.uiApplication = uiApplication
         uiApplication.onNewNodeRequested.connect(self.onRequestaddNodeToScene)
         uiApplication.initialize()

@@ -7,11 +7,13 @@ from vortex.ui import config
 
 from qt import QtWidgets, QtCore
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("VortexUI")
 logger.setLevel(logging.DEBUG)
 handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter("%(levelname)s: %(module)s: %(lineno)s:%(message)s"))
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
 logger.addHandler(handler)
+
 _instance = None
 
 
@@ -28,7 +30,7 @@ def embed():
         _instance.close()
     except:
         pass
-
+    logger.debug("Starting boot process")
     uiConfig = config.VortexConfig()
 
     app = slithermodel.Application(uiConfig)
@@ -36,8 +38,9 @@ def embed():
     ui.bindApplication(app)
     ui.resize(2000, 2500)
     ui.show()
+    logger.debug("Completed boot process")
 
-    _instance = ui
+    _instance = ui,
     return ui
 
 

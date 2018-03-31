@@ -5,20 +5,9 @@ from qt import QtWidgets, QtCore, QtGui
 
 from zoo.libs.pyqt.widgets.graphics import graphicsview
 from zoo.libs.pyqt.widgets.graphics import graphicsscene
-from zoo.libs.pyqt.extended import combobox
 from vortex.ui import utils
 from vortex.ui.graphics import graphpanels, edge, graphicsnode
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop
-
-
-class PopupCompleter(combobox.ExtendedComboBox):
-
-    def __init__(self, position, items, parent):
-        super(PopupCompleter, self).__init__(items, parent)
-        self.move(position)
-        self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Popup)
-        self.setSizeAdjustPolicy(self.AdjustToContents)
-        self.show()
 
 
 class GraphEditor(QtWidgets.QWidget):
@@ -26,24 +15,19 @@ class GraphEditor(QtWidgets.QWidget):
         super(GraphEditor, self).__init__(parent=parent)
         self.uiApplication = uiApplication
         self.init()
-        self.view.tabPress.connect(self.tabPress)
+        self.view.tabPress.connect(self.showNodeLibrary)
         self.view.deletePress.connect(self.scene.onDelete)
+        self.nodeLibraryWidget = uiApplication.nodeLibraryWidget(parent=self)
+        self.nodeLibraryWidget.hide()
 
-    def tabPress(self, point):
+    def showNodeLibrary(self, point):
         registeredItems = self.uiApplication.registeredNodes()
         if not registeredItems:
             raise ValueError("No registered nodes to display")
-        registeredItems.append("Group")
-        self.box = PopupCompleter(point, registeredItems, parent=self)
-        self.box.itemSelected.connect(self.onLibraryRequestNode)
-
-    def onLibraryRequestNode(self, Type):
-        if Type == "Group":
-            drop = self.scene.createBackDrop()
-            drop.setPos(self.view.centerPosition())
-        else:
-            self.uiApplication.onNodeCreated(Type)
-        self.view.setFocus()
+        # registeredItems.append("Group")
+        self.nodeLibraryWidget.reload(registeredItems)
+        self.nodeLibraryWidget.show()
+        self.nodeLibraryWidget.move(point)
 
     def showPanels(self, state):
         self.view.showPanels(state)
@@ -59,7 +43,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.uiApplication.customToolbarActions(self.toolbar)
         self.editorLayout.addWidget(self.toolbar)
         # constructor view and set scene
-        self.scene = Scene(parent=self)
+        self.scene = Scene(self.uiApplication, parent=self)
 
         self.view = View(self.uiApplication, parent=self)
         self.view.setScene(self.scene)
@@ -90,13 +74,7 @@ class GraphEditor(QtWidgets.QWidget):
                 item.model.contextMenu(menu)
             return
         edgeStyle = menu.addMenu("ConnectionStyle")
-        for i in ("SolidLine",
-                  "DashLine",
-                  "DotLine",
-                  "DashDotLine",
-                  "DashDotDotLine",
-                  "Linear",
-                  "Cubic"):
+        for i in self.uiApplication.connectionStyle.keys():
             edgeStyle.addAction(i, self.scene.onSetConnectionStyle)
         alignment = menu.addMenu("Alignment")
         self.createAlignmentActions(alignment)
@@ -122,8 +100,9 @@ class GraphEditor(QtWidgets.QWidget):
 
 
 class Scene(graphicsscene.GraphicsScene):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, uiApplication, *args, **kwargs):
         super(Scene, self).__init__(*args, **kwargs)
+        self.uiApplication = uiApplication
         self.nodes = set()
         self.backdrops = set()
         self.connections = set()
@@ -161,6 +140,7 @@ class Scene(graphicsscene.GraphicsScene):
             connection = edge.ConnectionEdge(destination.outCircle, source.inCircle)
         else:
             connection = edge.ConnectionEdge(source.outCircle, destination.inCircle)
+        connection.setLineStyle(self.uiApplication.connectionStyle)
         connection.updatePosition()
         self.connections.add(connection)
         self.addItem(connection)
@@ -187,6 +167,13 @@ class Scene(graphicsscene.GraphicsScene):
             return True
         return False
 
+    def deleteBackDrop(self, backDrop):
+        if backDrop in self.backdrops:
+            self.removeItem(backDrop)
+            self.backdrops.remove(backDrop)
+            return True
+        return False
+
     def deleteConnection(self, connection):
         if connection in self.connections:
             self.connections.remove(connection)
@@ -197,17 +184,16 @@ class Scene(graphicsscene.GraphicsScene):
 
     def onDelete(self, selection):
         for sel in selection:
-
             if isinstance(sel, edge.ConnectionEdge):
                 sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model)
                 self.deleteConnection(sel)
                 continue
             elif isinstance(sel, graphicsnode.GraphicsNode):
                 deleted = sel.model.delete()
-                self.removeNode(sel)
+                self.deleteNode(sel)
             elif isinstance(sel, graphbackdrop.BackDrop):
                 deleted = True
-                self.removeBackDrop(sel)
+                self.deleteBackDrop(sel)
             else:
                 continue
             if deleted:
@@ -215,17 +201,9 @@ class Scene(graphicsscene.GraphicsScene):
 
     def onSetConnectionStyle(self):
         style = self.sender().text()
-        if style == "SolidLine":
-            style = QtCore.Qt.SolidLine
-        elif style == "DashLine":
-            style = QtCore.Qt.DashLine
-        elif style == "DotLine":
-            style = QtCore.Qt.DotLine
-        elif style == "DashDotLine":
-            style = QtCore.Qt.DashDotLine
-        elif style == "DashDotDotLine":
-            style = QtCore.Qt.DashDotDotLine
-        elif style == "Linear":
+        style = self.uiApplication.connectionStyles.get(style)
+        self.uiApplication.connectionStyle = style
+        if style == "Linear":
             for conn in self.connections:
                 conn.setAsLinearPath()
             self.update()
@@ -285,6 +263,11 @@ class View(graphicsview.GraphicsView):
         super(View, self).mouseMoveEvent(event)
         if self.pan_active:
             self.rescaleGraphWidget()
+
+    def mousePressEvent(self, event):
+        if self.parent().nodeLibraryWidget.isVisible():
+            self.parent().nodeLibraryWidget.hide()
+        super(View, self).mousePressEvent(event)
 
     def wheelEvent(self, event):
         super(View, self).wheelEvent(event)

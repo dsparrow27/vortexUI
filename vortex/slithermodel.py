@@ -47,7 +47,13 @@ class Application(application.UIApplication):
         self._apiApplication.createNode(name, Type, parent=self.currentModel.slitherNode)
 
     def registeredNodes(self):
-        return self._apiApplication.nodeRegistry.nodes.keys()
+        """
+
+        :return: category: name
+        :rtype: dict
+        """
+
+        return dict([(k, v.category) for k, v in self._apiApplication.nodeRegistry.nodes.items()])
 
 
 class SlitherUIObject(graphicsdatamodel.ObjectModel):
@@ -65,6 +71,9 @@ class SlitherUIObject(graphicsdatamodel.ObjectModel):
 
     def isCompound(self):
         return self.slitherNode.isCompound()
+
+    def category(self):
+        return self.slitherNode.category
 
     def children(self):
         return self._children

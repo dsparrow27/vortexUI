@@ -1,4 +1,5 @@
 from qt import QtCore, QtWidgets
+from vortex.ui import nodelibrary
 
 
 class UIApplication(QtCore.QObject):
@@ -24,13 +25,24 @@ class UIApplication(QtCore.QObject):
             if wid.objectName() == "SlitherMainWindow":
                 return wid
 
+    def nodeLibraryWidget(self, parent):
+        """Returns the custom node library widget which will popup within the graphview on ctrl+tab. This widget will
+        only get created once per session.
+
+        :param parent: the graphicsEditor widget used as the parent
+        :type parent:  GraphEditor
+        :return: The node library widget
+        :rtype: QtWidget
+        """
+        return nodelibrary.NodesBox(self, parent=parent)
+
     def customToolbarActions(self, parent):
         pass
 
     def onNodeCreated(self, Type):
         pass
 
-    def registerdNodes(self):
+    def registeredNodes(self):
         """Returns a full list of registered nodes
 
         :return:

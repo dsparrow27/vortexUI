@@ -12,6 +12,18 @@ class ObjectModel(QtCore.QObject):
     def isCompound(self):
         return False
 
+    def category(self):
+        """This method returns the node category, each node should be associated with one category the default is 'Basic'.
+        The category is used for the widgets to organize the node library.
+
+        :return: This node category
+        :rtype: str
+        """
+        return "Basic"
+
+    def icon(self):
+        return QtGui.QIcon()
+
     def parentObject(self):
         return self._parent
 
@@ -60,6 +72,9 @@ class ObjectModel(QtCore.QObject):
 
     def headerColor(self):
         return QtGui.QColor("#4A71AB")
+
+    def headerButtonColor(self):
+        return QtGui.QColor(255, 255, 255)
 
     def selectedNodeColour(self):
         return QtGui.QColor(180, 255, 180, 255)
