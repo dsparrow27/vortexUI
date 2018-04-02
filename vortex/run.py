@@ -1,7 +1,6 @@
 import logging
 import sys
 
-from vortex import slithermodel
 from vortex.ui import graphnotebook
 from vortex.ui import config
 
@@ -32,7 +31,7 @@ def embed():
         pass
     logger.debug("Starting boot process")
     uiConfig = config.VortexConfig()
-
+    from slither.vortexmodel import slithermodel # temp just for proto
     app = slithermodel.Application(uiConfig)
     ui = graphnotebook.GraphNotebook()
     ui.bindApplication(app)
@@ -40,7 +39,7 @@ def embed():
     ui.show()
     logger.debug("Completed boot process")
 
-    _instance = ui,
+    _instance = ui
     return ui
 
 

@@ -11,6 +11,8 @@ from zoo.libs.pyqt.widgets.graphics import graphbackdrop
 
 
 class GraphEditor(QtWidgets.QWidget):
+    requestCompoundExpansion = QtCore.Signal(object)
+
     def __init__(self, uiApplication, parent=None):
         super(GraphEditor, self).__init__(parent=parent)
         self.uiApplication = uiApplication
@@ -33,7 +35,6 @@ class GraphEditor(QtWidgets.QWidget):
         self.view.showPanels(state)
 
     def init(self):
-
         self.editorLayout = QtWidgets.QVBoxLayout()
         self.editorLayout.setContentsMargins(0, 0, 0, 0)
         self.editorLayout.setSpacing(0)
@@ -48,6 +49,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.view = View(self.uiApplication, parent=self)
         self.view.setScene(self.scene)
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
+        self.view.requestCompoundExpansion.connect(self.requestCompoundExpansion.emit)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
         self.setLayout(self.editorLayout)
@@ -130,8 +132,8 @@ class Scene(graphicsscene.GraphicsScene):
         if not sourceModel.canAcceptConnection(destinationModel):
             return
         if destinationModel.isConnected() and not destinationModel.acceptsMultipleConnections():
-            connection = self.connectionForPlug(destination)
-            self.deleteConnection(connection)
+            for i in self.connectionsForPlug(destination):
+                self.deleteConnection(i)
             destinationModel.deleteConnection(sourceModel)
         result = sourceModel.createConnection(destinationModel)
         if not result:
@@ -140,7 +142,7 @@ class Scene(graphicsscene.GraphicsScene):
             connection = edge.ConnectionEdge(destination.outCircle, source.inCircle)
         else:
             connection = edge.ConnectionEdge(source.outCircle, destination.inCircle)
-        connection.setLineStyle(self.uiApplication.connectionStyle)
+        connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
         connection.updatePosition()
         self.connections.add(connection)
         self.addItem(connection)
@@ -149,16 +151,15 @@ class Scene(graphicsscene.GraphicsScene):
         for connection in self.connections:
             connection.updatePosition()
 
-    def connectionForPlug(self, plug):
+    def connectionsForPlug(self, plug):
         for connection in iter(self.connections):
             source = connection.sourcePlug.parentObject()
             if source == plug or connection.destinationPlug.parentObject() == plug:
-                return connection
+                yield connection
 
     def updateConnectionsForPlug(self, plug):
-        connection = self.connectionForPlug(plug)
-        if connection:
-            connection.updatePosition()
+        for conn in self.connectionsForPlug(plug):
+            conn.updatePosition()
 
     def deleteNode(self, node):
         if node in self.nodes:
@@ -201,8 +202,8 @@ class Scene(graphicsscene.GraphicsScene):
 
     def onSetConnectionStyle(self):
         style = self.sender().text()
-        style = self.uiApplication.connectionStyles.get(style)
-        self.uiApplication.connectionStyle = style
+        style = self.uiApplication.config.connectionStyles.get(style)
+        self.uiApplication.config.defaultConnectionStyle = style
         if style == "Linear":
             for conn in self.connections:
                 conn.setAsLinearPath()
@@ -222,6 +223,7 @@ class View(graphicsview.GraphicsView):
     onTabPress = QtCore.Signal(object)
     requestCopy = QtCore.Signal()
     requestPaste = QtCore.Signal(object)
+    requestCompoundExpansion = QtCore.Signal(object)
 
     def __init__(self, application, parent=None, setAntialiasing=True):
         super(View, self).__init__(application.config, parent, setAntialiasing)
@@ -258,6 +260,12 @@ class View(graphicsview.GraphicsView):
     def resizeEvent(self, event):
         super(View, self).resizeEvent(event)
         self.rescaleGraphWidget()
+
+    def mouseDoubleClickEvent(self, event):
+        item = self.itemAt(event.pos())
+        # if isinstance(item, graphicsnode.GraphicsNode) and item.model.isCompound():
+        #     self.requestCompoundExpansion.emit(item)
+        super(View, self).mouseDoubleClickEvent(event)
 
     def mouseMoveEvent(self, event):
         super(View, self).mouseMoveEvent(event)

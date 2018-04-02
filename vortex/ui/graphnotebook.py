@@ -26,23 +26,38 @@ class GraphNotebook(QtWidgets.QWidget):
             editor = self.currentPage()
             editor.scene.createNode(model=data["model"], position=editor.view.centerPosition())
 
+    def showTabContextMenu(self, pos):
+        tabWidget = self.notebook.tabBar().tabAt(pos)
+        if not tabWidget:
+            return
+        menu = QtWidgets.QMenu(parent=self)
+        menu.addAction("Delete")
+        menu.exec_(tabWidget.mapToGlobal(pos))
+
     def initLayout(self):
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(2, 2, 2, 2)
         self.setLayout(layout)
         self.notebook = QtWidgets.QTabWidget(parent=self)
+        bar = self.notebook.tabBar()
+        bar.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        bar.customContextMenuRequested.connect(self.showTabContextMenu)
         self.notebook.setMovable(True)
         self.notebook.setTabsClosable(True)
         self.notebook.tabCloseRequested.connect(self.deletePage)
+
         layout.addWidget(self.notebook)
 
+    def onRequestExpandCompoundAsTab(self, compound):
+        self.addPage(compound.text())
+        self.uiApplication.models[compound.text()] = compound
+
     def addPage(self, label):
-        # self.uiApplication.onBeforeNewTab.emit(self.currentPage())
         editor = grapheditor.GraphEditor(self.uiApplication, parent=self)
+        editor.requestCompoundExpansion.connect(self.onRequestExpandCompoundAsTab)
         editor.showPanels(True)
         self.pages.append(editor)
         self.notebook.insertTab(0, editor, label)
-        # self.uiApplication.onAfterNewTab.emit(self.currentPage())
         return editor
 
     def setCurrentPageLabel(self, label):
