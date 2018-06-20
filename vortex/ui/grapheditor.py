@@ -29,7 +29,7 @@ class GraphEditor(QtWidgets.QWidget):
         # registeredItems.append("Group")
         self.nodeLibraryWidget.reload(registeredItems)
         self.nodeLibraryWidget.show()
-        self.nodeLibraryWidget.move(point)
+        self.nodeLibraryWidget.move(self.mapFromGlobal(point))
 
     def showPanels(self, state):
         self.view.showPanels(state)
@@ -76,7 +76,7 @@ class GraphEditor(QtWidgets.QWidget):
                 item.model.contextMenu(menu)
             return
         edgeStyle = menu.addMenu("ConnectionStyle")
-        for i in self.uiApplication.connectionStyle.keys():
+        for i in self.uiApplication.config.connectionStyles.keys():
             edgeStyle.addAction(i, self.scene.onSetConnectionStyle)
         alignment = menu.addMenu("Alignment")
         self.createAlignmentActions(alignment)
@@ -220,7 +220,6 @@ class Scene(graphicsscene.GraphicsScene):
 
 
 class View(graphicsview.GraphicsView):
-    onTabPress = QtCore.Signal(object)
     requestCopy = QtCore.Signal()
     requestPaste = QtCore.Signal(object)
     requestCompoundExpansion = QtCore.Signal(object)
@@ -235,8 +234,8 @@ class View(graphicsview.GraphicsView):
 
     def showPanels(self, state):
         if state and self.leftPanel is None and self.rightPanel is None:
-            self.leftPanel = graphpanels.Panel()
-            self.rightPanel = graphpanels.Panel()
+            self.leftPanel = graphpanels.Panel(acceptsContextMenu=True)
+            self.rightPanel = graphpanels.Panel(acceptsContextMenu=True)
             self.scene().addItem(self.leftPanel)
             self.scene().addItem(self.rightPanel)
             size = self.size()
@@ -275,7 +274,25 @@ class View(graphicsview.GraphicsView):
     def mousePressEvent(self, event):
         if self.parent().nodeLibraryWidget.isVisible():
             self.parent().nodeLibraryWidget.hide()
+
         super(View, self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+
+        selectedItems = self.scene().selectedNodes()
+        for selItem in selectedItems:
+            items = selItem.collidingItems(QtCore.Qt.ContainsItemShape)
+            if items:
+                parentItem = [i for i in items if isinstance(i, graphbackdrop.BackDrop)]
+                if not parentItem:
+                    selItem.setParentItem(None)
+                    continue
+                if parentItem[0] == selItem:
+                    continue
+                selItem.setParentItem(parentItem[0])
+            elif selItem.parentItem():
+                selItem.setParentItem(None)
+        super(View, self).mouseReleaseEvent(event)
 
     def wheelEvent(self, event):
         super(View, self).wheelEvent(event)

@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 class GraphNotebook(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(GraphNotebook, self).__init__(parent=parent)
-
         self.pages = []
         self.initLayout()
 

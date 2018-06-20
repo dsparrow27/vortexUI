@@ -1,7 +1,6 @@
 import logging
 import sys
 
-from vortex.ui import graphnotebook
 from vortex.ui import config
 
 from qt import QtWidgets, QtCore
@@ -30,13 +29,11 @@ def embed():
     except:
         pass
     logger.debug("Starting boot process")
+    from vortex.ui import mainwindow
+    from slither.vortexmodel import slithermodel  # temp just for proto
     uiConfig = config.VortexConfig()
-    from slither.vortexmodel import slithermodel # temp just for proto
     app = slithermodel.Application(uiConfig)
-    ui = graphnotebook.GraphNotebook()
-    ui.bindApplication(app)
-    ui.resize(2000, 2500)
-    ui.show()
+    ui = mainwindow.ApplicationWindow(app)
     logger.debug("Completed boot process")
 
     _instance = ui

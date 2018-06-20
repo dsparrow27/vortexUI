@@ -1,5 +1,7 @@
-from qt import QtWidgets, QtCore
+from qt import QtWidgets, QtCore,QtGui
 
+import logging
+logger = logging.getLogger(__name__)
 
 class NodeBoxTreeWidget(QtWidgets.QTreeWidget):
 
@@ -46,8 +48,9 @@ class NodesBox(QtWidgets.QFrame):
     def searchTextChanged(self, text):
         if not self.lineEdit.text():
             self.lineEdit.setPlaceholderText("enter node name..")
-
-        self.reload(self.uiApplication.registeredNodes(), text)
+        nodes = self.uiApplication.registeredNodes()
+        nodes["Group"] = "misc"
+        self.reload(nodes, text)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -57,6 +60,10 @@ class NodesBox(QtWidgets.QFrame):
             if currentText in self.uiApplication.registeredNodes().keys():
                 self.uiApplication.onNodeCreated(currentText)
                 self.hide()
+            elif currentText == "Group":
+                self.parent().scene.createBackDrop()
+                self.hide()
+        super(NodesBox, self).keyPressEvent(event)
 
     def onSelectionChanged(self, current, previous):
         self.lineEdit.setText(current.text(0))
@@ -87,3 +94,5 @@ class NodesBox(QtWidgets.QFrame):
                     cat.setExpanded(True)
 
         self.treeWidget.sortItems(0, QtCore.Qt.AscendingOrder)
+        self.treeWidget.setCurrentItem(self.treeWidget.invisibleRootItem().child(0))
+

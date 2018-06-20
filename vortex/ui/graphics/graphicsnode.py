@@ -124,13 +124,19 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.setMinimumWidth(objectModel.minimumWidth())
         self.setMinimumHeight(objectModel.minimumHeight())
         self.model = objectModel
-        self._selected = False
 
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
         self.setZValue(1)
         self.setPos(position)
         self.init()
+
+    def isSelected(self):
+        return self.model.isSelected()
+
+    def setSelected(self, selected):
+        self.model.setSelected(bool(selected))
+        super(GraphicsNode, self).setSelected(selected)
 
     def init(self):
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
@@ -177,7 +183,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         # main rounded rect
         thickness = self.model.edgeThickness()
         if self.isSelected():
-            standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness+1)
+            standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness + 1)
         else:
             standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
 

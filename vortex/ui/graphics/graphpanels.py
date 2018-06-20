@@ -6,7 +6,6 @@ from vortex.ui.graphics import plugwidget
 class Panel(QtWidgets.QGraphicsWidget):
     color = QtGui.QColor(0.0, 0.0, 0.0, 125)
 
-
     def __init__(self, acceptsContextMenu=False, parent=None):
         super(Panel, self).__init__(parent=parent)
 
@@ -43,3 +42,9 @@ class Panel(QtWidgets.QGraphicsWidget):
         painter.fillRect(rect, self.color)
         painter.setPen(QtGui.QPen(self.color, 3))
         super(Panel, self).paint(painter, option, widget)
+
+    def _contextMenu(self, pos):
+        app = self.scene().uiApplication
+        menu = app.createContextMenu(app.currentModel)
+        if menu:
+            menu.exec_(pos)

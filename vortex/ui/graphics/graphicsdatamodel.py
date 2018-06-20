@@ -9,6 +9,12 @@ class ObjectModel(QtCore.QObject):
         if parent is not None and self not in parent.children():
             parent._children.append(self)
 
+    def isSelected(self):
+        return False
+
+    def setSelected(self, value):
+        pass
+
     def isCompound(self):
         return False
 

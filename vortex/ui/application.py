@@ -1,4 +1,4 @@
-from qt import QtCore, QtWidgets
+from qt import QtCore, QtWidgets, QtGui
 from vortex.ui import nodelibrary
 
 
@@ -42,6 +42,9 @@ class UIApplication(QtCore.QObject):
     def onNodeCreated(self, Type):
         pass
 
+    def createContextMenu(self, objectModel):
+        pass
+
     def registeredNodes(self):
         """Returns a full list of registered nodes
 
@@ -49,3 +52,38 @@ class UIApplication(QtCore.QObject):
         :rtype: list(str)
         """
         return []
+
+    def keyPressEvent(self, event):
+        """Gets executed any time a key gets pressed
+
+        :note not yet hooked up to the ui
+        :param event: The keyevent
+        :type event: ::class:`QtGui.QKeyEvent`
+        :rtype: str
+        :return: eg. 'Ctrl+Z'
+        """
+        modifiers = event.modifiers()
+        key = event.key()
+        if key == 16777249:
+            return
+        sequence = []
+        if modifiers == QtCore.Qt.ControlModifier:
+            sequence.append(QtCore.Qt.SHIFT + key)
+        if modifiers == QtCore.Qt.ShiftModifier:
+            sequence.append(QtCore.Qt.CTRL + key)
+        if modifiers == QtCore.Qt.AltModifier:
+            sequence.append(QtCore.Qt.ALT + key)
+        if not sequence:
+            sequence = [key]
+        results = QtGui.QKeySequence(*sequence)
+        self.keyBoardMapping(str(results.toString()))
+
+    def keyBoardMapping(self, sequenceString):
+        """Key mapping to operation
+
+        :param sequenceString: eg. 'Ctrl+Z'
+        :type sequenceString: str
+        :return:
+        :rtype:
+        """
+        pass
