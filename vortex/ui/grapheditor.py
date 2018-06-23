@@ -1,4 +1,4 @@
-import os
+import os, logging
 from functools import partial
 
 from qt import QtWidgets, QtCore, QtGui
@@ -8,6 +8,8 @@ from zoo.libs.pyqt.widgets.graphics import graphicsscene
 from vortex.ui import utils
 from vortex.ui.graphics import graphpanels, edge, graphicsnode
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop
+
+logger = logging.getLogger(__name__)
 
 
 class GraphEditor(QtWidgets.QWidget):
@@ -104,10 +106,15 @@ class GraphEditor(QtWidgets.QWidget):
 class Scene(graphicsscene.GraphicsScene):
     def __init__(self, uiApplication, *args, **kwargs):
         super(Scene, self).__init__(*args, **kwargs)
+        self.selectionChanged.connect(self._onSelectionChanged)
         self.uiApplication = uiApplication
         self.nodes = set()
         self.backdrops = set()
         self.connections = set()
+
+    def _onSelectionChanged(self):
+        for i in self.nodes:
+            i.model.setSelected(i.isSelected())
 
     def selectedNodes(self):
         return [i for i in self.nodes if i.isSelected()]
@@ -130,6 +137,7 @@ class Scene(graphicsscene.GraphicsScene):
         sourceModel = source.model
         destinationModel = destination.model
         if not sourceModel.canAcceptConnection(destinationModel):
+            logger.warning("Can't create connection to destination: {}".format(destinationModel.text()))
             return
         if destinationModel.isConnected() and not destinationModel.acceptsMultipleConnections():
             for i in self.connectionsForPlug(destination):
@@ -142,6 +150,8 @@ class Scene(graphicsscene.GraphicsScene):
             connection = edge.ConnectionEdge(destination.outCircle, source.inCircle)
         else:
             connection = edge.ConnectionEdge(source.outCircle, destination.inCircle)
+        logger.debug("Created Connection Edge, input: {}, output: {}".format(sourceModel.text(),
+                                                                             destinationModel.text()))
         connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
         connection.updatePosition()
         self.connections.add(connection)
@@ -234,8 +244,8 @@ class View(graphicsview.GraphicsView):
 
     def showPanels(self, state):
         if state and self.leftPanel is None and self.rightPanel is None:
-            self.leftPanel = graphpanels.Panel(acceptsContextMenu=True)
-            self.rightPanel = graphpanels.Panel(acceptsContextMenu=True)
+            self.leftPanel = graphpanels.Panel(self.application, ioType="Input",acceptsContextMenu=True)
+            self.rightPanel = graphpanels.Panel(self.application, ioType="Output", acceptsContextMenu=True)
             self.scene().addItem(self.leftPanel)
             self.scene().addItem(self.rightPanel)
             size = self.size()
@@ -262,8 +272,8 @@ class View(graphicsview.GraphicsView):
 
     def mouseDoubleClickEvent(self, event):
         item = self.itemAt(event.pos())
-        # if isinstance(item, graphicsnode.GraphicsNode) and item.model.isCompound():
-        #     self.requestCompoundExpansion.emit(item)
+        if isinstance(item, graphicsnode.GraphicsNode) and item.model.isCompound():
+            self.requestCompoundExpansion.emit(item)
         super(View, self).mouseDoubleClickEvent(event)
 
     def mouseMoveEvent(self, event):

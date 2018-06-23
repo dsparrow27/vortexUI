@@ -1,6 +1,8 @@
 import logging
 import sys
 
+import os
+
 from vortex.ui import config
 
 from qt import QtWidgets, QtCore
@@ -28,12 +30,15 @@ def embed():
         _instance.close()
     except:
         pass
+    os.environ["VORTEX_UI_PLUGINS"] = r"E:\code\python\personal\vortexUI\vortex\plugins"
     logger.debug("Starting boot process")
+    print os.environ["VORTEX_UI_PLUGINS"]
     from vortex.ui import mainwindow
     from slither.vortexmodel import slithermodel  # temp just for proto
     uiConfig = config.VortexConfig()
     app = slithermodel.Application(uiConfig)
     ui = mainwindow.ApplicationWindow(app)
+    app.loadPlugins()
     logger.debug("Completed boot process")
 
     _instance = ui

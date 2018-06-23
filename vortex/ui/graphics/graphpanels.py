@@ -6,22 +6,33 @@ from vortex.ui.graphics import plugwidget
 class Panel(QtWidgets.QGraphicsWidget):
     color = QtGui.QColor(0.0, 0.0, 0.0, 125)
 
-    def __init__(self, acceptsContextMenu=False, parent=None):
+    def __init__(self, application, ioType, acceptsContextMenu=False, parent=None):
         super(Panel, self).__init__(parent=parent)
-
+        self.application = application
+        self.ioType = ioType
+        self.model = application.currentModel
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(1)
         layout.setOrientation(QtCore.Qt.Vertical)
-
+        layout.addStretch(1)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         layout.addItem(self.attributeContainer)
-        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding))
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.acceptsContextMenu = acceptsContextMenu
         self.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
         self.setFlags(self.flags() & QtCore.Qt.ItemIsSelectable)
         self.setZValue(1000)
+        self.refresh()
+
+    def refresh(self):
+        currentModel = self.application.currentModel
+        if currentModel is None:
+            return
+        self.attributeContainer.clear()
+        for attr in currentModel.attributes(self.ioType == "Input", self.ioType == "Output"):
+            self.addAttribute(attr)
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.RightButton and self.acceptsContextMenu:
@@ -32,10 +43,14 @@ class Panel(QtWidgets.QGraphicsWidget):
     def addAttribute(self, attribute):
         plug = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
         if attribute.isInput():
-            plug.setInputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            plug.outCircle.show()
+            plug.inCircle.hide()
+            plug.layout().setStretchFactor(1, 0)
         else:
-            plug.setOutputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.attributeContainer.addItem(plug)
+            plug.inCircle.show()
+            plug.outCircle.hide()
+            plug.layout().setItemSpacing(1, 0)
+        self.attributeContainer.insertItem(0, plug)
 
     def paint(self, painter, option, widget):
         rect = self.windowFrameRect()
@@ -48,3 +63,4 @@ class Panel(QtWidgets.QGraphicsWidget):
         menu = app.createContextMenu(app.currentModel)
         if menu:
             menu.exec_(pos)
+            self.refresh()

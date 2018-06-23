@@ -17,7 +17,6 @@ class NodeBoxTreeWidget(QtWidgets.QTreeWidget):
         self.setDragDropMode(QtWidgets.QAbstractItemView.DragOnly)
         self.setAnimated(True)
 
-
 class NodesBox(QtWidgets.QFrame):
     """doc string for NodesBox"""
 
@@ -36,6 +35,7 @@ class NodesBox(QtWidgets.QFrame):
         self.lineEdit.textChanged.connect(self.searchTextChanged)
         self.treeWidget.itemChanged.connect(self.onSelectionChanged)
         self.treeWidget.itemClicked.connect(self.onSelectionChanged)
+        self.treeWidget.itemDoubleClicked.connect(self.onDoubleClicked)
         self.resize(400, 250)
 
     def sizeHint(self):
@@ -64,6 +64,10 @@ class NodesBox(QtWidgets.QFrame):
                 self.parent().scene.createBackDrop()
                 self.hide()
         super(NodesBox, self).keyPressEvent(event)
+
+    def onDoubleClicked(self, item, column):
+        self.uiApplication.onNodeCreated(item.text(column))
+        self.hide()
 
     def onSelectionChanged(self, current, previous):
         self.lineEdit.setText(current.text(0))

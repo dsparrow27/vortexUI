@@ -74,12 +74,41 @@ class Plug(QtWidgets.QGraphicsWidget):
             self.leftMouseButtonClicked.emit(self, event)
         elif btn == QtCore.Qt.RightButton:
             self.rightMouseButtonClicked.emit(self, event)
+        # super(Plug, self).mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         self.moveEventRequested.emit(self, event)
 
     def mouseReleaseEvent(self, event):
         self.releaseEventRequested.emit(self, event)
+
+class PlugTextItem(graphicitems.GraphicsText):
+
+    def __init__(self, text, parent=None):
+        super(PlugTextItem, self).__init__(text, parent)
+        self._parent=parent
+        self._mouseDownPosition = QtCore.QPoint()
+        self.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
+                                QtWidgets.QGraphicsItem.ItemIsMovable)
+        self._item.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
+
+    def mousePressEvent(self, event):
+        self._mouseDownPosition = self.mapToScene(event.pos())
+        #super(PlugTextItem, self).mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        scenePos = self.mapToScene(event.pos())
+        # When clicking on an UI port label, it is ambigous which connection point should be activated.
+        # We let the user drag the mouse in either direction to select the conneciton point to activate.
+        delta = scenePos - self._mouseDownPosition
+        parent = self._parent
+        if parent is not None:
+            if delta.x() < 0:
+                if parent.inCircle is not None:
+                    parent.inCircle.mousePressEvent(event)
+                return
+            if parent.outCircle is not None:
+                parent.outCircle.mousePressEvent(event)
 
 
 class PlugContainer(QtWidgets.QGraphicsWidget):
@@ -91,7 +120,7 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.model = attributeModel
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        layout.setSpacing(2)
         layout.setOrientation(QtCore.Qt.Horizontal)
         self.setLayout(layout)
         self.inCircle = Plug(self.model.itemColour(), self.model.highlightColor(), hOffset=0.0, parent=self)
@@ -99,10 +128,9 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.inCircle.setToolTip(attributeModel.toolTip())
         self.outCircle.setToolTip(attributeModel.toolTip())
 
-        self.label = graphicitems.GraphicsText(self.model.text(), parent=self)
+        self.label = PlugTextItem(self.model.text(), parent=self)
         self.label.color = attributeModel.textColour() or QtGui.QColor(200, 200, 200)
-        self.label.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
-                                QtWidgets.QGraphicsItem.ItemIsMovable)
+
         layout.addItem(self.inCircle)
         if not attributeModel.isOutput():
             self.outCircle.hide()
@@ -115,6 +143,7 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         layout.addItem(self.label)
         layout.addItem(self.outCircle)
         layout.setAlignment(self.label, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+
         self.setInputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.setOutputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
@@ -159,6 +188,7 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         :return:
         :rtype:
         """
+
         self._currentConnection = edge.ConnectionEdge(plug)
         self._currentConnection.destinationPoint = event.scenePos()
         self.scene().addItem(self._currentConnection)
@@ -171,6 +201,7 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         if self._currentConnection is not None:
             end = self._currentConnection.path().pointAtPercent(1)
             endItem = self.scene().itemAt(end, QtGui.QTransform())
+            print endItem
             if isinstance(endItem, PlugItem):
                 self.addConnection(endItem)
                 return

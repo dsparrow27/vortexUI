@@ -6,8 +6,13 @@ class ObjectModel(QtCore.QObject):
         super(ObjectModel, self).__init__()
         self.config = config
         self._parent = parent
+        self._children = []
+        self._icon = QtGui.QIcon()
         if parent is not None and self not in parent.children():
             parent._children.append(self)
+
+    def icon(self):
+        return self._icon
 
     def isSelected(self):
         return False
@@ -32,6 +37,10 @@ class ObjectModel(QtCore.QObject):
 
     def parentObject(self):
         return self._parent
+
+    def child(self, index):
+        if index in range(len(self._children)):
+            return self._children[index]
 
     def children(self):
         return self._children

@@ -131,13 +131,6 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.setPos(position)
         self.init()
 
-    def isSelected(self):
-        return self.model.isSelected()
-
-    def setSelected(self, selected):
-        self.model.setSelected(bool(selected))
-        super(GraphicsNode, self).setSelected(selected)
-
     def init(self):
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
         layout.setContentsMargins(0, 0, 0, 0)

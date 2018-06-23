@@ -1,10 +1,14 @@
+import os
+
 from qt import QtCore, QtWidgets, QtGui
 from vortex.ui import nodelibrary
+from zoo.libs.plugin import pluginmanager
+from vortex.ui import plugin
 
 
 class UIApplication(QtCore.QObject):
     # list(objectModel)
-    onSelectionChanged = QtCore.Signal(list)
+    onSelectionChanged = QtCore.Signal(object, bool)
 
     # from api to ui signals
     onNewNodeRequested = QtCore.Signal(dict)
@@ -13,16 +17,36 @@ class UIApplication(QtCore.QObject):
     onConnectionDeleteRequested = QtCore.Signal(object, object)
 
     def __init__(self, uiConfig, apiApplication):
+        """
+        :param uiConfig:
+        :type uiConfig:
+        :param apiApplication:
+        :type apiApplication:
+        """
         super(UIApplication, self).__init__()
         self._apiApplication = apiApplication
+        self._apiApplication.events.selectedChanged.connect(self.onSelectionChangedEvent)
+        self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin)
+        self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
+
         self.config = uiConfig
 
         self.models = {}
         self.currentModel = None
 
+    def loadPlugins(self):
+        for uiPlugin in self.pluginManager.plugins.values():
+            if uiPlugin.autoLoad:
+                uiExt = self.pluginManager.loadPlugin(uiPlugin.__name__, application=self)
+                uiExt.initializeWidget()
+
+    def onSelectionChangedEvent(self, node, state):
+        pass
+
     def mainWindow(self):
+
         for wid in QtWidgets.QApplication.topLevelWidgets():
-            if wid.objectName() == "SlitherMainWindow":
+            if wid.objectName() == "VortexMainWindow":
                 return wid
 
     def nodeLibraryWidget(self, parent):
