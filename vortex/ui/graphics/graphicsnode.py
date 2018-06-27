@@ -130,6 +130,21 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.setZValue(1)
         self.setPos(position)
         self.init()
+        # bind the objectModel signals to this qNode
+        # objectModel.addAttributeSig.connect(self.addAttribute)
+        # objectModel.attributeNameChangedSig.connect(self)
+        # objectModel.nodeNameChangedSig.connect(self)
+        # objectModel.removeAttributeSig.connect(self)
+        # objectModel.addConnectionSig.connect(self.onConnectionAdded)
+        # objectModel.removeConnectionSig.connect(self)
+        # objectModel.valueChangedSig.connect(self)
+        # objectModel.selectionChangedSig.connect(self)
+        # objectModel.progressUpdatedSig.connect(self)
+        # objectModel.parentChangedSig.connect(self)
+
+    def onConnectionRemoved(self, source, destination):
+        if source.objectModel == self.model:
+            pass
 
     def init(self):
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)

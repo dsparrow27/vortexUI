@@ -25,7 +25,7 @@ class AttributeEditor(treewidget.TreeWidgetFrame):
         tree = treewidget.TreeWidget(parent=self, locked=False, allowSubGroups=False)
         self.initUi(tree)
         self.nodes = {}
-        self.application.onSelectionChanged.connect(self.onSceneSelection)
+        # self.application.onSelectionChanged.connect(self.onSceneSelection)
 
     def onSceneSelection(self, selection, state):
         if state:

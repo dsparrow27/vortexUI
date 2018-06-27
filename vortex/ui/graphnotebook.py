@@ -66,10 +66,10 @@ class GraphNotebook(QtWidgets.QWidget):
     def deletePage(self, index):
         if index in range(self.notebook.count()):
             # show popup
-            # self.uiApplication.onBeforeRemoveTab.emit(self.pages[index])
+            self.uiApplication.onBeforeRemoveTab.emit(self.pages[index])
             self.pages[index].close()
             self.notebook.removeTab(index)
-            # self.uiApplication.onAfterRemoveTab.emit(self.pages[index])
+            self.uiApplication.onAfterRemoveTab.emit(self.pages[index])
 
     def clear(self):
         self.notebook.clear()

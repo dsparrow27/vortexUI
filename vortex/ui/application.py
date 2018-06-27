@@ -7,14 +7,11 @@ from vortex.ui import plugin
 
 
 class UIApplication(QtCore.QObject):
-    # list(objectModel)
-    onSelectionChanged = QtCore.Signal(object, bool)
-
     # from api to ui signals
     onNewNodeRequested = QtCore.Signal(dict)
     onNodeDeleteRequested = QtCore.Signal(object)
-    onConnectionAddedRequested = QtCore.Signal(object, object)
-    onConnectionDeleteRequested = QtCore.Signal(object, object)
+    onBeforeRemoveTab = QtCore.Signal(object)
+    onAfterRemoveTab = QtCore.Signal(object)
 
     def __init__(self, uiConfig, apiApplication):
         """
@@ -25,7 +22,6 @@ class UIApplication(QtCore.QObject):
         """
         super(UIApplication, self).__init__()
         self._apiApplication = apiApplication
-        self._apiApplication.events.selectedChanged.connect(self.onSelectionChangedEvent)
         self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin)
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
 
@@ -39,9 +35,6 @@ class UIApplication(QtCore.QObject):
             if uiPlugin.autoLoad:
                 uiExt = self.pluginManager.loadPlugin(uiPlugin.__name__, application=self)
                 uiExt.initializeWidget()
-
-    def onSelectionChangedEvent(self, node, state):
-        pass
 
     def mainWindow(self):
 
@@ -100,9 +93,9 @@ class UIApplication(QtCore.QObject):
         if not sequence:
             sequence = [key]
         results = QtGui.QKeySequence(*sequence)
-        self.keyBoardMapping(str(results.toString()))
+        self.keyBoardMapping(str(results.toString()), key, modifiers)
 
-    def keyBoardMapping(self, sequenceString):
+    def keyBoardMapping(self, sequenceString, key, modifiers):
         """Key mapping to operation
 
         :param sequenceString: eg. 'Ctrl+Z'
@@ -110,4 +103,8 @@ class UIApplication(QtCore.QObject):
         :return:
         :rtype:
         """
-        pass
+        print sequenceString, key, modifiers
+    def save(self, filePath):
+        print "saving", filePath
+    def load(self, filePath):
+        print "loading", filePath

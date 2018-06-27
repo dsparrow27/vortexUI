@@ -1,13 +1,29 @@
+from collections import OrderedDict
+
 from qt import QtGui, QtCore
 
 
 class ObjectModel(QtCore.QObject):
+    # subclass should emit these signals to update the GUI from the core
+    addAttributeSig = QtCore.Signal(object)  # attributeModel
+    attributeNameChangedSig = QtCore.Signal(object)  # attributeModel
+    nodeNameChangedSig = QtCore.Signal(object)  # objectModel
+    removeAttributeSig = QtCore.Signal(object)  # attributeModel
+    addConnectionSig = QtCore.Signal(object, object, object, object)  # sourceModel, destinationModel, sourceAttrModel,
+    # destAttrModel
+    removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
+    valueChangedSig = QtCore.Signal(object)  # attributeModel
+    selectionChangedSig = QtCore.Signal(object)  # objectModel
+    progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
+    parentChangedSig = QtCore.Signal(object, object)  # childObjectModel, parentObjectModel
+
     def __init__(self, config, parent=None):
         super(ObjectModel, self).__init__()
         self.config = config
         self._parent = parent
         self._children = []
         self._icon = QtGui.QIcon()
+        self._attributes = []
         if parent is not None and self not in parent.children():
             parent._children.append(self)
 
@@ -54,6 +70,11 @@ class ObjectModel(QtCore.QObject):
     def secondaryText(self):
         return ""
 
+    def attribute(self, name):
+        for attr in self.attributes():
+            if attr.text() == name:
+                return attr
+
     def attributes(self, inputs=True, outputs=True):
         return []
 
@@ -67,7 +88,7 @@ class ObjectModel(QtCore.QObject):
         pass
 
     def hasAttribute(self, name):
-        return True
+        return self.attribute(name) is not None
 
     def toolTip(self):
         return "hello world"

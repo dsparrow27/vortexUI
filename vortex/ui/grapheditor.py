@@ -134,28 +134,30 @@ class Scene(graphicsscene.GraphicsScene):
         return drop
 
     def createConnection(self, source, destination):
-        sourceModel = source.model
-        destinationModel = destination.model
-        if not sourceModel.canAcceptConnection(destinationModel):
-            logger.warning("Can't create connection to destination: {}".format(destinationModel.text()))
-            return
-        if destinationModel.isConnected() and not destinationModel.acceptsMultipleConnections():
-            for i in self.connectionsForPlug(destination):
-                self.deleteConnection(i)
-            destinationModel.deleteConnection(sourceModel)
-        result = sourceModel.createConnection(destinationModel)
-        if not result:
-            return
-        if sourceModel.isInput():
-            connection = edge.ConnectionEdge(destination.outCircle, source.inCircle)
-        else:
-            connection = edge.ConnectionEdge(source.outCircle, destination.inCircle)
-        logger.debug("Created Connection Edge, input: {}, output: {}".format(sourceModel.text(),
-                                                                             destinationModel.text()))
-        connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
-        connection.updatePosition()
-        self.connections.add(connection)
-        self.addItem(connection)
+        pass
+        # sourceModel = source.model
+        # destinationModel = destination.model
+        # if not sourceModel.canAcceptConnection(destinationModel):
+        #     logger.warning("Can't create connection to destination: {}".format(destinationModel.text()))
+        #     return
+        # if destinationModel.isConnected() and not destinationModel.acceptsMultipleConnections():
+        #     for i in self.connectionsForPlug(destination):
+        #         self.deleteConnection(i)
+        #     destinationModel.deleteConnection(sourceModel)
+        # result = sourceModel.createConnection(destinationModel)
+        # if not result:
+        #     return
+        # if sourceModel.isInput():
+        #
+        #     connection = edge.ConnectionEdge(destination.outCircle, source.inCircle)
+        # else:
+        #     connection = edge.ConnectionEdge(source.outCircle, destination.inCircle)
+        # logger.debug("Created Connection Edge, input: {}, output: {}".format(sourceModel.text(),
+        #                                                                      destinationModel.text()))
+        # connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
+        # connection.updatePosition()
+        # self.connections.add(connection)
+        # self.addItem(connection)
 
     def updateAllConnections(self):
         for connection in self.connections:
@@ -244,7 +246,7 @@ class View(graphicsview.GraphicsView):
 
     def showPanels(self, state):
         if state and self.leftPanel is None and self.rightPanel is None:
-            self.leftPanel = graphpanels.Panel(self.application, ioType="Input",acceptsContextMenu=True)
+            self.leftPanel = graphpanels.Panel(self.application, ioType="Input", acceptsContextMenu=True)
             self.rightPanel = graphpanels.Panel(self.application, ioType="Output", acceptsContextMenu=True)
             self.scene().addItem(self.leftPanel)
             self.scene().addItem(self.rightPanel)

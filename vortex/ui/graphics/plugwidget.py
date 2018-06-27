@@ -164,15 +164,15 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.layout().setAlignment(self.outCircle, alignment)
 
     def addConnection(self, plug):
-        if self.model.isInput():
-            source = plug.parentObject().parentObject()
-            dest = self
-        else:
-            source = self
-            dest = plug.parentObject().parentObject()
         self.scene().removeItem(self._currentConnection)
         self._currentConnection = None
-        self.scene().createConnection(source, dest)
+        connection = edge.ConnectionEdge(self.outCircle, plug.inCircle)
+        connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
+        connection.updatePosition()
+        scene = self.scene()
+
+        scene.connections.add(connection)
+        self.scene().addItem(connection)
 
     def updateConnections(self):
         self.scene().updateConnectionsForPlug(self)
@@ -201,11 +201,9 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         if self._currentConnection is not None:
             end = self._currentConnection.path().pointAtPercent(1)
             endItem = self.scene().itemAt(end, QtGui.QTransform())
-            print endItem
             if isinstance(endItem, PlugItem):
-                self.addConnection(endItem)
-                return
-
+                dest = self if self.model.isInput() else endItem.parentObject().parentObject()
+                self.model.createConnection(dest.model)
             self.scene().removeItem(self._currentConnection)
             self._currentConnection = None
         self.scene().update()

@@ -19,6 +19,7 @@ _instance = None
 
 def standalone():
     app = QtWidgets.QApplication(sys.argv)
+    app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     win = embed()
     win.show()
     sys.exit(app.exec_())
