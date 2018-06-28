@@ -227,6 +227,9 @@ class AttributeModel(QtCore.QObject):
     def text(self):
         return "attributeName"
 
+    def textAlignment(self):
+        return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
+
     def setText(self, text):
         return False
 

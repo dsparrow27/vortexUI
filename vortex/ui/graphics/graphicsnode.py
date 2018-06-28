@@ -161,15 +161,15 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
     def onHeaderButtonStateChanged(self, state):
         pass
 
-    def onSetAttributeName(self, attribute, name):
+    def setAttributeName(self, attribute, name):
         attr = self.attributeItem(attribute)
         if attr:
             attr.setText(name)
 
-    def onAddAttribute(self, attribute):
+    def addAttribute(self, attribute):
         self.attributeContainer.addItem(plugwidget.PlugContainer(attribute, parent=self.attributeContainer))
 
-    def onRemoveAttribute(self, attribute):
+    def removeAttribute(self, attribute):
         for index, item in enumerate(self.attributeContainer.items()):
             if item.objectModel == attribute:
                 self.attributeContainer.removeItemAtIndex(index)

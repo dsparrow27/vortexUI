@@ -3,6 +3,26 @@ from zoo.libs.pyqt.widgets.graphics import graphicitems
 from vortex.ui.graphics import plugwidget
 
 
+class PanelWidget(QtWidgets.QGraphicsWidget):
+    def __init__(self, application, acceptsContextMenu=True, parent=None):
+        super(PanelWidget, self).__init__(parent=parent)
+        self.setFlag(self.ItemSendsScenePositionChanges)
+        self.setFlag(self.ItemIgnoresTransformations)
+        self.application = application
+        self.leftPanel = Panel(self.application, ioType="Input", acceptsContextMenu=acceptsContextMenu)
+        self.rightPanel = Panel(self.application, ioType="Output", acceptsContextMenu=acceptsContextMenu)
+        self.leftPanel.setMaximumWidth(application.config.panelWidth)
+        self.rightPanel.setMaximumWidth(application.config.panelWidth)
+        layout = QtWidgets.QGraphicsLinearLayout(parent=self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.setOrientation(QtCore.Qt.Horizontal)
+        layout.addItem(self.leftPanel)
+        layout.addStretch(1)
+        layout.addItem(self.rightPanel)
+        self.setLayout(layout)
+
+
 class Panel(QtWidgets.QGraphicsWidget):
     color = QtGui.QColor(0.0, 0.0, 0.0, 125)
 
@@ -19,7 +39,7 @@ class Panel(QtWidgets.QGraphicsWidget):
         layout.addItem(self.attributeContainer)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.acceptsContextMenu = acceptsContextMenu
-        # self.setContentsMargins(0, 0, 0, 0)
+
         self.setLayout(layout)
         self.setFlags(self.flags() & QtCore.Qt.ItemIsSelectable)
         self.setZValue(1000)
@@ -41,16 +61,15 @@ class Panel(QtWidgets.QGraphicsWidget):
 
     def addAttribute(self, attribute):
         plug = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
+
         # todo: flip the alignment of the text
         if attribute.isInput():
             plug.outCircle.show()
             plug.inCircle.hide()
-            plug.layout().setStretchFactor(1, 0)
         else:
             plug.inCircle.show()
             plug.outCircle.hide()
-            plug.layout().setItemSpacing(1, 0)
-        self.attributeContainer.insertItem(0, plug)
+        self.attributeContainer.addItem(plug)
 
     def paint(self, painter, option, widget):
         rect = self.windowFrameRect()

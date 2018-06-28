@@ -82,14 +82,15 @@ class Plug(QtWidgets.QGraphicsWidget):
     def mouseReleaseEvent(self, event):
         self.releaseEventRequested.emit(self, event)
 
+
 class PlugTextItem(graphicitems.GraphicsText):
 
     def __init__(self, text, parent=None):
         super(PlugTextItem, self).__init__(text, parent)
-        self._parent=parent
+        self._parent = parent
         self._mouseDownPosition = QtCore.QPoint()
         self.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
-                                QtWidgets.QGraphicsItem.ItemIsMovable)
+                          QtWidgets.QGraphicsItem.ItemIsMovable)
         self._item.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
 
     def mousePressEvent(self, event):
@@ -135,13 +136,13 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
             self.outCircle.hide()
         if not attributeModel.isInput():
             self.inCircle.hide()
-            if attributeModel.isOutput():
+            if attributeModel.isOutput() and not attributeModel.objectModel.isCompound():
                 layout.addStretch(1)
         self.inCircle.setToolTip(self.model.toolTip())
         self.outCircle.setToolTip(self.model.toolTip())
         layout.addItem(self.label)
         layout.addItem(self.outCircle)
-        layout.setAlignment(self.label, QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        layout.setAlignment(self.label, attributeModel.textAlignment())
 
         self.setInputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.setOutputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
@@ -155,8 +156,10 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.outCircle.releaseEventRequested.connect(self.onPlugRelease)
         # used purely to store the connection request transaction
         self._currentConnection = None
+
     def setLabel(self, label):
         self.label.setText(label)
+
     def setInputAlignment(self, alignment):
         self.layout().setAlignment(self.inCircle, alignment)
 
@@ -190,7 +193,7 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         """
 
         self._currentConnection = edge.ConnectionEdge(plug)
-        self._currentConnection.destinationPoint = event.scenePos()
+        self._currentConnection.destinationPoint = plug.center()
         self.scene().addItem(self._currentConnection)
 
     def onPlugMove(self, plug, event):

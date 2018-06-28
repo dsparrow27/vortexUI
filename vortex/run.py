@@ -31,9 +31,8 @@ def embed():
         _instance.close()
     except:
         pass
-    os.environ["VORTEX_UI_PLUGINS"] = r"E:\code\python\personal\vortexUI\vortex\plugins"
+
     logger.debug("Starting boot process")
-    print os.environ["VORTEX_UI_PLUGINS"]
     from vortex.ui import mainwindow
     from slither.vortexmodel import slithermodel  # temp just for proto
     uiConfig = config.VortexConfig()

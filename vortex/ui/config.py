@@ -14,7 +14,7 @@ class VortexConfig(graphviewconfig.Config):
     def __init__(self):
         super(VortexConfig, self).__init__()
         self.connectionStyles = connectionStyle
-        self.panelWidthPercentage = 0.05
+        self.panelWidth = 150
         self.drawMainGridAxis = False
         self.defaultConnectionStyle = connectionStyle["SolidLine"]
         self.defaultConnectionShape = connectionStyle["cubic"]

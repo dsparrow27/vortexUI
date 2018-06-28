@@ -259,23 +259,25 @@ class View(graphicsview.GraphicsView):
         self.application = application
         self.newScale = None
         self.updateRequested.connect(self.rescaleGraphWidget)
-        self.leftPanel = None
-        self.rightPanel = None
+        self.panelWidget = None
 
     def showPanels(self, state):
-        if state and self.leftPanel is None and self.rightPanel is None:
-            self.leftPanel = graphpanels.Panel(self.application, ioType="Input", acceptsContextMenu=True)
-            self.rightPanel = graphpanels.Panel(self.application, ioType="Output", acceptsContextMenu=True)
-            self.scene().addItem(self.leftPanel)
-            self.scene().addItem(self.rightPanel)
+        if state:
+            self.panelWidget = graphpanels.PanelWidget(self.application, acceptsContextMenu=True)
+            self.scene().addItem(self.panelWidget)
+            # self.leftPanel = graphpanels.Panel(self.application, ioType="Input", acceptsContextMenu=True)
+            # self.rightPanel = graphpanels.Panel(self.application, ioType="Output", acceptsContextMenu=True)
+            #
+            # self.scene().addItem(self.leftPanel)
+            # self.scene().addItem(self.rightPanel)
             size = self.size()
             self.setSceneRect(0, 0, size.width(), size.height())
-            self.rescaleGraphWidget()
-        elif not state:
-            if self.leftPanel is not None:
-                self.layout().takeAt(self.leftPanel)
-            if self.rightPanel is not None:
-                self.layout().takeAt(self.leftPanel)
+            # self.rescaleGraphWidget()
+        # elif not state:
+        #     if self.leftPanel is not None:
+        #         self.layout().takeAt(self.leftPanel)
+        #     if self.rightPanel is not None:
+        #         self.layout().takeAt(self.leftPanel)
 
     def keyPressEvent(self, event):
         ctrl = event.modifiers() == QtCore.Qt.ControlModifier
@@ -329,13 +331,15 @@ class View(graphicsview.GraphicsView):
         self.rescaleGraphWidget()
 
     def rescaleGraphWidget(self):
-        rect = self.mapToScene(self.rect()).boundingRect()
-        pos = self.mapToScene(0, 0)
-        multiple = self.config.panelWidthPercentage
-        panelWidth = rect.width() * multiple
-        height = rect.height()
-        self.leftPanel.setGeometry(pos.x(), pos.y(), panelWidth, height)
-        self.rightPanel.setGeometry(rect.topRight().x() - panelWidth,
-                                    rect.topRight().y(),
-                                    panelWidth,
-                                    height)
+        if self.panelWidget is None:
+            return
+
+        rect = self.viewport().rect()
+        leftCorner = self.mapToScene(0, 0).toPoint()
+        self.panelWidget.setGeometry(leftCorner.x(),
+                                     leftCorner.y(),
+                                     rect.width(),
+                                     rect.height())
+        # force the heights
+        self.panelWidget.rightPanel.setMinimumHeight(rect.height())
+        self.panelWidget.leftPanel.setMinimumHeight(rect.height())

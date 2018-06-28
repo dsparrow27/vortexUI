@@ -1,7 +1,9 @@
-from qt import QtWidgets, QtCore,QtGui
+from qt import QtWidgets, QtCore, QtGui
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class NodeBoxTreeWidget(QtWidgets.QTreeWidget):
 
@@ -50,6 +52,7 @@ class NodesBox(QtWidgets.QFrame):
             self.lineEdit.setPlaceholderText("enter node name..")
         nodes = self.uiApplication.registeredNodes()
         nodes["Group"] = "misc"
+        self.treeWidget.setFilter(text)
         self.reload(nodes, text)
 
     def keyPressEvent(self, event):
@@ -63,6 +66,8 @@ class NodesBox(QtWidgets.QFrame):
             elif currentText == "Group":
                 self.parent().scene.createBackDrop()
                 self.hide()
+        elif event.key() in (QtCore.Qt.Key_Down, QtCore.Qt.Key_Up):
+            return self.treeWidget.keyPressEvent(event)
         super(NodesBox, self).keyPressEvent(event)
 
     def onDoubleClicked(self, item, column):
@@ -99,4 +104,3 @@ class NodesBox(QtWidgets.QFrame):
 
         self.treeWidget.sortItems(0, QtCore.Qt.AscendingOrder)
         self.treeWidget.setCurrentItem(self.treeWidget.invisibleRootItem().child(0))
-
