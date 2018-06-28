@@ -59,7 +59,6 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         self.curveType = ConnectionEdge.CUBIC
         self.setPath(path)
 
-
     def hoverLeaveEvent(self, event):
         super(ConnectionEdge, self).hoverEnterEvent(event)
         self.hovering = False

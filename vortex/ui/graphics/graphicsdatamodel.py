@@ -1,21 +1,39 @@
-from collections import OrderedDict
 
 from qt import QtGui, QtCore
 
 
 class ObjectModel(QtCore.QObject):
+    """ObjectModel class Handles communication between the GUI Elements and the core engine logic,
+    Any subclass of ObjectModel must emit the following Signals which require objectModel  or attributeModel
+     this will mean you will need to translate any client logic and objects back the objectModel currently
+     being referenced.
+        addConnectionSig
+        removeConnectionSig
+        addAttributeSig
+        nodeNameChangedSig
+        removeAttributeSig
+        attributeNameChangedSig
+        valueChangedSig
+        selectionChangedSig
+        parentChangedSig
+        progressUpdatedSig
+
+    """
     # subclass should emit these signals to update the GUI from the core
+
+    # signals connected by the graphics scene
+    addConnectionSig = QtCore.Signal(object, object)  # sourceAttrModel, destAttrModel
+    removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
+
+    # connected by the GraphicsNode
     addAttributeSig = QtCore.Signal(object)  # attributeModel
-    attributeNameChangedSig = QtCore.Signal(object)  # attributeModel
     nodeNameChangedSig = QtCore.Signal(object)  # objectModel
     removeAttributeSig = QtCore.Signal(object)  # attributeModel
-    addConnectionSig = QtCore.Signal(object, object, object, object)  # sourceModel, destinationModel, sourceAttrModel,
-    # destAttrModel
-    removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
+    attributeNameChangedSig = QtCore.Signal(object)  # attributeModel
     valueChangedSig = QtCore.Signal(object)  # attributeModel
-    selectionChangedSig = QtCore.Signal(object)  # objectModel
-    progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
+    selectionChangedSig = QtCore.Signal(bool)  # selectionState
     parentChangedSig = QtCore.Signal(object, object)  # childObjectModel, parentObjectModel
+    progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
 
     def __init__(self, config, parent=None):
         super(ObjectModel, self).__init__()
@@ -28,15 +46,32 @@ class ObjectModel(QtCore.QObject):
             parent._children.append(self)
 
     def icon(self):
+        """QIcon for the node
+
+        :rtype: QtGui.QIcon
+        """
         return self._icon
 
     def isSelected(self):
+        """Returns if the node is currently selected
+
+        :rtype: bool
+        """
         return False
 
     def setSelected(self, value):
+        """Sets the nodes selection state, gets called from the nodeEditor each time a node is selected.
+
+        :param value: True if the node has been selected in the UI
+        :type value: bool
+        """
         pass
 
     def isCompound(self):
+        """Returns True if the node is a compound, Compounds a treated as special entities, Eg. Expansion
+
+        :rtype: bool
+        """
         return False
 
     def category(self):
@@ -48,14 +83,23 @@ class ObjectModel(QtCore.QObject):
         """
         return "Basic"
 
-    def icon(self):
-        return QtGui.QIcon()
-
     def parentObject(self):
+        """Parent Object Model, should be a compound node.
+
+        :return: The parent compound ObjectModel
+        :rtype: ::class:`ObjectModel`
+        """
         return self._parent
 
     def child(self, index):
-        if index in range(len(self._children)):
+        """Retrieve's the child objectModel by index
+
+        :param index: The child index
+        :type index: int
+        :return: The child Node ObjectModel
+        :rtype: ::class:`ObjectModel`
+        """
+        if index in xrange(len(self._children)):
             return self._children[index]
 
     def children(self):
@@ -65,20 +109,49 @@ class ObjectModel(QtCore.QObject):
         return id(self)
 
     def text(self):
+        """The primary node text usually the node name.
+
+        :return: The Text to display
+        :rtype: str
+        """
         return "primary header"
 
     def secondaryText(self):
+        """The Secondary text to display just under the primary text (self.text()).
+
+        :rtype: str
+        """
         return ""
 
     def attribute(self, name):
+        """Return the attributeModel by name.
+
+        :param name: The attribute name.
+        :type name: str
+        :return: An existing AttributeModel of this node
+        :rtype: ::class:`ObjectModel` or None
+        """
         for attr in self.attributes():
             if attr.text() == name:
                 return attr
 
     def attributes(self, inputs=True, outputs=True):
+        """List of Attribute models to display on the node.
+
+        :param inputs: return inputs
+        :type inputs: bool
+        :param outputs: Return outputs
+        :type outputs: bool
+        :return: Returns a list of AttributeModels containing inputs and outputs(depending of parameters)
+        :rtype: list(::class::`AttributeModel`)
+        """
         return []
 
     def canCreateAttributes(self):
+        """Determines if the user can create attributes on this node.
+
+        :rtype: bool
+        """
         return False
 
     def createAttribute(self, **kwargs):
@@ -91,6 +164,11 @@ class ObjectModel(QtCore.QObject):
         return self.attribute(name) is not None
 
     def toolTip(self):
+        """The Tooltip to display.
+
+        :return: The tooltip which will be display when hovering over the node.
+        :rtype: str
+        """
         return "hello world"
 
     def minimumHeight(self):
@@ -136,6 +214,10 @@ class ObjectModel(QtCore.QObject):
 
 class AttributeModel(QtCore.QObject):
     def __init__(self, objectModel):
+        """
+        :param objectModel: The Node ObjectModel
+        :type objectModel: ::class:`ObjectModel`
+        """
         super(AttributeModel, self).__init__()
         self.objectModel = objectModel
 
@@ -160,6 +242,14 @@ class AttributeModel(QtCore.QObject):
         return False
 
     def createConnection(self, attribute):
+        # if not sourceModel.canAcceptConnection(destinationModel):
+        #     logger.warning("Can't create connection to destination: {}".format(destinationModel.text()))
+        #     return
+        # if destinationModel.isConnected() and not destinationModel.acceptsMultipleConnections():
+        #     for i in self.connectionsForPlug(destination):
+        #         self.deleteConnection(i)
+        #     destinationModel.deleteConnection(sourceModel)
+        # result = sourceModel.createConnection(destinationModel)
         return False
 
     def deleteConnection(self, attribute):

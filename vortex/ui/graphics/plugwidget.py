@@ -94,7 +94,6 @@ class PlugTextItem(graphicitems.GraphicsText):
 
     def mousePressEvent(self, event):
         self._mouseDownPosition = self.mapToScene(event.pos())
-        #super(PlugTextItem, self).mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         scenePos = self.mapToScene(event.pos())
@@ -156,7 +155,8 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.outCircle.releaseEventRequested.connect(self.onPlugRelease)
         # used purely to store the connection request transaction
         self._currentConnection = None
-
+    def setLabel(self, label):
+        self.label.setText(label)
     def setInputAlignment(self, alignment):
         self.layout().setAlignment(self.inCircle, alignment)
 
@@ -201,6 +201,9 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         if self._currentConnection is not None:
             end = self._currentConnection.path().pointAtPercent(1)
             endItem = self.scene().itemAt(end, QtGui.QTransform())
+            # if we're a plugItem then offload the connection handling to the model
+            # the model will then call the scene.createConnection via a signal
+            # this is so we let the client code determine if the connection is legal
             if isinstance(endItem, PlugItem):
                 dest = self if self.model.isInput() else endItem.parentObject().parentObject()
                 self.model.createConnection(dest.model)

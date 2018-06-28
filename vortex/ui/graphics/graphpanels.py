@@ -15,12 +15,11 @@ class Panel(QtWidgets.QGraphicsWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(1)
         layout.setOrientation(QtCore.Qt.Vertical)
-        layout.addStretch(1)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         layout.addItem(self.attributeContainer)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.acceptsContextMenu = acceptsContextMenu
-        self.setContentsMargins(0, 0, 0, 0)
+        # self.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
         self.setFlags(self.flags() & QtCore.Qt.ItemIsSelectable)
         self.setZValue(1000)
@@ -42,6 +41,7 @@ class Panel(QtWidgets.QGraphicsWidget):
 
     def addAttribute(self, attribute):
         plug = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
+        # todo: flip the alignment of the text
         if attribute.isInput():
             plug.outCircle.show()
             plug.inCircle.hide()

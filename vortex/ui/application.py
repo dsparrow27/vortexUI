@@ -104,7 +104,9 @@ class UIApplication(QtCore.QObject):
         :rtype:
         """
         print sequenceString, key, modifiers
+
     def save(self, filePath):
         print "saving", filePath
+
     def load(self, filePath):
         print "loading", filePath

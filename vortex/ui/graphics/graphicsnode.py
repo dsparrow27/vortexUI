@@ -131,20 +131,15 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.setPos(position)
         self.init()
         # bind the objectModel signals to this qNode
-        # objectModel.addAttributeSig.connect(self.addAttribute)
-        # objectModel.attributeNameChangedSig.connect(self)
-        # objectModel.nodeNameChangedSig.connect(self)
-        # objectModel.removeAttributeSig.connect(self)
-        # objectModel.addConnectionSig.connect(self.onConnectionAdded)
-        # objectModel.removeConnectionSig.connect(self)
+        objectModel.addAttributeSig.connect(self.addAttribute)
+        objectModel.attributeNameChangedSig.connect(self.setAttributeName)
+        objectModel.nodeNameChangedSig.connect(self.header.setText)
+        objectModel.removeAttributeSig.connect(self.removeAttribute)
+
         # objectModel.valueChangedSig.connect(self)
-        # objectModel.selectionChangedSig.connect(self)
+        objectModel.selectionChangedSig.connect(self.setSelected)
         # objectModel.progressUpdatedSig.connect(self)
         # objectModel.parentChangedSig.connect(self)
-
-    def onConnectionRemoved(self, source, destination):
-        if source.objectModel == self.model:
-            pass
 
     def init(self):
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
@@ -166,8 +161,25 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
     def onHeaderButtonStateChanged(self, state):
         pass
 
-    def addAttribute(self, attribute):
+    def onSetAttributeName(self, attribute, name):
+        attr = self.attributeItem(attribute)
+        if attr:
+            attr.setText(name)
+
+    def onAddAttribute(self, attribute):
         self.attributeContainer.addItem(plugwidget.PlugContainer(attribute, parent=self.attributeContainer))
+
+    def onRemoveAttribute(self, attribute):
+        for index, item in enumerate(self.attributeContainer.items()):
+            if item.objectModel == attribute:
+                self.attributeContainer.removeItemAtIndex(index)
+                return True
+        return False
+
+    def attributeItem(self, attributeModel):
+        for attr in iter(self.attributeContainer.items()):
+            if attr.model == attributeModel:
+                return attr
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:

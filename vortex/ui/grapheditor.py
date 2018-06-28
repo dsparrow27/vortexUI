@@ -1,3 +1,7 @@
+"""Main Graph editor widget which is attached to a page of the graphnote book,
+Each editor houses a graphicsview and graphicsScene.
+"""
+
 import os, logging
 from functools import partial
 
@@ -133,31 +137,44 @@ class Scene(graphicsscene.GraphicsScene):
         self.addItem(drop)
         return drop
 
-    def createConnection(self, source, destination):
-        pass
-        # sourceModel = source.model
-        # destinationModel = destination.model
-        # if not sourceModel.canAcceptConnection(destinationModel):
-        #     logger.warning("Can't create connection to destination: {}".format(destinationModel.text()))
-        #     return
-        # if destinationModel.isConnected() and not destinationModel.acceptsMultipleConnections():
-        #     for i in self.connectionsForPlug(destination):
-        #         self.deleteConnection(i)
-        #     destinationModel.deleteConnection(sourceModel)
-        # result = sourceModel.createConnection(destinationModel)
-        # if not result:
-        #     return
-        # if sourceModel.isInput():
-        #
-        #     connection = edge.ConnectionEdge(destination.outCircle, source.inCircle)
-        # else:
-        #     connection = edge.ConnectionEdge(source.outCircle, destination.inCircle)
-        # logger.debug("Created Connection Edge, input: {}, output: {}".format(sourceModel.text(),
-        #                                                                      destinationModel.text()))
-        # connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
-        # connection.updatePosition()
-        # self.connections.add(connection)
-        # self.addItem(connection)
+    def createConnection(self, sourceModel, destinationModel):
+        """Called from the model. the create an Edge between two attributes.
+
+        :param sourceModel: The source attribute objectModel
+        :type sourceModel: ::class:`ObjectModel`
+        :param destinationModel: The destination attribute objectModel
+        :type destinationModel: ::class:`ObjectModel`
+        """
+        sourceNode = sourceModel.objectModel
+        destinationNode = destinationModel.objectModel
+        source = None  # source Plug item which will be connected
+        destination = None  # destination Plug Item which will be connected
+        for n in self.nodes:
+            if n.objectModel == sourceNode:
+                source = sourceNode.attributeItem(sourceModel)
+            elif n.objectModel == destinationNode:
+                destination = sourceNode.attributeItem(destinationModel)
+            if source is not None and destination is not None:
+                break
+        if source is None or destination is None:
+            msg = "Can't find source: {} or destination: {}, attributes on source: {}, destination: {}".format(
+                sourceModel.text(), destinationModel.text(), sourceNode.text(), destinationNode.text())
+            logger.error(msg)
+            return
+
+        result = False
+        if not result:
+            return
+        if sourceModel.isInput():
+            connection = edge.ConnectionEdge(destination.outCircle, source.inCircle)
+        else:
+            connection = edge.ConnectionEdge(source.outCircle, destination.inCircle)
+        logger.debug("Created Connection Edge, input: {}, output: {}".format(sourceModel.text(),
+                                                                             destinationModel.text()))
+        connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
+        connection.updatePosition()
+        self.connections.add(connection)
+        self.addItem(connection)
 
     def updateAllConnections(self):
         for connection in self.connections:
@@ -198,12 +215,13 @@ class Scene(graphicsscene.GraphicsScene):
     def onDelete(self, selection):
         for sel in selection:
             if isinstance(sel, edge.ConnectionEdge):
-                sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model)
-                self.deleteConnection(sel)
+                if sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model):
+                    self.deleteConnection(sel)
                 continue
             elif isinstance(sel, graphicsnode.GraphicsNode):
                 deleted = sel.model.delete()
-                self.deleteNode(sel)
+                if deleted:
+                    self.deleteNode(sel)
             elif isinstance(sel, graphbackdrop.BackDrop):
                 deleted = True
                 self.deleteBackDrop(sel)
