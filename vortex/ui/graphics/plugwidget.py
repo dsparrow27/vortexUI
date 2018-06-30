@@ -8,8 +8,7 @@ class PlugItem(QtWidgets.QGraphicsEllipseItem):
         super(PlugItem, self).__init__(parent=parent)
         self.setPen(pen)
         self.setBrush(brush)
-        self.setPos(hOffset, radius)
-        self.setRect(-radius, -radius, diameter, diameter)
+        self.setRect(radius, radius, diameter, diameter)
 
     def center(self):
         rect = self.boundingRect()
@@ -27,13 +26,13 @@ class Plug(QtWidgets.QGraphicsWidget):
     INPUT_TYPE = 0
     OUTPUT_TYPE = 1
 
-    def __init__(self, color, highlightColor, hOffset, parent=None):
+    def __init__(self, color, edgeColor, highlightColor, hOffset, parent=None):
         super(Plug, self).__init__(parent=parent)
         size = QtCore.QSizeF(self._diameter, self._diameter)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
         self.setWindowFrameMargins(0, 0, 0, 0)
-        self._defaultPen = QtGui.QPen(color, 1.0)
+        self._defaultPen = QtGui.QPen(edgeColor, 1.0)
         self._hoverPen = QtGui.QPen(highlightColor, 1.5)
         self._brush = QtGui.QBrush(color)
 
@@ -123,8 +122,13 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         layout.setSpacing(2)
         layout.setOrientation(QtCore.Qt.Horizontal)
         self.setLayout(layout)
-        self.inCircle = Plug(self.model.itemColour(), self.model.highlightColor(), hOffset=0.0, parent=self)
-        self.outCircle = Plug(self.model.itemColour(), self.model.highlightColor(), hOffset=Plug._diameter, parent=self)
+        self.inCircle = Plug(self.model.itemColour(),
+                             self.model.itemEdgeColor(),
+                             self.model.highlightColor(),
+                             hOffset=0.0, parent=self)
+        self.outCircle = Plug(self.model.itemColour(),
+                              self.model.itemEdgeColor(),
+                              self.model.highlightColor(), hOffset=0.0, parent=self)
         self.inCircle.setToolTip(attributeModel.toolTip())
         self.outCircle.setToolTip(attributeModel.toolTip())
 
@@ -144,8 +148,8 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         layout.addItem(self.outCircle)
         layout.setAlignment(self.label, attributeModel.textAlignment())
 
-        self.setInputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.setOutputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.setInputAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        self.setOutputAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
 
         self.label.allowHoverHighlight = True
         self.inCircle.leftMouseButtonClicked.connect(self.onPlugClicked)
@@ -169,8 +173,11 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
     def addConnection(self, plug):
         self.scene().removeItem(self._currentConnection)
         self._currentConnection = None
-        connection = edge.ConnectionEdge(self.outCircle, plug.inCircle)
+        connection = edge.ConnectionEdge(self.outCircle,
+                                         plug.inCircle,
+                                         curveType=self.uiApplication.config.defaultConnectionShape)
         connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
+        connection.setWidth(self.uiApplication.config.connectionLineWidth)
         connection.updatePosition()
         scene = self.scene()
 

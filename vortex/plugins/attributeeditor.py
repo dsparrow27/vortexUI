@@ -62,3 +62,16 @@ class AttributeItem(stackwidget.StackItem):
     def setObjectModel(self, model):
         self.model = model
         self.setTitle(model.name)
+
+
+class AttributeItemWidget(QtWidgets.QFrame):
+    def __init__(self, label, widget, parent=None):
+        super(AttributeItemWidget, self).__init__(parent=parent)
+        layout = QtWidgets.QHBoxLayout()
+        colorItem = QtWidgets.QFrame(paren=self)
+        label = QtWidgets.QLabel(label, parent=self)
+        widget.setParent(self)
+        layout.addWidget(label)
+        layout.addWidget(colorItem)
+        layout.addWidget(widget)
+        self.setLayout(layout)

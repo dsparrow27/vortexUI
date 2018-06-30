@@ -12,14 +12,14 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
     CUBIC = 0
     LINEAR = 1
 
-    def __init__(self, source, destination=None, curveType=CUBIC):
+    def __init__(self, source, destination=None, curveType=CUBIC, color=defaultColor):
         super(ConnectionEdge, self).__init__()
         self.curveType = curveType
         self._sourcePlug = source
         self._destinationPlug = destination
         self._sourcePoint = source.center()
         self._destinationPoint = destination.center() if destination is not None else None
-        self.defaultPen = QtGui.QPen(source.color, 1.25, style=QtCore.Qt.DashLine)
+        self.defaultPen = QtGui.QPen(color, 1.25, style=QtCore.Qt.DashLine)
         self.defaultPen.setDashPattern([1, 2, 2, 1])
         self.selectedPen = QtGui.QPen(self.selectedColor, 1.7, style=QtCore.Qt.DashLine)
         self.selectedPen.setDashPattern([1, 2, 2, 1])
@@ -31,11 +31,23 @@ class ConnectionEdge(QtWidgets.QGraphicsPathItem):
         self.setPen(self.defaultPen)
         self.setZValue(-1)
         self.setFlags(self.ItemIsFocusable | self.ItemIsSelectable | self.ItemIsMovable)
-        # if self._sourcePlug and self._destinationPlug:
-        #     self.connect(self._sourcePlug, self._destinationPlug)
+        self.setCurveType(curveType)
         self.update()
 
+    def setWidth(self, width):
+        lineWidth = width * 1.25
+        self.defaultPen.setWidth(width)
+        self.selectedPen.setWidth(lineWidth)
+        self.hoverPen.setWidth(lineWidth)
+
+    def setCurveType(self, cType):
+        if cType == "Linear":
+            self.setAsLinearPath()
+        elif cType == "Cubic":
+            self.setAsCubicPath()
+
     def setLineStyle(self, qStyle):
+
         self.defaultPen.setStyle(qStyle)
         self.selectedPen.setStyle(qStyle)
         self.hoverPen.setStyle(qStyle)

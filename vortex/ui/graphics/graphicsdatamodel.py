@@ -1,4 +1,3 @@
-
 from qt import QtGui, QtCore
 
 
@@ -19,6 +18,12 @@ class ObjectModel(QtCore.QObject):
         progressUpdatedSig
 
     """
+    # constants for attribute visibility
+    ATTRIBUTE_VIS_LEVEL_ZERO = 0
+    ATTRIBUTE_VIS_LEVEL_ONE = 1
+    ATTRIBUTE_VIS_LEVEL_TWO = 2
+    ATTRIBUTE_VIS_LEVEL_THREE = 3
+
     # subclass should emit these signals to update the GUI from the core
 
     # signals connected by the graphics scene
@@ -135,13 +140,15 @@ class ObjectModel(QtCore.QObject):
             if attr.text() == name:
                 return attr
 
-    def attributes(self, inputs=True, outputs=True):
+    def attributes(self, inputs=True, outputs=True, attributeVisLevel=0):
         """List of Attribute models to display on the node.
 
         :param inputs: return inputs
         :type inputs: bool
         :param outputs: Return outputs
         :type outputs: bool
+        :param attributeVisLevel:
+        :type attributeVisLevel: int
         :return: Returns a list of AttributeModels containing inputs and outputs(depending of parameters)
         :rtype: list(::class::`AttributeModel`)
         """
@@ -182,7 +189,7 @@ class ObjectModel(QtCore.QObject):
 
     # colors
     def backgroundColour(self):
-        return QtGui.QColor(31, 33, 34, 255)
+        return QtGui.QColor(31, 33, 34, 200)
 
     def headerColor(self):
         return QtGui.QColor("#4A71AB")
@@ -191,7 +198,7 @@ class ObjectModel(QtCore.QObject):
         return QtGui.QColor(255, 255, 255)
 
     def selectedNodeColour(self):
-        return QtGui.QColor(180, 255, 180, 255)
+        return QtGui.QColor(180, 255, 180, 200)
 
     def unSelectedNodeColour(self):
         return self.backgroundColour()
@@ -276,21 +283,8 @@ class AttributeModel(QtCore.QObject):
     def highlightColor(self):
         return QtGui.QColor(255, 255, 255)
 
-    def itemColour(self):
+    def itemEdgeColor(self):
         return QtGui.QColor(0, 180, 0)
 
-
-class InAttributeModel(AttributeModel):
-    def isInput(self):
-        return True
-
-    def isOutput(self):
-        return False
-
-
-class OutAttributeModel(AttributeModel):
-    def isInput(self):
-        return False
-
-    def isOutput(self):
-        return True
+    def itemColour(self):
+        return QtGui.QColor(0, 180, 0)

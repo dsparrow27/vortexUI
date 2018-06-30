@@ -5,19 +5,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class NodeBoxTreeWidget(QtWidgets.QTreeWidget):
+class NodeBoxWidget(QtWidgets.QListWidget):
 
     def __init__(self, parent):
-        super(NodeBoxTreeWidget, self).__init__(parent)
+        super(NodeBoxWidget, self).__init__(parent)
         self.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.setObjectName("nodeLibraryTreeWidget")
         self.setSortingEnabled(True)
         self.setDragEnabled(True)
-        self.setColumnCount(1)
-        self.setHeaderHidden(True)
         self.setDragDropMode(QtWidgets.QAbstractItemView.DragOnly)
-        self.setAnimated(True)
 
 class NodesBox(QtWidgets.QFrame):
     """doc string for NodesBox"""
@@ -32,12 +29,12 @@ class NodesBox(QtWidgets.QFrame):
         self.lineEdit.setObjectName("nodelibraryLineEdit")
         self.lineEdit.setPlaceholderText("Enter node name..")
         self.verticalLayout.addWidget(self.lineEdit)
-        self.treeWidget = NodeBoxTreeWidget(parent=self)
-        self.verticalLayout.addWidget(self.treeWidget)
+        self.nodeListWidget = NodeBoxWidget(parent=self)
+        self.verticalLayout.addWidget(self.nodeListWidget)
         self.lineEdit.textChanged.connect(self.searchTextChanged)
-        self.treeWidget.itemChanged.connect(self.onSelectionChanged)
-        self.treeWidget.itemClicked.connect(self.onSelectionChanged)
-        self.treeWidget.itemDoubleClicked.connect(self.onDoubleClicked)
+        self.nodeListWidget.itemChanged.connect(self.onSelectionChanged)
+        self.nodeListWidget.itemClicked.connect(self.onSelectionChanged)
+        self.nodeListWidget.itemDoubleClicked.connect(self.onDoubleClicked)
         self.resize(400, 250)
 
     def sizeHint(self):
@@ -52,7 +49,6 @@ class NodesBox(QtWidgets.QFrame):
             self.lineEdit.setPlaceholderText("enter node name..")
         nodes = self.uiApplication.registeredNodes()
         nodes["Group"] = "misc"
-        self.treeWidget.setFilter(text)
         self.reload(nodes, text)
 
     def keyPressEvent(self, event):
@@ -67,40 +63,23 @@ class NodesBox(QtWidgets.QFrame):
                 self.parent().scene.createBackDrop()
                 self.hide()
         elif event.key() in (QtCore.Qt.Key_Down, QtCore.Qt.Key_Up):
-            return self.treeWidget.keyPressEvent(event)
+            return self.nodeListWidget.keyPressEvent(event)
         super(NodesBox, self).keyPressEvent(event)
 
-    def onDoubleClicked(self, item, column):
-        self.uiApplication.onNodeCreated(item.text(column))
+    def onDoubleClicked(self, item):
+        self.uiApplication.onNodeCreated(item.text())
         self.hide()
 
-    def onSelectionChanged(self, current, previous):
-        self.lineEdit.setText(current.text(0))
+    def onSelectionChanged(self, current):
+        self.lineEdit.setText(current.text())
 
     def reload(self, items, searchText=None):
         searchText = (searchText or "").lower()
-        self.treeWidget.clear()
-        existing = {}
-
+        self.nodeListWidget.clear()
         for item, category in items.items():
-            if not category:
-                category = "misc"
-            if searchText not in category.lower() and searchText not in item.lower():
+            if searchText not in item.lower():
                 continue
-            if category in existing:
-                child = QtWidgets.QTreeWidgetItem()
-                child.setText(0, item)
-                existing[category].addChild(child)
-            else:
-                cat = QtWidgets.QTreeWidgetItem()
-                cat.setText(0, category)
-                existing[category] = cat
-                self.treeWidget.insertTopLevelItem(0, cat)
-                child = QtWidgets.QTreeWidgetItem()
-                child.setText(0, item)
-                cat.addChild(child)
-                if searchText:
-                    cat.setExpanded(True)
+            self.nodeListWidget.addItem(item)
 
-        self.treeWidget.sortItems(0, QtCore.Qt.AscendingOrder)
-        self.treeWidget.setCurrentItem(self.treeWidget.invisibleRootItem().child(0))
+        self.nodeListWidget.sortItems(QtCore.Qt.AscendingOrder)
+        self.nodeListWidget.setCurrentRow(0)

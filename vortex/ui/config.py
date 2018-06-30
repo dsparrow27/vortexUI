@@ -1,4 +1,4 @@
-from qt import QtCore
+from qt import QtCore, QtGui
 from zoo.libs.pyqt.widgets.graphics import graphviewconfig
 
 connectionStyle = {"SolidLine": QtCore.Qt.SolidLine,
@@ -16,5 +16,6 @@ class VortexConfig(graphviewconfig.Config):
         self.connectionStyles = connectionStyle
         self.panelWidth = 150
         self.drawMainGridAxis = False
+        self.connectionLineWidth = 2
         self.defaultConnectionStyle = connectionStyle["SolidLine"]
         self.defaultConnectionShape = connectionStyle["cubic"]

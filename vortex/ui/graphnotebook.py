@@ -1,5 +1,6 @@
 from qt import QtWidgets, QtCore, QtGui
 from vortex.ui import grapheditor
+from zoo.libs.pyqt.extended import tabwidget
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,25 +26,14 @@ class GraphNotebook(QtWidgets.QWidget):
             editor = self.currentPage()
             editor.scene.createNode(model=data["model"], position=editor.view.centerPosition())
 
-    def showTabContextMenu(self, pos):
-        tabWidget = self.notebook.tabBar().tabAt(pos)
-        if not tabWidget:
-            return
-        menu = QtWidgets.QMenu(parent=self)
-        menu.addAction("Delete")
-        menu.exec_(tabWidget.mapToGlobal(pos))
-
     def initLayout(self):
         layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(2, 2, 2, 2)
         self.setLayout(layout)
-        self.notebook = QtWidgets.QTabWidget(parent=self)
-        bar = self.notebook.tabBar()
-        bar.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        bar.customContextMenuRequested.connect(self.showTabContextMenu)
-        self.notebook.setMovable(True)
-        self.notebook.setTabsClosable(True)
-        self.notebook.tabCloseRequested.connect(self.deletePage)
+
+        self.notebook = tabwidget.TabWidget("NoteBook", parent=self)
+        # self.notebook.newTabRequested
+        # self.notebook.tabCloseRequested.connect(self.deletePage)
 
         layout.addWidget(self.notebook)
 

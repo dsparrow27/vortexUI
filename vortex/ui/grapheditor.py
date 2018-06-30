@@ -165,10 +165,7 @@ class Scene(graphicsscene.GraphicsScene):
         result = False
         if not result:
             return
-        if sourceModel.isInput():
-            connection = edge.ConnectionEdge(destination.outCircle, source.inCircle)
-        else:
-            connection = edge.ConnectionEdge(source.outCircle, destination.inCircle)
+        connection = destination.addConnection(source)
         logger.debug("Created Connection Edge, input: {}, output: {}".format(sourceModel.text(),
                                                                              destinationModel.text()))
         connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
