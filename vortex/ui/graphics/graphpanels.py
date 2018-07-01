@@ -65,10 +65,10 @@ class Panel(QtWidgets.QGraphicsWidget):
         # todo: flip the alignment of the text
         if attribute.isInput():
             plug.outCircle.show()
-            plug.inCircle.hide()
-        else:
-            plug.inCircle.show()
-            plug.outCircle.hide()
+        #     plug.inCircle.hide()
+        # else:
+        #     plug.inCircle.show()
+        #     plug.outCircle.hide()
         self.attributeContainer.addItem(plug)
 
     def paint(self, painter, option, widget):

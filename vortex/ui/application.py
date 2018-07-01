@@ -12,7 +12,7 @@ class UIApplication(QtCore.QObject):
     onNodeDeleteRequested = QtCore.Signal(object)
     onBeforeRemoveTab = QtCore.Signal(object)
     onAfterRemoveTab = QtCore.Signal(object)
-
+    onSelectionChanged = QtCore.Signal(object, bool)
     def __init__(self, uiConfig, apiApplication):
         """
         :param uiConfig:

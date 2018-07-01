@@ -118,7 +118,10 @@ class Scene(graphicsscene.GraphicsScene):
 
     def _onSelectionChanged(self):
         for i in self.nodes:
-            i.model.setSelected(i.isSelected())
+            try:
+                i.model.setSelected(i.isSelected())
+            except RuntimeError:
+                pass
 
     def selectedNodes(self):
         return [i for i in self.nodes if i.isSelected()]

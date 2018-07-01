@@ -1,7 +1,7 @@
 from zoo.libs.pyqt.widgets import treewidget
 from zoo.libs.pyqt.extended import stackwidget
 from vortex.ui import plugin
-from qt import QtCore
+from qt import QtCore, QtWidgets
 
 
 class AttributeEditorPlugin(plugin.UIPlugin):
@@ -25,7 +25,7 @@ class AttributeEditor(treewidget.TreeWidgetFrame):
         tree = treewidget.TreeWidget(parent=self, locked=False, allowSubGroups=False)
         self.initUi(tree)
         self.nodes = {}
-        # self.application.onSelectionChanged.connect(self.onSceneSelection)
+        self.application.onSelectionChanged.connect(self.onSceneSelection)
 
     def onSceneSelection(self, selection, state):
         if state:
@@ -38,7 +38,8 @@ class AttributeEditor(treewidget.TreeWidgetFrame):
         if exists:
             exists.show()
             return
-        wid = AttributeItem(objectModel.text(), parent=self.treeWidget)
+        wid = NodeItem(objectModel.text(), parent=self.treeWidget)
+        wid.setObjectModel(objectModel)
         treeItem = self.treeWidget.insertNewItem(objectModel.text(), widget=wid, index=0, treeParent=None)
         self.nodes[objectModel] = treeItem
 
@@ -50,28 +51,19 @@ class AttributeEditor(treewidget.TreeWidgetFrame):
             del self.nodes[objectModel]
 
 
-class AttributeItem(stackwidget.StackItem):
+class NodeItem(stackwidget.StackItem):
 
     def __init__(self, title, parent, collapsed=False, collapsable=True, icon=None, startHidden=False,
                  itemTint=tuple([60, 60, 60]), shiftArrowsEnabled=True, deleteButtonEnabled=True, titleEditable=True,
                  initUi=True):
-        super(AttributeItem, self).__init__(title, parent, collapsed, collapsable, icon, startHidden, itemTint,
-                                            shiftArrowsEnabled, deleteButtonEnabled, titleEditable, initUi)
+        super(NodeItem, self).__init__(title, parent, collapsed, collapsable, icon, startHidden, itemTint,
+                                       shiftArrowsEnabled, deleteButtonEnabled, titleEditable, initUi)
         self.model = None
+        self.customWidget = None
 
     def setObjectModel(self, model):
+        widget = model.attributeWidget(parent=self)
+        if widget is not None:
+            self.customWidget = widget
+            self.addWidget(self.customWidget)
         self.model = model
-        self.setTitle(model.name)
-
-
-class AttributeItemWidget(QtWidgets.QFrame):
-    def __init__(self, label, widget, parent=None):
-        super(AttributeItemWidget, self).__init__(parent=parent)
-        layout = QtWidgets.QHBoxLayout()
-        colorItem = QtWidgets.QFrame(paren=self)
-        label = QtWidgets.QLabel(label, parent=self)
-        widget.setParent(self)
-        layout.addWidget(label)
-        layout.addWidget(colorItem)
-        layout.addWidget(widget)
-        self.setLayout(layout)

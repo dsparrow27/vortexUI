@@ -217,7 +217,8 @@ class ObjectModel(QtCore.QObject):
 
     def contextMenu(self, menu):
         pass
-
+    def attributeWidget(self, parent):
+        pass
 
 class AttributeModel(QtCore.QObject):
     def __init__(self, objectModel):
@@ -233,6 +234,11 @@ class AttributeModel(QtCore.QObject):
 
     def text(self):
         return "attributeName"
+
+    def setValue(self, value):
+        pass
+    def value(self):
+        return
 
     def textAlignment(self):
         return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter

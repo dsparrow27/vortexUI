@@ -135,21 +135,22 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.label = PlugTextItem(self.model.text(), parent=self)
         self.label.color = attributeModel.textColour() or QtGui.QColor(200, 200, 200)
 
-        layout.addItem(self.inCircle)
+
         if not attributeModel.isOutput():
             self.outCircle.hide()
         if not attributeModel.isInput():
             self.inCircle.hide()
-            if attributeModel.isOutput() and not attributeModel.objectModel.isCompound():
-                layout.addStretch(1)
+            # if attributeModel.isOutput():# and not attributeModel.objectModel.isCompound():
+            #     layout.addStretch(1)
         self.inCircle.setToolTip(self.model.toolTip())
         self.outCircle.setToolTip(self.model.toolTip())
+        layout.addItem(self.inCircle)
         layout.addItem(self.label)
         layout.addItem(self.outCircle)
         layout.setAlignment(self.label, attributeModel.textAlignment())
 
-        self.setInputAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        self.setOutputAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        self.setInputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.setOutputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
         self.label.allowHoverHighlight = True
         self.inCircle.leftMouseButtonClicked.connect(self.onPlugClicked)
