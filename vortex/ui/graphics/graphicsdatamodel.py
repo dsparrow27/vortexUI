@@ -45,15 +45,15 @@ class ObjectModel(QtCore.QObject):
         self.config = config
         self._parent = parent
         self._children = []
-        self._icon = QtGui.QIcon()
+        self._icon = ""
         self._attributes = []
         if parent is not None and self not in parent.children():
             parent._children.append(self)
 
     def icon(self):
-        """QIcon for the node
+        """Icon path for the node
 
-        :rtype: QtGui.QIcon
+        :rtype: str
         """
         return self._icon
 
@@ -241,7 +241,7 @@ class AttributeModel(QtCore.QObject):
         return
 
     def textAlignment(self):
-        return QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
+        return QtCore.Qt.AlignCenter
 
     def setText(self, text):
         return False

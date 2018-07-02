@@ -72,11 +72,20 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
                                   )
         painter.strokePath(rounded_rect, QtGui.QPen(self.color, 1))
 
+class HeaderPixmap(QtWidgets.QGraphicsWidget):
+    def __init__(self, pixmap, parent):
+        super(HeaderPixmap, self).__init__(parent)
+        self.setPixmap(pixmap)
+        self.pixmap = QtGui.QPixmap()
+        self.pixItem = QtWidgets.QGraphicsPixmapItem()
+    def setPixmap(self, path):
+        self.pixmap = QtGui.QPixmap(path)
+        self.pixItem = QtWidgets.QGraphicsPixmapItem(self.pixmap, self)
 
 class NodeHeader(QtWidgets.QGraphicsWidget):
     headerButtonStateChanged = QtCore.Signal(int)
 
-    def __init__(self, node, text, secondaryText="", parent=None):
+    def __init__(self, node, text, secondaryText="", icon=None,parent=None):
         super(NodeHeader, self).__init__(parent)
         self._node = node
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
@@ -86,12 +95,19 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
         layout.setSpacing(0)
         layout.setOrientation(QtCore.Qt.Horizontal)
         self.setLayout(layout)
+        self.headerIcon = HeaderPixmap(pixmap=icon or "", parent=self)
+        layout.addItem(self.headerIcon)
+        if not icon:
+            self.headerIcon.hide()
         self._createLabels(text, secondaryText, layout)
         layout.addStretch(1)
         headerButton = NodeHeaderButton(size=12, color=node.model.headerButtonColor())
         headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
         layout.addItem(headerButton)
         layout.setAlignment(headerButton, QtCore.Qt.AlignCenter | QtCore.Qt.AlignCenter)
+
+    def setIcon(self, path):
+        self.headerIcon.setPixmap(path)
 
     def _createLabels(self, primary, secondary, parentLayout):
         container = graphicitems.ItemContainer(QtCore.Qt.Vertical, parent=self)
@@ -147,6 +163,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         layout.setSpacing(0)
         layout.setOrientation(QtCore.Qt.Vertical)
         self.header = NodeHeader(self, self.model.text(), self.model.secondaryText(), parent=self)
+
         self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         self.setToolTip(self.model.toolTip())

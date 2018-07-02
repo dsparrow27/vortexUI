@@ -10,7 +10,7 @@ class UIPlugin(plugin.Plugin):
     """Base Plugin for UI, a UI Plugin allows the client to implement their own UI widgets and attach it
     to the MainWindow. To Initialize a widget you should overload initializeWidget()
     """
-    def __init__(self, application, manager):
+    def __init__(self, application, manager=None):
         """SubClasses that implement this method need to call super().
 
         :param application: The Vortex Application handler

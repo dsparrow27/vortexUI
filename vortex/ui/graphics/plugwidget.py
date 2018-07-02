@@ -21,7 +21,7 @@ class Plug(QtWidgets.QGraphicsWidget):
     leftMouseButtonClicked = QtCore.Signal(object, object)
     moveEventRequested = QtCore.Signal(object, object)
     releaseEventRequested = QtCore.Signal(object, object)
-    _radius = 4.5
+    _radius = 6
     _diameter = 2 * _radius
     INPUT_TYPE = 0
     OUTPUT_TYPE = 1
@@ -36,7 +36,7 @@ class Plug(QtWidgets.QGraphicsWidget):
         self._hoverPen = QtGui.QPen(highlightColor, 1.5)
         self._brush = QtGui.QBrush(color)
 
-        self._item = PlugItem(self._defaultPen, self._brush, hOffset, self._radius, self._diameter, parent=self)
+        self._item = PlugItem(self._defaultPen, self._brush, hOffset, self._radius * 0.5, self._diameter, parent=self)
 
         self.setAcceptHoverEvents(True)
 
@@ -97,7 +97,7 @@ class PlugTextItem(graphicitems.GraphicsText):
 
     def mouseMoveEvent(self, event):
         scenePos = self.mapToScene(event.pos())
-        # When clicking on an UI port label, it is ambigous which connection point should be activated.
+        # When clicking on an UI port label, it is ambiguous which connection point should be activated.
         # We let the user drag the mouse in either direction to select the conneciton point to activate.
         delta = scenePos - self._mouseDownPosition
         parent = self._parent
@@ -117,10 +117,10 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
     def __init__(self, attributeModel, parent=None):
         super(PlugContainer, self).__init__(parent)
         self.model = attributeModel
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
-        layout.setOrientation(QtCore.Qt.Horizontal)
+        layout.setContentsMargins(1, 0, 1, 0)
+        layout.setSpacing(3)
         self.setLayout(layout)
         self.inCircle = Plug(self.model.itemColour(),
                              self.model.itemEdgeColor(),
@@ -135,22 +135,21 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.label = PlugTextItem(self.model.text(), parent=self)
         self.label.color = attributeModel.textColour() or QtGui.QColor(200, 200, 200)
 
-
         if not attributeModel.isOutput():
             self.outCircle.hide()
         if not attributeModel.isInput():
             self.inCircle.hide()
-            # if attributeModel.isOutput():# and not attributeModel.objectModel.isCompound():
-            #     layout.addStretch(1)
+            if attributeModel.isOutput():  # and not attributeModel.objectModel.isCompound():
+                layout.addStretch(1)
         self.inCircle.setToolTip(self.model.toolTip())
         self.outCircle.setToolTip(self.model.toolTip())
         layout.addItem(self.inCircle)
         layout.addItem(self.label)
         layout.addItem(self.outCircle)
         layout.setAlignment(self.label, attributeModel.textAlignment())
-
+        # layout.setAlignment(QtCore.Qt.AlignVCenter)
         self.setInputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.setOutputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.setOutputAlignment(QtCore.Qt.AlignCenter)
 
         self.label.allowHoverHighlight = True
         self.inCircle.leftMouseButtonClicked.connect(self.onPlugClicked)

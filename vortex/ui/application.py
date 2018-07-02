@@ -33,6 +33,7 @@ class UIApplication(QtCore.QObject):
     def loadPlugins(self):
         for uiPlugin in self.pluginManager.plugins.values():
             if uiPlugin.autoLoad:
+                print uiPlugin.__name__
                 uiExt = self.pluginManager.loadPlugin(uiPlugin.__name__, application=self)
                 uiExt.initializeWidget()
 
