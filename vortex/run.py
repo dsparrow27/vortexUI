@@ -3,8 +3,6 @@ import sys
 
 import os
 
-from vortex.ui import config
-
 from qt import QtWidgets, QtCore
 
 logger = logging.getLogger("VortexUI")
@@ -33,6 +31,7 @@ def embed():
         pass
 
     logger.debug("Starting boot process")
+    from vortex.ui import config
     from vortex.ui import mainwindow
     from slither.vortexmodel import slithermodel  # temp just for proto
     uiConfig = config.VortexConfig()

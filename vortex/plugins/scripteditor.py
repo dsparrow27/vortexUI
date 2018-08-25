@@ -1,12 +1,49 @@
 import logging
 import os
+import traceback
+
+import sys
 
 from zoo.libs.pyqt.extended import pythoneditor
 from zoo.libs.pyqt import utils as qtutils
 from zoo.libs.pyqt.widgets import logoutput
 from zoo.libs.pyqt.syntaxhighlighter import highlighter
+from zoo.libs.pyqt import thread
 from vortex.ui import plugin
 from qt import QtCore, QtWidgets
+from Queue import Queue
+
+
+class XStream(QtCore.QObject):
+    """https://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
+    """
+    _stdout = None
+    _stderr = None
+    messageWritten = QtCore.Signal(str)
+
+    def flush(self):
+        pass
+
+    def fileno(self):
+        return -1
+
+    def write(self, msg):
+        if not self.signalsBlocked():
+            self.messageWritten.emit(unicode(msg))
+
+    @staticmethod
+    def stdout():
+        if not XStream._stdout:
+            XStream._stdout = XStream()
+            sys.stdout = XStream._stdout
+        return XStream._stdout
+
+    @staticmethod
+    def stderr():
+        if not XStream._stderr:
+            XStream._stderr = XStream()
+            sys.stderr = XStream._stderr
+        return XStream._stderr
 
 
 class ScriptEditor(plugin.UIPlugin):
@@ -39,6 +76,8 @@ class ScriptEditor(plugin.UIPlugin):
         self.splitter.addWidget(self.editor)
         self.editor.outputText.connect(self.outputText)
         window.createDock(self.editorParent, QtCore.Qt.BottomDockWidgetArea, tabify=True)
+        XStream.stdout().messageWritten.connect(self.logout.insertPlainText)
+        XStream.stderr().messageWritten.connect(self.logout.logError)
 
     def outputText(self, text):
         logger = self.logout
