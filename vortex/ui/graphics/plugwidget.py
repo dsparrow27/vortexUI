@@ -55,9 +55,7 @@ class Plug(QtWidgets.QGraphicsWidget):
         self._item.setBrush(self._brush)
 
     def center(self):
-        rect = self._item.boundingRect()
-        center = QtCore.QPointF(rect.x() + rect.width() * 0.5, rect.y() + rect.height() * 0.5)
-        return self._item.mapToScene(center)
+        return self._item.center()
 
     def hoverEnterEvent(self, event):
         self.highlight()
@@ -171,18 +169,15 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.layout().setAlignment(self.outCircle, alignment)
 
     def addConnection(self, plug):
-        self.scene().removeItem(self._currentConnection)
-        self._currentConnection = None
-        connection = edge.ConnectionEdge(self.outCircle,
-                                         plug.inCircle,
-                                         curveType=self.uiApplication.config.defaultConnectionShape)
-        connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
-        connection.setWidth(self.uiApplication.config.connectionLineWidth)
+        connection = edge.ConnectionEdge(plug.outCircle, self.inCircle,
+                                        curveType=self.model.objectModel.config.defaultConnectionShape)
+        connection.setLineStyle(self.model.objectModel.config.defaultConnectionStyle)
+        connection.setWidth(self.model.objectModel.config.connectionLineWidth)
         connection.updatePosition()
         scene = self.scene()
 
         scene.connections.add(connection)
-        self.scene().addItem(connection)
+        return connection
 
     def updateConnections(self):
         self.scene().updateConnectionsForPlug(self)
@@ -191,6 +186,7 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
     def onPlugClicked(self, plug, event):
         """Trigger when either the inCircle or outCircle is clicked, this method will handle setup of the connection
         object and appropriately call the attributeModel.
+
         :param plug: Plug class
         :type plug: ::class:`Plug`
         :param event:
@@ -198,8 +194,9 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         :return:
         :rtype:
         """
-
-        self._currentConnection = edge.ConnectionEdge(plug)
+        self._currentConnection = edge.ConnectionEdge(plug, curveType=self.model.objectModel.config.defaultConnectionShape)
+        self._currentConnection.setLineStyle(self.model.objectModel.config.defaultConnectionStyle)
+        self._currentConnection.setWidth(self.model.objectModel.config.connectionLineWidth)
         self._currentConnection.destinationPoint = plug.center()
         self.scene().addItem(self._currentConnection)
 

@@ -3,18 +3,15 @@
 
 rem // Save value of CD variable (current directory)
 set ABS_PATH=%CD%
-
+set VORTEX=%CD%
 CALL :NORMALIZEPATH "..\slither"
 set SLITHER=%RETVAL%
-set PATH=%PATH%;%ABS_PATH%;%SLITHER%;
-set PYTHONPATH=%PYTHONPATH%;%ABS_PATH%;%SLITHER%;
+set PATH=%PATH%;%ABS_PATH%;%SLITHER%;%SLITHER%\thirdparty;
+set PYTHONPATH=%PYTHONPATH%;%ABS_PATH%;%SLITHER%;%SLITHER%\thirdparty;
 set VORTEX_UI_PLUGINS=%ABS_PATH%\vortex\plugins
-echo %VORTEX_UI_PLUGINS%
-echo %PYTHONPATH%
-CALL :NORMALIZEPATH "..\..\zootools_pro\bin"
+CALL :NORMALIZEPATH "..\zootools_pro\bin"
 cd %RETVAL%
-call ./zoo_cmd.bat
-
+call %RETVAL%\zoo_cmd.bat
 :: ========== FUNCTIONS ==========
 EXIT /B
 

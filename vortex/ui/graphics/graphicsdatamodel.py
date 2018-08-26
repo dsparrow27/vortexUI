@@ -27,7 +27,7 @@ class ObjectModel(QtCore.QObject):
     # subclass should emit these signals to update the GUI from the core
 
     # signals connected by the graphics scene
-    addConnectionSig = QtCore.Signal(object, object)  # sourceAttrModel, destAttrModel
+    addConnectionSig = QtCore.Signal(object, object)  #sourceAttrModel, destAttrModel
     removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
 
     # connected by the GraphicsNode
@@ -49,6 +49,9 @@ class ObjectModel(QtCore.QObject):
         self._attributes = []
         if parent is not None and self not in parent.children():
             parent._children.append(self)
+
+    def __repr__(self):
+        return "<{}-{}>".format(self.__class__.__name__, self.text())
 
     def icon(self):
         """Icon path for the node
@@ -217,8 +220,10 @@ class ObjectModel(QtCore.QObject):
 
     def contextMenu(self, menu):
         pass
+
     def attributeWidget(self, parent):
         pass
+
 
 class AttributeModel(QtCore.QObject):
     def __init__(self, objectModel):
@@ -229,6 +234,9 @@ class AttributeModel(QtCore.QObject):
         super(AttributeModel, self).__init__()
         self.objectModel = objectModel
 
+    def __repr__(self):
+        return "<{}-{}>".format(self.__class__.__name__, self.text())
+
     def __hash__(self):
         return id(self)
 
@@ -237,6 +245,7 @@ class AttributeModel(QtCore.QObject):
 
     def setValue(self, value):
         pass
+
     def value(self):
         return
 

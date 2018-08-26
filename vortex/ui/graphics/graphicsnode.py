@@ -72,20 +72,23 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
                                   )
         painter.strokePath(rounded_rect, QtGui.QPen(self.color, 1))
 
+
 class HeaderPixmap(QtWidgets.QGraphicsWidget):
     def __init__(self, pixmap, parent):
         super(HeaderPixmap, self).__init__(parent)
         self.setPixmap(pixmap)
         self.pixmap = QtGui.QPixmap()
         self.pixItem = QtWidgets.QGraphicsPixmapItem()
+
     def setPixmap(self, path):
         self.pixmap = QtGui.QPixmap(path)
         self.pixItem = QtWidgets.QGraphicsPixmapItem(self.pixmap, self)
 
+
 class NodeHeader(QtWidgets.QGraphicsWidget):
     headerButtonStateChanged = QtCore.Signal(int)
 
-    def __init__(self, node, text, secondaryText="", icon=None,parent=None):
+    def __init__(self, node, text, secondaryText="", icon=None, parent=None):
         super(NodeHeader, self).__init__(parent)
         self._node = node
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
@@ -145,17 +148,6 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.cornerRounding = self.model.cornerRounding()
         self.setZValue(1)
         self.setPos(position)
-        self.init()
-        # bind the objectModel signals to this qNode
-        objectModel.addAttributeSig.connect(self.addAttribute)
-        objectModel.attributeNameChangedSig.connect(self.setAttributeName)
-        objectModel.nodeNameChangedSig.connect(self.header.setText)
-        objectModel.removeAttributeSig.connect(self.removeAttribute)
-
-        # objectModel.valueChangedSig.connect(self)
-        objectModel.selectionChangedSig.connect(self.setSelected)
-        # objectModel.progressUpdatedSig.connect(self)
-        # objectModel.parentChangedSig.connect(self)
 
     def init(self):
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
@@ -169,7 +161,16 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.setToolTip(self.model.toolTip())
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
+        # bind the objectModel signals to this qNode
+        self.model.addAttributeSig.connect(self.addAttribute)
+        self.model.attributeNameChangedSig.connect(self.setAttributeName)
+        self.model.nodeNameChangedSig.connect(self.header.setText)
+        self.model.removeAttributeSig.connect(self.removeAttribute)
 
+        # objectModel.valueChangedSig.connect(self)
+        self.model.selectionChangedSig.connect(self.setSelected)
+        # objectModel.progressUpdatedSig.connect(self)
+        # objectModel.parentChangedSig.connect(self)
         self.setLayout(layout)
         # now bind the attributes from the model if it has any
         for attr in self.model.attributes():
@@ -184,7 +185,9 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             attr.setText(name)
 
     def addAttribute(self, attribute):
-        self.attributeContainer.addItem(plugwidget.PlugContainer(attribute, parent=self.attributeContainer))
+        container = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
+        # self.scene().addItem(container)
+        self.attributeContainer.addItem(container)
 
     def removeAttribute(self, attribute):
         for index, item in enumerate(self.attributeContainer.items()):

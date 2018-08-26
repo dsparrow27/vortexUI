@@ -115,6 +115,7 @@ class Scene(graphicsscene.GraphicsScene):
         self.nodes = set()
         self.backdrops = set()
         self.connections = set()
+        self.uiApplication.onNodeDeleteRequested.connect(self.deleteNode)
 
     def _onSelectionChanged(self):
         for i in self.nodes:
@@ -131,8 +132,10 @@ class Scene(graphicsscene.GraphicsScene):
 
     def createNode(self, model, position):
         graphNode = graphicsnode.GraphicsNode(model, position=position)
-        self.nodes.add(graphNode)
         self.addItem(graphNode)
+        graphNode.init()
+        model.addConnectionSig.connect(self.createConnection)
+        self.nodes.add(graphNode)
 
     def createBackDrop(self):
         drop = graphbackdrop.BackDrop()
@@ -153,10 +156,10 @@ class Scene(graphicsscene.GraphicsScene):
         source = None  # source Plug item which will be connected
         destination = None  # destination Plug Item which will be connected
         for n in self.nodes:
-            if n.objectModel == sourceNode:
-                source = sourceNode.attributeItem(sourceModel)
-            elif n.objectModel == destinationNode:
-                destination = sourceNode.attributeItem(destinationModel)
+            if n.model == sourceNode:
+                source = n.attributeItem(sourceModel)
+            elif n.model == destinationNode:
+                destination = n.attributeItem(destinationModel)
             if source is not None and destination is not None:
                 break
         if source is None or destination is None:
@@ -165,14 +168,9 @@ class Scene(graphicsscene.GraphicsScene):
             logger.error(msg)
             return
 
-        result = False
-        if not result:
-            return
         connection = destination.addConnection(source)
         logger.debug("Created Connection Edge, input: {}, output: {}".format(sourceModel.text(),
                                                                              destinationModel.text()))
-        connection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
-        connection.updatePosition()
         self.connections.add(connection)
         self.addItem(connection)
 
@@ -191,10 +189,11 @@ class Scene(graphicsscene.GraphicsScene):
             conn.updatePosition()
 
     def deleteNode(self, node):
-        if node in self.nodes:
-            self.removeItem(node)
-            self.nodes.remove(node)
-            return True
+        for n in self.nodes:
+            if n.model == node:
+                self.nodes.remove(n)
+                self.removeItem(n)
+                return True
         return False
 
     def deleteBackDrop(self, backDrop):
@@ -214,14 +213,13 @@ class Scene(graphicsscene.GraphicsScene):
 
     def onDelete(self, selection):
         for sel in selection:
+
             if isinstance(sel, edge.ConnectionEdge):
                 if sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model):
                     self.deleteConnection(sel)
                 continue
             elif isinstance(sel, graphicsnode.GraphicsNode):
                 deleted = sel.model.delete()
-                if deleted:
-                    self.deleteNode(sel)
             elif isinstance(sel, graphbackdrop.BackDrop):
                 deleted = True
                 self.deleteBackDrop(sel)
@@ -265,19 +263,8 @@ class View(graphicsview.GraphicsView):
         if state:
             self.panelWidget = graphpanels.PanelWidget(self.application, acceptsContextMenu=True)
             self.scene().addItem(self.panelWidget)
-            # self.leftPanel = graphpanels.Panel(self.application, ioType="Input", acceptsContextMenu=True)
-            # self.rightPanel = graphpanels.Panel(self.application, ioType="Output", acceptsContextMenu=True)
-            #
-            # self.scene().addItem(self.leftPanel)
-            # self.scene().addItem(self.rightPanel)
             size = self.size()
             self.setSceneRect(0, 0, size.width(), size.height())
-            # self.rescaleGraphWidget()
-        # elif not state:
-        #     if self.leftPanel is not None:
-        #         self.layout().takeAt(self.leftPanel)
-        #     if self.rightPanel is not None:
-        #         self.layout().takeAt(self.leftPanel)
 
     def keyPressEvent(self, event):
         ctrl = event.modifiers() == QtCore.Qt.ControlModifier

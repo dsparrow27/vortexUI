@@ -26,6 +26,7 @@ class AttributeEditor(treewidget.TreeWidgetFrame):
         self.initUi(tree)
         self.nodes = {}
         self.application.onSelectionChanged.connect(self.onSceneSelection)
+        self.application.onNodeDeleteRequested.connect(self.removeNode)
 
     def onSceneSelection(self, selection, state):
         if state:
@@ -54,9 +55,9 @@ class AttributeEditor(treewidget.TreeWidgetFrame):
 class NodeItem(stackwidget.StackItem):
 
     def __init__(self, title, parent, collapsed=False, collapsable=True, icon=None, startHidden=False,
-                 itemTint=tuple([60, 60, 60]), shiftArrowsEnabled=True, deleteButtonEnabled=True, titleEditable=True,
+                 shiftArrowsEnabled=True, deleteButtonEnabled=True, titleEditable=True,
                  initUi=True):
-        super(NodeItem, self).__init__(title, parent, collapsed, collapsable, icon, startHidden, itemTint,
+        super(NodeItem, self).__init__(title, parent, collapsed, collapsable, icon, startHidden,
                                        shiftArrowsEnabled, deleteButtonEnabled, titleEditable, initUi)
         self.model = None
         self.customWidget = None
