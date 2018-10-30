@@ -23,9 +23,8 @@ class UIApplication(QtCore.QObject):
         """
         super(UIApplication, self).__init__()
         self._apiApplication = apiApplication
-        self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin)
+        self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin, variableName="id")
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
-
         self.config = uiConfig
 
         self.models = {}
@@ -34,8 +33,7 @@ class UIApplication(QtCore.QObject):
     def loadPlugins(self):
         for uiPlugin in self.pluginManager.plugins.values():
             if uiPlugin.autoLoad:
-                print uiPlugin.__name__
-                uiExt = self.pluginManager.loadPlugin(uiPlugin.__name__, application=self)
+                uiExt = self.pluginManager.loadPlugin(uiPlugin.id, application=self)
                 uiExt.initializeWidget()
 
     def mainWindow(self):

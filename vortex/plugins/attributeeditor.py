@@ -55,10 +55,9 @@ class AttributeEditor(treewidget.TreeWidgetFrame):
 class NodeItem(stackwidget.StackItem):
 
     def __init__(self, title, parent, collapsed=False, collapsable=True, icon=None, startHidden=False,
-                 shiftArrowsEnabled=True, deleteButtonEnabled=True, titleEditable=True,
-                 initUi=True):
+                 shiftArrowsEnabled=False, deleteButtonEnabled=True, titleEditable=True):
         super(NodeItem, self).__init__(title, parent, collapsed, collapsable, icon, startHidden,
-                                       shiftArrowsEnabled, deleteButtonEnabled, titleEditable, initUi)
+                                       shiftArrowsEnabled, deleteButtonEnabled, titleEditable)
         self.model = None
         self.customWidget = None
 

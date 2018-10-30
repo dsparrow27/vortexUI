@@ -78,6 +78,7 @@ class ScriptEditor(plugin.UIPlugin):
         window.createDock(self.editorParent, QtCore.Qt.BottomDockWidgetArea, tabify=True)
         XStream.stdout().messageWritten.connect(self.logout.insertPlainText)
         XStream.stderr().messageWritten.connect(self.logout.logError)
+        return self.editorParent
 
     def outputText(self, text):
         logger = self.logout

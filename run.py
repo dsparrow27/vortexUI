@@ -1,8 +1,6 @@
 import logging
 import sys
 
-import os
-
 from qt import QtWidgets, QtCore
 
 logger = logging.getLogger("VortexUI")
