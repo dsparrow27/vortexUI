@@ -14,6 +14,7 @@ QWidget:item:hover {
 QWidget:disabled {
     color: #$DISABLED_COLOR;
 }
+
 QMainWindow{
     background-color: #$MAIN_BACKGROUND_COLOR;
 }
@@ -37,12 +38,16 @@ QMenuBar::item:pressed {
 QMenu {
     color: #$MAIN_FOREGROUND_COLOR;
 }
+
 QCheckBox {
     color: #$MAIN_FOREGROUND_COLOR;
+
 }
+
 QCheckBox:disabled {
     color: #$DISABLED_COLOR;
 }
+
 QRadioButton {
     color: #$MAIN_FOREGROUND_COLOR;
 }
@@ -52,9 +57,10 @@ QRadioButton:disabled {
 }
 
 QAbstractItemView {
-    alternate-background-color: #dbdbdb;
+    alternate-background-color: #$SECONDARY_BACKGROUND_COLOR;
     color: #$MAIN_FOREGROUND_COLOR;
 }
+
 
 QAbstractItemView::item:!selected:hover,
 QAbstractItemView::item:!selected:hover {
@@ -118,8 +124,8 @@ QTextEdit {
 }
 
 QPlainTextEdit {
-    background-color: #BBBBBB;
-    color: #BBBBBB;
+    background-color: #$SECONDARY_BACKGROUND_COLOR;
+    color: #$MAIN_FOREGROUND_COLOR;
 }
 
 QToolButton#qt_toolbar_ext_button {
@@ -137,7 +143,7 @@ QPushButton:disabled {
 }
 
 QPushButton:hover {
-    background-color: #$HOVER_BACKGROUND_COLOR
+    background-color: #$HOVER_BACKGROUND_COLOR;
 }
 
 QPushButton:pressed {
@@ -178,19 +184,18 @@ QScrollArea,
 QGraphicsView,
 QToolBox
 {
-    background-color: #$VIEW_BACKGROUND_COLOR
+    background-color: #$VIEW_BACKGROUND_COLOR;
 }
 QToolBox:tab
 {
-    background-color: #$SECONDARY_BACKGROUND_COLOR
+    background-color: #$SECONDARY_BACKGROUND_COLOR;
 }
-QTabBar::tab  {
-    border: 0px solid transparent;
-    background-color: #$MAIN_BACKGROUND_COLOR;
+QTabWidget::pane, QTabWidget::tabPane, QTabBar::tab  {
+    border: 1px solid transparent;
+    background-color: #$VIEW_BACKGROUND_COLOR;
 }
-
 QTabBar::tab:selected, QTabBar::tab:hover  {
-    border: 5px solid transparent;
+    border: 1px solid transparent;
     background-color: #$SECONDARY_BACKGROUND_COLOR;
 }
 
@@ -219,4 +224,21 @@ StackItem .QToolButton{
 StackItem QLineEdit#disabled
 {
     color:rgb(140,140,140);
+}
+
+ExtendedButton {
+    background-color: transparent;
+    border: 0px solid transparent;
+}
+
+ExtendedButton:hover {
+    background-color: transparent;
+}
+
+DisplayModeButton
+{
+    padding: 3px;
+    border: 0px solid transparent;
+    background-color: transparent;
+    border-radius: 1px;
 }

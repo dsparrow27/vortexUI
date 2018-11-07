@@ -32,8 +32,8 @@ class Plug(QtWidgets.QGraphicsWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
         self.setWindowFrameMargins(0, 0, 0, 0)
-        self._defaultPen = QtGui.QPen(edgeColor, 1.0)
-        self._hoverPen = QtGui.QPen(highlightColor, 1.5)
+        self._defaultPen = QtGui.QPen(edgeColor, 2.5)
+        self._hoverPen = QtGui.QPen(highlightColor, 3.0)
         self._brush = QtGui.QBrush(color)
 
         self._item = PlugItem(self._defaultPen, self._brush, hOffset, self._radius * 0.5, self._diameter, parent=self)

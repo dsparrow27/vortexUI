@@ -41,7 +41,7 @@ class AttributeEditor(treewidget.TreeWidgetFrame):
             return
         wid = NodeItem(objectModel.text(), parent=self.treeWidget)
         wid.setObjectModel(objectModel)
-        treeItem = self.treeWidget.insertNewItem(objectModel.text(), widget=wid, index=0, treeParent=None)
+        treeItem = self.treeWidget.insertNewItem("", widget=wid, index=0, treeParent=None)
         self.nodes[objectModel] = treeItem
 
     def removeNode(self, objectModel):

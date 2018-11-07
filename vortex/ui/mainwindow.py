@@ -7,6 +7,7 @@ from qt import QtWidgets
 from zoo.libs.pyqt import stylesheet
 
 styleKeys = {
+    "$WINDOW_LOGO_ICON_COLOR": "DDDDDD",
     "$BTN_BACKGROUND_COLOR": "5D5D5D",
     "$DISABLED_COLOR": "454545",
     "$HOVER_BACKGROUND_COLOR": "5D5D5D",
@@ -15,6 +16,10 @@ styleKeys = {
     "$SECONDARY_BACKGROUND_COLOR": "353535",
     "$STACKITEM_BACKGROUND_COLOR": "5D5D5D",
     "$VIEW_BACKGROUND_COLOR": "1C1C1C",
+    "$TREEWIDGET_ITEM_HOVER_BACKGROUND_COLOR": "00000000",
+    "$COMMAND_BTN_HEIGHT": 26,
+    "$PRIMARY_COLOR": "5285A6",
+    "$TITLE_FONTSIZE": "^15"
 }
 
 style = stylesheet.StyleSheet.fromPath(os.path.join(os.path.dirname(__file__), "style.qss"), **styleKeys)
