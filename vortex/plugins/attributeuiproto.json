@@ -1,0 +1,88 @@
+{
+    "type": "node",
+    "name": "",
+    "expanded": true,
+    "children": [
+        {
+            "type": "block",
+            "expanded": true,
+            "children": [
+                {
+                    "type": "String",
+                    "label": "",
+                    "name": "",
+                    "value": "test",
+                    "placeholder": ""
+                },
+                {
+                    "type": "Integer",
+                    "label": "",
+                    "name": "",
+                    "value": 10,
+                    "default": 0,
+                    "min": 0,
+                    "max": 100
+                },
+                {
+                    "type": "Enumeration",
+                    "label": "",
+                    "name": "",
+                    "value": 0,
+                    "default": 0,
+                    "options": [
+                        "one",
+                        "two",
+                        "three"
+                    ]
+                },
+                {
+                    "type": "float",
+                    "label": "",
+                    "name": "",
+                    "value": 0,
+                    "default": 0,
+                    "decimals": 1,
+                    "min": 0,
+                    "max": 100
+                },
+                {
+                    "type": "path",
+                    "label": "",
+                    "name": "",
+                    "value": "C://",
+                    "default": "C://"
+                },
+                {
+                    "type": "Vector",
+                    "label": "",
+                    "name": ""
+                },
+                {
+                    "type": "4x4",
+                    "label": "",
+                    "name": ""
+                },
+                {
+                    "type": "python",
+                    "label": "",
+                    "name": ""
+                },
+                {
+                    "type": "boolean",
+                    "label": "",
+                    "name": ""
+                },
+                {
+                    "type": "separator",
+                    "label": "",
+                    "name": ""
+                },
+                {
+                    "type": "color",
+                    "label": "",
+                    "name": ""
+                }
+            ]
+        }
+    ]
+}
