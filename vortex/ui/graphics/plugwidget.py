@@ -3,30 +3,16 @@ from vortex.ui.graphics import edge
 from qt import QtWidgets, QtCore, QtGui
 
 
-class PlugItem(QtWidgets.QGraphicsEllipseItem):
-    def __init__(self, pen, brush, hOffset, radius, diameter, parent):
-        super(PlugItem, self).__init__(parent=parent)
-        self.setPen(pen)
-        self.setBrush(brush)
-        self.setRect(radius, radius, diameter, diameter)
-
-    def center(self):
-        rect = self.boundingRect()
-        center = QtCore.QPointF(rect.x() + rect.width() * 0.5, rect.y() + rect.height() * 0.5)
-        return self.mapToScene(center)
-
-
 class Plug(QtWidgets.QGraphicsWidget):
     rightMouseButtonClicked = QtCore.Signal(object, object)
     leftMouseButtonClicked = QtCore.Signal(object, object)
     moveEventRequested = QtCore.Signal(object, object)
     releaseEventRequested = QtCore.Signal(object, object)
-    _radius = 6
-    _diameter = 2 * _radius
+    _diameter = 2 * 6
     INPUT_TYPE = 0
     OUTPUT_TYPE = 1
 
-    def __init__(self, color, edgeColor, highlightColor, hOffset, parent=None):
+    def __init__(self, color, edgeColor, highlightColor, parent=None):
         super(Plug, self).__init__(parent=parent)
         size = QtCore.QSizeF(self._diameter, self._diameter)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
@@ -34,28 +20,28 @@ class Plug(QtWidgets.QGraphicsWidget):
         self.setWindowFrameMargins(0, 0, 0, 0)
         self._defaultPen = QtGui.QPen(edgeColor, 2.5)
         self._hoverPen = QtGui.QPen(highlightColor, 3.0)
-        self._brush = QtGui.QBrush(color)
-
-        self._item = PlugItem(self._defaultPen, self._brush, hOffset, self._radius * 0.5, self._diameter, parent=self)
-
+        self._defaultBrush = QtGui.QBrush(color)
+        self._currentBrush = QtGui.QBrush(color)
         self.setAcceptHoverEvents(True)
 
     @property
     def color(self):
-        return self._item.brush().color()
+        return self._currentBrush.color()
 
     @color.setter
     def color(self, color):
-        self._item.setBrush(QtGui.QBrush(color))
+        self._currentBrush = QtGui.QBrush(color)
 
     def highlight(self):
-        self._item.setBrush(QtGui.QBrush(self._item.brush().color().lighter()))
+        self._currentBrush = QtGui.QBrush(self.color.lighter())
 
     def unhighlight(self):
-        self._item.setBrush(self._brush)
+        self._currentBrush = QtGui.QBrush(self._defaultBrush)
 
     def center(self):
-        return self._item.center()
+        rect = self.boundingRect()
+        center = QtCore.QPointF(rect.x() + rect.width() * 0.5, rect.y() + rect.height() * 0.5)
+        return self.mapToScene(center)
 
     def hoverEnterEvent(self, event):
         self.highlight()
@@ -78,6 +64,20 @@ class Plug(QtWidgets.QGraphicsWidget):
 
     def mouseReleaseEvent(self, event):
         self.releaseEventRequested.emit(self, event)
+
+    def paint(self, painter, options, widget=None):
+        painter.setBrush(self._currentBrush)
+
+        painter.setPen(self._defaultPen)
+        painter.drawEllipse(0.0, 0.0, self._diameter, self._diameter)
+
+    def boundingRect(self):
+        return QtCore.QRectF(
+            0.0,
+            0.0,
+            self._diameter + 2.5,
+            self._diameter + 2.5,
+        )
 
 
 class PlugTextItem(graphicitems.GraphicsText):
@@ -117,16 +117,16 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.model = attributeModel
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
-        layout.setContentsMargins(1, 0, 1, 0)
-        layout.setSpacing(3)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(1)
         self.setLayout(layout)
         self.inCircle = Plug(self.model.itemColour(),
                              self.model.itemEdgeColor(),
                              self.model.highlightColor(),
-                             hOffset=0.0, parent=self)
+                             parent=self)
         self.outCircle = Plug(self.model.itemColour(),
                               self.model.itemEdgeColor(),
-                              self.model.highlightColor(), hOffset=0.0, parent=self)
+                              self.model.highlightColor(), parent=self)
         self.inCircle.setToolTip(attributeModel.toolTip())
         self.outCircle.setToolTip(attributeModel.toolTip())
 
@@ -137,17 +137,15 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
             self.outCircle.hide()
         if not attributeModel.isInput():
             self.inCircle.hide()
-            if attributeModel.isOutput():  # and not attributeModel.objectModel.isCompound():
-                layout.addStretch(1)
         self.inCircle.setToolTip(self.model.toolTip())
         self.outCircle.setToolTip(self.model.toolTip())
         layout.addItem(self.inCircle)
         layout.addItem(self.label)
+        layout.addStretch(1)
         layout.addItem(self.outCircle)
         layout.setAlignment(self.label, attributeModel.textAlignment())
-        # layout.setAlignment(QtCore.Qt.AlignVCenter)
         self.setInputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.setOutputAlignment(QtCore.Qt.AlignCenter)
+        self.setOutputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
         self.label.allowHoverHighlight = True
         self.inCircle.leftMouseButtonClicked.connect(self.onPlugClicked)
@@ -170,10 +168,12 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
 
     def addConnection(self, plug):
         connection = edge.ConnectionEdge(plug.outCircle, self.inCircle,
-                                        curveType=self.model.objectModel.config.defaultConnectionShape)
+                                         curveType=self.model.objectModel.config.defaultConnectionShape)
         connection.setLineStyle(self.model.objectModel.config.defaultConnectionStyle)
         connection.setWidth(self.model.objectModel.config.connectionLineWidth)
         connection.updatePosition()
+        plug.outCircle.color = plug.model.itemColour()
+        self.inCircle.color = self.model.itemColour()
         scene = self.scene()
 
         scene.connections.add(connection)
@@ -194,7 +194,8 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         :return:
         :rtype:
         """
-        self._currentConnection = edge.ConnectionEdge(plug, curveType=self.model.objectModel.config.defaultConnectionShape)
+        self._currentConnection = edge.ConnectionEdge(plug,
+                                                      curveType=self.model.objectModel.config.defaultConnectionShape)
         self._currentConnection.setLineStyle(self.model.objectModel.config.defaultConnectionStyle)
         self._currentConnection.setWidth(self.model.objectModel.config.connectionLineWidth)
         self._currentConnection.destinationPoint = plug.center()
@@ -211,8 +212,8 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
             # if we're a plugItem then offload the connection handling to the model
             # the model will then call the scene.createConnection via a signal
             # this is so we let the client code determine if the connection is legal
-            if isinstance(endItem, PlugItem):
-                dest = self if self.model.isInput() else endItem.parentObject().parentObject()
+            if isinstance(endItem, Plug):
+                dest = self if self.model.isInput() else endItem.parentObject()
                 self.model.createConnection(dest.model)
             self.scene().removeItem(self._currentConnection)
             self._currentConnection = None
