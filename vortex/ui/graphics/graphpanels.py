@@ -4,15 +4,15 @@ from vortex.ui.graphics import plugwidget
 
 
 class PanelWidget(QtWidgets.QGraphicsWidget):
-    def __init__(self, application, acceptsContextMenu=True, parent=None):
+    def __init__(self, model, acceptsContextMenu=True, parent=None):
         super(PanelWidget, self).__init__(parent=parent)
         self.setFlag(self.ItemSendsScenePositionChanges)
         self.setFlag(self.ItemIgnoresTransformations)
-        self.application = application
-        self.leftPanel = Panel(self.application, ioType="Input", acceptsContextMenu=acceptsContextMenu)
-        self.rightPanel = Panel(self.application, ioType="Output", acceptsContextMenu=acceptsContextMenu)
-        self.leftPanel.setMaximumWidth(application.config.panelWidth)
-        self.rightPanel.setMaximumWidth(application.config.panelWidth)
+        self.model = model
+        self.leftPanel = Panel(model, ioType="Input", acceptsContextMenu=acceptsContextMenu)
+        self.rightPanel = Panel(model, ioType="Output", acceptsContextMenu=acceptsContextMenu)
+        self.leftPanel.setMaximumWidth(model.config.panelWidth)
+        self.rightPanel.setMaximumWidth(model.config.panelWidth)
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -26,11 +26,10 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
 class Panel(QtWidgets.QGraphicsWidget):
     color = QtGui.QColor(0.0, 0.0, 0.0, 125)
 
-    def __init__(self, application, ioType, acceptsContextMenu=False, parent=None):
+    def __init__(self, objectModel, ioType, acceptsContextMenu=False, parent=None):
         super(Panel, self).__init__(parent=parent)
-        self.application = application
+        self.model = objectModel
         self.ioType = ioType
-        self.model = application.currentModel
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(1)
@@ -46,7 +45,7 @@ class Panel(QtWidgets.QGraphicsWidget):
         self.refresh()
 
     def refresh(self):
-        currentModel = self.application.currentModel
+        currentModel = self.model
         if currentModel is None:
             return
         self.attributeContainer.clear()
@@ -61,15 +60,34 @@ class Panel(QtWidgets.QGraphicsWidget):
 
     def addAttribute(self, attribute):
         plug = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
-
-        # todo: flip the alignment of the text
-        if attribute.isInput():
+        layout = plug.layout()
+        if attribute.isInput() and self.ioType == "Input":
+            plug.inCircle.show()
+            plug.outCircle.hide()
+        #     # insert the inCircle to the far right
+            layout.insertItem(3, plug.inCircle)
+            layoutStretchIndex = 2
+            # we switch this around for panels because the model input would be connected to another input
+            # making it difficult to which is the start point and end point of a connection
+            plug.inCircle.ioType = "Output"
+        else:
             plug.outCircle.show()
-        #     plug.inCircle.hide()
-        # else:
-        #     plug.inCircle.show()
-        #     plug.outCircle.hide()
+            plug.inCircle.hide()
+        #     # insert the outCircle to the far left
+            layout.insertItem(0, plug.outCircle)
+            layout.itemAt(layout.count()-1)
+            plug.inCircle.ioType = "Input"
+            layoutStretchIndex = 3
+        layout.insertStretch(layoutStretchIndex, 1)
+        # swap the layout alignment
+        plug.setInputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        plug.setOutputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.attributeContainer.addItem(plug)
+
+    def attributeItem(self, attributeModel):
+        for attr in iter(self.attributeContainer.items()):
+            if attr.model == attributeModel:
+                return attr
 
     def paint(self, painter, option, widget):
         rect = self.windowFrameRect()
@@ -83,3 +101,5 @@ class Panel(QtWidgets.QGraphicsWidget):
         if menu:
             menu.exec_(pos)
             self.refresh()
+    def handleConnectionDrop(self, model):
+        print "drop", self.ioType, model

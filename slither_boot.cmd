@@ -13,7 +13,7 @@ CALL :NORMALIZEPATH "..\zootools\bin"
 cd %RETVAL%
 call %RETVAL%\zoo_cmd.bat
 :: ========== FUNCTIONS ==========
-EXIT /B
+
 
 :NORMALIZEPATH
   SET RETVAL=%~dpfn1

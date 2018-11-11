@@ -186,7 +186,11 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
 
     def addAttribute(self, attribute):
         container = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
-        # self.scene().addItem(container)
+        if attribute.isInput():
+            index = container.layout().count() - 1
+        else:
+            index = 1
+        container.layout().insertStretch(index, 1)
         self.attributeContainer.addItem(container)
 
     def removeAttribute(self, attribute):
@@ -211,9 +215,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         for i in items:
             pos = i.pos() + i.mapToParent(event.pos()) - i.mapToParent(event.lastPos())
             i.setPos(pos)
-            for item in i.attributeContainer.items():
-                if isinstance(item, plugwidget.PlugContainer):
-                    item.updateConnections()
+        self.scene().updateAllConnections()
 
     def doubleClickEvent(self, event):
         if self.model.isCompound():

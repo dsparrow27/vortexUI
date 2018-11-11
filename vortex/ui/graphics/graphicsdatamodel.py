@@ -27,7 +27,7 @@ class ObjectModel(QtCore.QObject):
     # subclass should emit these signals to update the GUI from the core
 
     # signals connected by the graphics scene
-    addConnectionSig = QtCore.Signal(object, object)  #sourceAttrModel, destAttrModel
+    addConnectionSig = QtCore.Signal(object, object)  # sourceAttrModel, destAttrModel
     removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
 
     # connected by the GraphicsNode
@@ -39,6 +39,7 @@ class ObjectModel(QtCore.QObject):
     selectionChangedSig = QtCore.Signal(bool)  # selectionState
     parentChangedSig = QtCore.Signal(object, object)  # childObjectModel, parentObjectModel
     progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
+    requestRefresh = QtCore.Signal()
 
     def __init__(self, config, parent=None):
         super(ObjectModel, self).__init__()
@@ -237,6 +238,12 @@ class AttributeModel(QtCore.QObject):
     def __repr__(self):
         return "<{}-{}>".format(self.__class__.__name__, self.text())
 
+    def __eq__(self, other):
+        return hash(self) == hash(other)
+
+    def __ne__(self, other):
+        return hash(self) != hash(other)
+
     def __hash__(self):
         return id(self)
 
@@ -250,7 +257,10 @@ class AttributeModel(QtCore.QObject):
         return
 
     def textAlignment(self):
-        return QtCore.Qt.AlignCenter
+        if self.isInput():
+            return QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
+        else:
+            return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
 
     def setText(self, text):
         return False
@@ -267,14 +277,6 @@ class AttributeModel(QtCore.QObject):
         return False
 
     def createConnection(self, attribute):
-        # if not sourceModel.canAcceptConnection(destinationModel):
-        #     logger.warning("Can't create connection to destination: {}".format(destinationModel.text()))
-        #     return
-        # if destinationModel.isConnected() and not destinationModel.acceptsMultipleConnections():
-        #     for i in self.connectionsForPlug(destination):
-        #         self.deleteConnection(i)
-        #     destinationModel.deleteConnection(sourceModel)
-        # result = sourceModel.createConnection(destinationModel)
         return False
 
     def deleteConnection(self, attribute):

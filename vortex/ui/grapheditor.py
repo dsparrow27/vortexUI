@@ -19,17 +19,18 @@ logger = logging.getLogger(__name__)
 class GraphEditor(QtWidgets.QWidget):
     requestCompoundExpansion = QtCore.Signal(object)
 
-    def __init__(self, uiApplication, parent=None):
+    def __init__(self, model, application, parent=None):
         super(GraphEditor, self).__init__(parent=parent)
-        self.uiApplication = uiApplication
+        self.model = model
+        self.application = application
         self.init()
         self.view.tabPress.connect(self.showNodeLibrary)
         self.view.deletePress.connect(self.scene.onDelete)
-        self.nodeLibraryWidget = uiApplication.nodeLibraryWidget(parent=self)
+        self.nodeLibraryWidget = application.nodeLibraryWidget(parent=self)
         self.nodeLibraryWidget.hide()
 
     def showNodeLibrary(self, point):
-        registeredItems = self.uiApplication.registeredNodes()
+        registeredItems = self.application.registeredNodes()
         if not registeredItems:
             raise ValueError("No registered nodes to display")
         # registeredItems.append("Group")
@@ -47,12 +48,12 @@ class GraphEditor(QtWidgets.QWidget):
         self.toolbar = QtWidgets.QToolBar(parent=self)
         self.createAlignmentActions(self.toolbar)
         self.toolbar.addSeparator()
-        self.uiApplication.customToolbarActions(self.toolbar)
+        self.application.customToolbarActions(self.toolbar)
         self.editorLayout.addWidget(self.toolbar)
         # constructor view and set scene
-        self.scene = Scene(self.uiApplication, parent=self)
+        self.scene = Scene(self.application, parent=self)
 
-        self.view = View(self.uiApplication, parent=self)
+        self.view = View(self.application, self.model, parent=self)
         self.view.setScene(self.scene)
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
         self.view.requestCompoundExpansion.connect(self.requestCompoundExpansion.emit)
@@ -82,7 +83,7 @@ class GraphEditor(QtWidgets.QWidget):
                 item.model.contextMenu(menu)
             return
         edgeStyle = menu.addMenu("ConnectionStyle")
-        for i in self.uiApplication.config.connectionStyles.keys():
+        for i in self.application.config.connectionStyles.keys():
             edgeStyle.addAction(i, self.scene.onSetConnectionStyle)
         alignment = menu.addMenu("Alignment")
         self.createAlignmentActions(alignment)
@@ -108,34 +109,37 @@ class GraphEditor(QtWidgets.QWidget):
 
 
 class Scene(graphicsscene.GraphicsScene):
-    def __init__(self, uiApplication, *args, **kwargs):
+    def __init__(self, application, *args, **kwargs):
         super(Scene, self).__init__(*args, **kwargs)
         self.selectionChanged.connect(self._onSelectionChanged)
-        self.uiApplication = uiApplication
-        self.nodes = set()
+        self.uiApplication = application
+        self.nodes = {}
+        self.panelWidget = None
         self.backdrops = set()
         self.connections = set()
         self.uiApplication.onNodeDeleteRequested.connect(self.deleteNode)
 
     def _onSelectionChanged(self):
-        for i in self.nodes:
+        for i in self.nodes.values():
+            item = i["qitem"]
             try:
-                i.model.setSelected(i.isSelected())
+                item.model.setSelected(item.isSelected())
             except RuntimeError:
                 pass
 
     def selectedNodes(self):
-        return [i for i in self.nodes if i.isSelected()]
+        return [i["qitem"] for i in self.nodes.values() if i["qitem"].isSelected()]
 
     def selectionConnections(self):
-        return [i for i in self.connections if i.isSelected()]
+        return [i["qitem"] for i in self.connections if i["qitem"].isSelected()]
 
     def createNode(self, model, position):
         graphNode = graphicsnode.GraphicsNode(model, position=position)
         self.addItem(graphNode)
         graphNode.init()
         model.addConnectionSig.connect(self.createConnection)
-        self.nodes.add(graphNode)
+        self.nodes[hash(model)] = {"qitem": graphNode,
+                                   "model": model}
 
     def createBackDrop(self):
         drop = graphbackdrop.BackDrop()
@@ -151,18 +155,27 @@ class Scene(graphicsscene.GraphicsScene):
         :param destinationModel: The destination attribute objectModel
         :type destinationModel: ::class:`ObjectModel`
         """
-        sourceNode = sourceModel.objectModel
-        destinationNode = destinationModel.objectModel
-        source = None  # source Plug item which will be connected
-        destination = None  # destination Plug Item which will be connected
-        for n in self.nodes:
-            if n.model == sourceNode:
-                source = n.attributeItem(sourceModel)
-            elif n.model == destinationNode:
-                destination = n.attributeItem(destinationModel)
-            if source is not None and destination is not None:
-                break
-        if source is None or destination is None:
+        sourceModelObj = sourceModel.objectModel
+        sourceNode = self.nodes.get(hash(sourceModelObj), {}).get("qitem")
+        destination, source = None, None
+        # ok if the sourceNode can't be found in the nodes cache
+        # then it may means it's part of the side panels. Inputs are on the left panel
+        # while the outputs are on the rightPanel
+        if sourceNode is None:
+            # compare hash of the objectModels
+            if hash(self.panelWidget.model) == hash(sourceModelObj):
+                source = self.panelWidget.leftPanel.attributeItem(sourceModel)
+        else:
+            source = sourceNode.attributeItem(sourceModel)  # source Plug item which will be connected
+        destinationModelObj = destinationModel.objectModel
+        destinationNode = self.nodes.get(hash(destinationModelObj), {}).get("qitem")
+        if destinationNode is None:
+            # compare hash of the objectModels
+            if hash(self.panelWidget.model) == hash(destinationModelObj):
+                destination = self.panelWidget.rightPanel.attributeItem(destinationModel)
+        else:
+            destination = destinationNode.attributeItem(destinationModel)  # destination Plug Item which will be
+        if destination is None or source is None:
             msg = "Can't find source: {} or destination: {}, attributes on source: {}, destination: {}".format(
                 sourceModel.text(), destinationModel.text(), sourceNode.text(), destinationNode.text())
             logger.error(msg)
@@ -180,8 +193,8 @@ class Scene(graphicsscene.GraphicsScene):
 
     def connectionsForPlug(self, plug):
         for connection in iter(self.connections):
-            source = connection.sourcePlug.parentObject()
-            if source == plug or connection.destinationPlug.parentObject() == plug:
+            source = connection.sourcePlug
+            if source == plug or connection.destinationPlug == plug:
                 yield connection
 
     def updateConnectionsForPlug(self, plug):
@@ -189,11 +202,12 @@ class Scene(graphicsscene.GraphicsScene):
             conn.updatePosition()
 
     def deleteNode(self, node):
-        for n in self.nodes:
-            if n.model == node:
-                self.nodes.remove(n)
-                self.removeItem(n)
-                return True
+        key = hash(node.model)
+        if key in self.nodes:
+            item = self.nodes[key]["qitem"]
+            self.removeItem(item)
+            del self.nodes[key]
+            return True
         return False
 
     def deleteBackDrop(self, backDrop):
@@ -213,7 +227,6 @@ class Scene(graphicsscene.GraphicsScene):
 
     def onDelete(self, selection):
         for sel in selection:
-
             if isinstance(sel, edge.ConnectionEdge):
                 if sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model):
                     self.deleteConnection(sel)
@@ -252,16 +265,17 @@ class View(graphicsview.GraphicsView):
     requestPaste = QtCore.Signal(object)
     requestCompoundExpansion = QtCore.Signal(object)
 
-    def __init__(self, application, parent=None, setAntialiasing=True):
+    def __init__(self, application, model, parent=None, setAntialiasing=True):
         super(View, self).__init__(application.config, parent, setAntialiasing)
-        self.application = application
+        self.model = model
         self.newScale = None
         self.updateRequested.connect(self.rescaleGraphWidget)
         self.panelWidget = None
 
     def showPanels(self, state):
         if state:
-            self.panelWidget = graphpanels.PanelWidget(self.application, acceptsContextMenu=True)
+            self.panelWidget = graphpanels.PanelWidget(self.model, acceptsContextMenu=True)
+            self.scene().panelWidget = self.panelWidget
             self.scene().addItem(self.panelWidget)
             size = self.size()
             self.setSceneRect(0, 0, size.width(), size.height())

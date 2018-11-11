@@ -12,9 +12,10 @@ class Plug(QtWidgets.QGraphicsWidget):
     INPUT_TYPE = 0
     OUTPUT_TYPE = 1
 
-    def __init__(self, color, edgeColor, highlightColor, parent=None):
+    def __init__(self, color, edgeColor, highlightColor, ioType, parent=None):
         super(Plug, self).__init__(parent=parent)
         size = QtCore.QSizeF(self._diameter, self._diameter)
+        self.ioType= ""
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
         self.setWindowFrameMargins(0, 0, 0, 0)
@@ -31,12 +32,14 @@ class Plug(QtWidgets.QGraphicsWidget):
     @color.setter
     def color(self, color):
         self._currentBrush = QtGui.QBrush(color)
+        self.update()
 
     def highlight(self):
         self._currentBrush = QtGui.QBrush(self.color.lighter())
 
     def unhighlight(self):
         self._currentBrush = QtGui.QBrush(self._defaultBrush)
+        self.update()
 
     def center(self):
         rect = self.boundingRect()
@@ -57,7 +60,6 @@ class Plug(QtWidgets.QGraphicsWidget):
             self.leftMouseButtonClicked.emit(self, event)
         elif btn == QtCore.Qt.RightButton:
             self.rightMouseButtonClicked.emit(self, event)
-        # super(Plug, self).mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         self.moveEventRequested.emit(self, event)
@@ -80,37 +82,7 @@ class Plug(QtWidgets.QGraphicsWidget):
         )
 
 
-class PlugTextItem(graphicitems.GraphicsText):
-
-    def __init__(self, text, parent=None):
-        super(PlugTextItem, self).__init__(text, parent)
-        self._parent = parent
-        self._mouseDownPosition = QtCore.QPoint()
-        self.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
-                          QtWidgets.QGraphicsItem.ItemIsMovable)
-        self._item.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
-
-    def mousePressEvent(self, event):
-        self._mouseDownPosition = self.mapToScene(event.pos())
-
-    def mouseMoveEvent(self, event):
-        scenePos = self.mapToScene(event.pos())
-        # When clicking on an UI port label, it is ambiguous which connection point should be activated.
-        # We let the user drag the mouse in either direction to select the conneciton point to activate.
-        delta = scenePos - self._mouseDownPosition
-        parent = self._parent
-        if parent is not None:
-            if delta.x() < 0:
-                if parent.inCircle is not None:
-                    parent.inCircle.mousePressEvent(event)
-                return
-            if parent.outCircle is not None:
-                parent.outCircle.mousePressEvent(event)
-
-
 class PlugContainer(QtWidgets.QGraphicsWidget):
-    _radius = 4.5
-    _diameter = 2 * _radius
 
     def __init__(self, attributeModel, parent=None):
         super(PlugContainer, self).__init__(parent)
@@ -122,15 +94,19 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.setLayout(layout)
         self.inCircle = Plug(self.model.itemColour(),
                              self.model.itemEdgeColor(),
-                             self.model.highlightColor(),
+                             self.model.highlightColor(), "Input",
                              parent=self)
         self.outCircle = Plug(self.model.itemColour(),
                               self.model.itemEdgeColor(),
-                              self.model.highlightColor(), parent=self)
+                              self.model.highlightColor(), "Output", parent=self)
         self.inCircle.setToolTip(attributeModel.toolTip())
         self.outCircle.setToolTip(attributeModel.toolTip())
 
-        self.label = PlugTextItem(self.model.text(), parent=self)
+        self.label = graphicitems.GraphicsText(self.model.text(), parent=self)
+        self.label.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
+                                QtWidgets.QGraphicsItem.ItemIsMovable)
+
+        self.label.text.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         self.label.color = attributeModel.textColour() or QtGui.QColor(200, 200, 200)
 
         if not attributeModel.isOutput():
@@ -141,7 +117,6 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.outCircle.setToolTip(self.model.toolTip())
         layout.addItem(self.inCircle)
         layout.addItem(self.label)
-        layout.addStretch(1)
         layout.addItem(self.outCircle)
         layout.setAlignment(self.label, attributeModel.textAlignment())
         self.setInputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
@@ -160,6 +135,21 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
     def setLabel(self, label):
         self.label.setText(label)
 
+    def hideInput(self):
+        self.inCircle.hide()
+
+    def hideOutput(self):
+        self.outCircle.hide()
+
+    def showInput(self):
+        self.inCircle.show()
+
+    def showOutput(self):
+        self.outCircle.show()
+
+    def setTextAlignment(self, alignment):
+        self.layout().setAlignment(self.label, alignment)
+
     def setInputAlignment(self, alignment):
         self.layout().setAlignment(self.inCircle, alignment)
 
@@ -167,8 +157,11 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.layout().setAlignment(self.outCircle, alignment)
 
     def addConnection(self, plug):
+        plug.outCircle.color = plug.model.itemColour()
+        self.inCircle.color = self.model.itemColour()
         connection = edge.ConnectionEdge(plug.outCircle, self.inCircle,
-                                         curveType=self.model.objectModel.config.defaultConnectionShape)
+                                         curveType=self.model.objectModel.config.defaultConnectionShape,
+                                         color=plug.outCircle.color)
         connection.setLineStyle(self.model.objectModel.config.defaultConnectionStyle)
         connection.setWidth(self.model.objectModel.config.connectionLineWidth)
         connection.updatePosition()
@@ -194,8 +187,10 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         :return:
         :rtype:
         """
+        plug.color = plug.parentObject().model.itemColour()
         self._currentConnection = edge.ConnectionEdge(plug,
-                                                      curveType=self.model.objectModel.config.defaultConnectionShape)
+                                                      curveType=self.model.objectModel.config.defaultConnectionShape,
+                                                      color=plug.color)
         self._currentConnection.setLineStyle(self.model.objectModel.config.defaultConnectionStyle)
         self._currentConnection.setWidth(self.model.objectModel.config.connectionLineWidth)
         self._currentConnection.destinationPoint = plug.center()
@@ -206,15 +201,25 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self._currentConnection.destinationPoint = newPosition
 
     def onPlugRelease(self, plug, event):
+        scene = self.scene()
         if self._currentConnection is not None:
             end = self._currentConnection.path().pointAtPercent(1)
             endItem = self.scene().itemAt(end, QtGui.QTransform())
             # if we're a plugItem then offload the connection handling to the model
             # the model will then call the scene.createConnection via a signal
             # this is so we let the client code determine if the connection is legal
+
             if isinstance(endItem, Plug):
-                dest = self if self.model.isInput() else endItem.parentObject()
-                self.model.createConnection(dest.model)
-            self.scene().removeItem(self._currentConnection)
+                endItem = endItem.parentObject()
+                if endItem.model.isInput():
+                    endItem.model.createConnection(plug.parentObject().model)
+                else:
+                    plug.parentObject().model.createConnection(endItem.model)
+            # could be the side panel, just use the left panel
+            elif endItem == scene.panelWidget.leftPanel:
+                scene.panelWidget.leftPanel.handleConnectionDrop(plug.parentObject().model)
+            elif endItem == scene.panelWidget.rightPanel:
+                scene.panelWidget.rightPanel.handleConnectionDrop(plug.parentObject().model)
+            scene.removeItem(self._currentConnection)
             self._currentConnection = None
-        self.scene().update()
+        scene.update()

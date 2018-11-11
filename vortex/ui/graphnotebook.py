@@ -21,7 +21,7 @@ class GraphNotebook(QtWidgets.QWidget):
     def onRequestaddNodeToScene(self, data):
         # {model: objectModel, newTab: True}
         if data["newTab"]:
-            editor = self.addPage(data["model"].text())
+            editor = self.addPage(data["model"])
         else:
             editor = self.currentPage()
             editor.scene.createNode(model=data["model"], position=editor.view.centerPosition())
@@ -41,12 +41,13 @@ class GraphNotebook(QtWidgets.QWidget):
         self.addPage(compound.text())
         self.uiApplication.models[compound.text()] = compound
 
-    def addPage(self, label):
-        editor = grapheditor.GraphEditor(self.uiApplication, parent=self)
+    def addPage(self, model):
+        editor = grapheditor.GraphEditor(model, self.uiApplication, parent=self)
+        model.addConnectionSig.connect(editor.scene.createConnection)
         editor.requestCompoundExpansion.connect(self.onRequestExpandCompoundAsTab)
         editor.showPanels(True)
         self.pages.append(editor)
-        self.notebook.insertTab(0, editor, label)
+        self.notebook.insertTab(0, editor, model.text())
         return editor
 
     def setCurrentPageLabel(self, label):
