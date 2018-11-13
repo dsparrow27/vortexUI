@@ -4,6 +4,10 @@ from qt import QtWidgets, QtCore, QtGui
 
 from PySide2 import QtWidgets, QtGui, QtCore
 
+ATTRIBUTE_VIS_LEVEL_ZERO = 0
+ATTRIBUTE_VIS_LEVEL_ONE = 1
+ATTRIBUTE_VIS_LEVEL_TWO = 2
+
 
 class NodeHeaderButton(QtWidgets.QGraphicsWidget):
     stateChanged = QtCore.Signal(int)
@@ -21,7 +25,7 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
-            if self.state >= 3:
+            if self.state >= 2:
                 self.state = 0
             elif self.state <= 0:
                 self.state += 1
@@ -33,19 +37,15 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
     def paint(self, painter, option, widget):
         avg = self._size / 3.0
         mid = self._size / 2.0
-        if self.state == 0:
-            self._stroke(painter, 0, 0, self._size, avg)
-            self._stroke(painter, 0, mid, self._size, avg)
-            self._stroke(painter, 0, self._size, self._size, avg)
-        elif self.state == 1:
+        if self.state == ATTRIBUTE_VIS_LEVEL_ZERO:
             self._solidRect(painter, 0, 0, self._size, avg)
             self._stroke(painter, 0, mid, self._size, avg)
             self._stroke(painter, 0, self._size, self._size, avg)
-        elif self.state == 2:
+        elif self.state == ATTRIBUTE_VIS_LEVEL_ONE:
             self._solidRect(painter, 0, 0, self._size, avg)
             self._solidRect(painter, 0, mid, self._size, avg)
             self._stroke(painter, 0, self._size, self._size, avg)
-        elif self.state == 3:
+        elif self.state == ATTRIBUTE_VIS_LEVEL_TWO:
             self._solidRect(painter, 0, 0, self._size, avg)
             self._solidRect(painter, 0, mid, self._size, avg)
             self._solidRect(painter, 0, self._size, self._size, avg)
@@ -87,6 +87,7 @@ class HeaderPixmap(QtWidgets.QGraphicsWidget):
 
 class NodeHeader(QtWidgets.QGraphicsWidget):
     headerButtonStateChanged = QtCore.Signal(int)
+    headerTextChanged = QtCore.Signal(str)
 
     def __init__(self, node, text, secondaryText="", icon=None, parent=None):
         super(NodeHeader, self).__init__(parent)
@@ -116,9 +117,7 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
         container = graphicitems.ItemContainer(QtCore.Qt.Vertical, parent=self)
         container.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
         self._titleWidget = graphicitems.GraphicsText(primary, self)
-        self._titleWidget.setTextFlags(
-            QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
-            QtWidgets.QGraphicsItem.ItemIsMovable)
+        self._titleWidget.textChanged.connect(self.headerTextChanged)
         self._titleWidget.font = QtGui.QFont("Roboto-Bold.ttf", 8)
         self._secondarytitle = graphicitems.GraphicsText(secondary, self)
         self._secondarytitle.setTextFlags(
@@ -131,6 +130,7 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
 
     def setText(self, text):
         self._titleWidget.setText(text)
+
 
 
 class GraphicsNode(QtWidgets.QGraphicsWidget):
@@ -155,9 +155,10 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         layout.setSpacing(0)
         layout.setOrientation(QtCore.Qt.Vertical)
         self.header = NodeHeader(self, self.model.text(), self.model.secondaryText(), parent=self)
-
+        self.header.headerTextChanged.connect(self.onHeaderTextChanged)
         self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
+        self.attributeContainer.layout().setSpacing(0)
         self.setToolTip(self.model.toolTip())
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
@@ -173,11 +174,16 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         # objectModel.parentChangedSig.connect(self)
         self.setLayout(layout)
         # now bind the attributes from the model if it has any
-        for attr in self.model.attributes():
+        for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=ATTRIBUTE_VIS_LEVEL_ZERO):
             self.addAttribute(attr)
 
+    def onHeaderTextChanged(self, text):
+        self.model.setText(text)
+
     def onHeaderButtonStateChanged(self, state):
-        pass
+        self.attributeContainer.clear()
+        for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=state):
+            self.addAttribute(attr)
 
     def setAttributeName(self, attribute, name):
         attr = self.attributeItem(attribute)
@@ -232,8 +238,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness + 1)
         else:
             standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
-
-        rect = self.windowFrameRect()
+        rect = self.childrenBoundingRect()
         rounded_rect = QtGui.QPainterPath()
         roundingX = 0.0
         roundingY = int(150.0 * self.cornerRounding / rect.height())

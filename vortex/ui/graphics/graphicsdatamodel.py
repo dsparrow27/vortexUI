@@ -22,7 +22,6 @@ class ObjectModel(QtCore.QObject):
     ATTRIBUTE_VIS_LEVEL_ZERO = 0
     ATTRIBUTE_VIS_LEVEL_ONE = 1
     ATTRIBUTE_VIS_LEVEL_TWO = 2
-    ATTRIBUTE_VIS_LEVEL_THREE = 3
 
     # subclass should emit these signals to update the GUI from the core
 
@@ -124,6 +123,9 @@ class ObjectModel(QtCore.QObject):
         :rtype: str
         """
         return "primary header"
+
+    def setText(self, value):
+        pass
 
     def secondaryText(self):
         """The Secondary text to display just under the primary text (self.text()).
@@ -227,13 +229,14 @@ class ObjectModel(QtCore.QObject):
 
 
 class AttributeModel(QtCore.QObject):
-    def __init__(self, objectModel):
+    def __init__(self, objectModel, parent=None):
         """
         :param objectModel: The Node ObjectModel
         :type objectModel: ::class:`ObjectModel`
         """
         super(AttributeModel, self).__init__()
         self.objectModel = objectModel
+        self.parent = parent
 
     def __repr__(self):
         return "<{}-{}>".format(self.__class__.__name__, self.text())
@@ -268,8 +271,18 @@ class AttributeModel(QtCore.QObject):
     def isArray(self):
         return False
 
+    def isElement(self):
+        if self.parent is not None:
+            return self.parent.isArray()
+
     def isCompound(self):
         return False
+
+    def elements(self):
+        return [AttributeModel(self.objectModel, parent=self)]
+
+    def children(self):
+        return [AttributeModel(self.objectModel, parent=self)]
 
     def canAcceptConnection(self, plug):
         return True

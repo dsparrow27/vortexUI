@@ -89,6 +89,7 @@ class CrossSquare(QtWidgets.QGraphicsWidget):
         super(CrossSquare, self).__init__(parent)
         size = QtCore.QSizeF(Plug._diameter, Plug._diameter)
         self.expanded = False
+        self.isElement = False
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
         self.setWindowFrameMargins(0, 0, 0, 0)
@@ -101,19 +102,28 @@ class CrossSquare(QtWidgets.QGraphicsWidget):
 
     def mousePressEvent(self, event):
         btn = event.button()
-        if btn == QtCore.Qt.LeftButton:
+        if btn == QtCore.Qt.LeftButton and not self.isElement:
             self.leftMouseButtonClicked.emit()
 
     def paint(self, painter, options, widget=None):
         painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255), 0.25))
         # draw the square
-        painter.drawRect(0, 0, Plug._diameter, Plug._diameter)
+
+        if self.isElement:
+            parentHeight = self.parentObject().size().height()
+            lines = [QtCore.QLineF(QtCore.QPoint(Plug._diameter*0.5, Plug._diameter*0.5),
+                                   QtCore.QPoint(Plug._diameter*0.5, -(parentHeight -Plug._diameter))),
+                     QtCore.QLineF(QtCore.QPoint(Plug._diameter * 0.5, Plug._diameter * 0.5),
+                                   QtCore.QPoint(Plug._diameter, Plug._diameter * 0.5))]
+            painter.drawLines(lines)
         # draw the center cross
-        if self.expanded:
-            # if we have expanded just draw the horizontal line
-            painter.drawLines(self.lines[1:])
         else:
-            painter.drawLines(self.lines)
+            painter.drawRect(0, 0, Plug._diameter, Plug._diameter)
+            if self.expanded:
+                # if we have expanded just draw the horizontal line
+                painter.drawLines(self.lines[1:])
+            else:
+                painter.drawLines(self.lines)
 
     def boundingRect(self):
         return QtCore.QRectF(
@@ -129,6 +139,7 @@ class PlugContainer(graphicitems.ItemContainer):
     def __init__(self, attributeModel, parent=None):
         super(PlugContainer, self).__init__(QtCore.Qt.Horizontal, parent)
         self.model = attributeModel
+        self.childContainers = []
         self.inCrossItem = CrossSquare(parent=self)
         self.outCrossItem = CrossSquare(parent=self)
 
@@ -215,11 +226,43 @@ class PlugContainer(graphicitems.ItemContainer):
     def updateConnections(self):
         self.scene().updateConnectionsForPlug(self)
 
+    def expand(self):
+        parentContainer = self.parentObject()
+        if self.model.isArray():
+            if self.inCrossItem.expanded:
+                for container in self.childContainers:
+                    parentContainer.removeItem(container)
+                    self.scene().removeItem(container)
+                self.childContainers = []
+                return
+            else:
+                children = reversed(self.model.elements())
+        else:
+            children = reversed(self.model.children())
+        selfIndex = parentContainer.indexOf(self) + 1
+        for element in children:
+            elementContainer = PlugContainer(attributeModel=element, parent=self)
+            elementContainer.inCrossItem.isElement = True
+            elementContainer.outCrossItem.isElement = True
+            parentContainer.insertItem(selfIndex, elementContainer)
+            self.childContainers.append(elementContainer)
+            if element.isInput():
+                index = elementContainer.layout().count() - 2
+                if element.isArray() or element.isCompound() or element.isElement():
+                    elementContainer.inCrossItem.show()
+            else:
+                if element.isArray() or element.isCompound() or element.isElement():
+                    elementContainer.outCrossItem.show()
+                index = 2
+            elementContainer.layout().insertStretch(index, 1)
+
     def onExpandInput(self):
+        self.expand()
         self.inCrossItem.expanded = not self.inCrossItem.expanded
         self.update()
 
     def onExpandOutput(self):
+        self.expand()
         self.outCrossItem.expanded = not self.outCrossItem.expanded
         self.update()
 

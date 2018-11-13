@@ -202,7 +202,7 @@ class Scene(graphicsscene.GraphicsScene):
             conn.updatePosition()
 
     def deleteNode(self, node):
-        key = hash(node.model)
+        key = hash(node)
         if key in self.nodes:
             item = self.nodes[key]["qitem"]
             self.removeItem(item)
