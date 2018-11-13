@@ -187,9 +187,13 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
     def addAttribute(self, attribute):
         container = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
         if attribute.isInput():
-            index = container.layout().count() - 1
+            index = container.layout().count() - 2
+            if attribute.isArray() or attribute.isCompound():
+                container.inCrossItem.show()
         else:
-            index = 1
+            if attribute.isArray() or attribute.isCompound():
+                container.outCrossItem.show()
+            index = 2
         container.layout().insertStretch(index, 1)
         self.attributeContainer.addItem(container)
 

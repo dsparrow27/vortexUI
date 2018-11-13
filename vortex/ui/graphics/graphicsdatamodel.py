@@ -265,6 +265,12 @@ class AttributeModel(QtCore.QObject):
     def setText(self, text):
         return False
 
+    def isArray(self):
+        return False
+
+    def isCompound(self):
+        return False
+
     def canAcceptConnection(self, plug):
         return True
 

@@ -15,7 +15,7 @@ class Plug(QtWidgets.QGraphicsWidget):
     def __init__(self, color, edgeColor, highlightColor, ioType, parent=None):
         super(Plug, self).__init__(parent=parent)
         size = QtCore.QSizeF(self._diameter, self._diameter)
-        self.ioType= ""
+        self.ioType = ""
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
         self.setWindowFrameMargins(0, 0, 0, 0)
@@ -82,16 +82,56 @@ class Plug(QtWidgets.QGraphicsWidget):
         )
 
 
-class PlugContainer(QtWidgets.QGraphicsWidget):
+class CrossSquare(QtWidgets.QGraphicsWidget):
+    leftMouseButtonClicked = QtCore.Signal()
+
+    def __init__(self, parent=None):
+        super(CrossSquare, self).__init__(parent)
+        size = QtCore.QSizeF(Plug._diameter, Plug._diameter)
+        self.expanded = False
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
+        self.setPreferredSize(size)
+        self.setWindowFrameMargins(0, 0, 0, 0)
+        self.hide()
+        self.lines = [QtCore.QLineF(QtCore.QPoint(Plug._diameter * 0.5, 3.0),
+                                    QtCore.QPoint(Plug._diameter * 0.5, Plug._diameter - 3.0)),
+                      QtCore.QLineF(QtCore.QPoint(3.0, Plug._diameter * 0.5),
+                                    QtCore.QPoint(Plug._diameter - 3.0, Plug._diameter * 0.5))
+                      ]
+
+    def mousePressEvent(self, event):
+        btn = event.button()
+        if btn == QtCore.Qt.LeftButton:
+            self.leftMouseButtonClicked.emit()
+
+    def paint(self, painter, options, widget=None):
+        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255), 0.25))
+        # draw the square
+        painter.drawRect(0, 0, Plug._diameter, Plug._diameter)
+        # draw the center cross
+        if self.expanded:
+            # if we have expanded just draw the horizontal line
+            painter.drawLines(self.lines[1:])
+        else:
+            painter.drawLines(self.lines)
+
+    def boundingRect(self):
+        return QtCore.QRectF(
+            0,
+            0,
+            Plug._diameter + 0.25,
+            Plug._diameter + 0.25,
+        )
+
+
+class PlugContainer(graphicitems.ItemContainer):
 
     def __init__(self, attributeModel, parent=None):
-        super(PlugContainer, self).__init__(parent)
+        super(PlugContainer, self).__init__(QtCore.Qt.Horizontal, parent)
         self.model = attributeModel
-        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
-        layout = QtWidgets.QGraphicsLinearLayout(parent=self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(1)
-        self.setLayout(layout)
+        self.inCrossItem = CrossSquare(parent=self)
+        self.outCrossItem = CrossSquare(parent=self)
+
         self.inCircle = Plug(self.model.itemColour(),
                              self.model.itemEdgeColor(),
                              self.model.highlightColor(), "Input",
@@ -115,13 +155,11 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
             self.inCircle.hide()
         self.inCircle.setToolTip(self.model.toolTip())
         self.outCircle.setToolTip(self.model.toolTip())
-        layout.addItem(self.inCircle)
-        layout.addItem(self.label)
-        layout.addItem(self.outCircle)
-        layout.setAlignment(self.label, attributeModel.textAlignment())
-        self.setInputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.setOutputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-
+        self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.addItem(self.label, attributeModel.textAlignment())
+        self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.label.allowHoverHighlight = True
         self.inCircle.leftMouseButtonClicked.connect(self.onPlugClicked)
         self.outCircle.leftMouseButtonClicked.connect(self.onPlugClicked)
@@ -129,6 +167,8 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
         self.outCircle.moveEventRequested.connect(self.onPlugMove)
         self.inCircle.releaseEventRequested.connect(self.onPlugRelease)
         self.outCircle.releaseEventRequested.connect(self.onPlugRelease)
+        self.inCrossItem.leftMouseButtonClicked.connect(self.onExpandInput)
+        self.outCrossItem.leftMouseButtonClicked.connect(self.onExpandOutput)
         # used purely to store the connection request transaction
         self._currentConnection = None
 
@@ -174,6 +214,14 @@ class PlugContainer(QtWidgets.QGraphicsWidget):
 
     def updateConnections(self):
         self.scene().updateConnectionsForPlug(self)
+
+    def onExpandInput(self):
+        self.inCrossItem.expanded = not self.inCrossItem.expanded
+        self.update()
+
+    def onExpandOutput(self):
+        self.outCrossItem.expanded = not self.outCrossItem.expanded
+        self.update()
 
     # handle connection methods
     def onPlugClicked(self, plug, event):

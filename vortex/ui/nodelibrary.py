@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class NodeBoxWidget(QtWidgets.QListWidget):
+    enterPressed = QtCore.Signal()
 
     def __init__(self, parent):
         super(NodeBoxWidget, self).__init__(parent)
@@ -15,6 +16,12 @@ class NodeBoxWidget(QtWidgets.QListWidget):
         self.setSortingEnabled(True)
         self.setDragEnabled(True)
         self.setDragDropMode(QtWidgets.QAbstractItemView.DragOnly)
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Enter:
+            self.enterPressed.emit()
+        super(NodeBoxWidget, self).keyPressEvent(event)
+
 
 class NodesBox(QtWidgets.QFrame):
     """doc string for NodesBox"""
@@ -33,8 +40,9 @@ class NodesBox(QtWidgets.QFrame):
         self.verticalLayout.addWidget(self.nodeListWidget)
         self.lineEdit.textChanged.connect(self.searchTextChanged)
         self.nodeListWidget.itemChanged.connect(self.onSelectionChanged)
-        self.nodeListWidget.itemClicked.connect(self.onSelectionChanged)
+        # self.nodeListWidget.itemClicked.connect(self.onSelectionChanged)
         self.nodeListWidget.itemDoubleClicked.connect(self.onDoubleClicked)
+        self.nodeListWidget.enterPressed.connect(self.onEnterPressed)
         self.resize(400, 250)
 
     def sizeHint(self):
@@ -55,16 +63,19 @@ class NodesBox(QtWidgets.QFrame):
         if event.key() == QtCore.Qt.Key_Escape:
             self.hide()
         elif event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
-            currentText = self.lineEdit.text()
-            if currentText in self.uiApplication.registeredNodes().keys():
-                self.uiApplication.onNodeCreated(currentText)
-                self.hide()
-            elif currentText == "Group":
-                self.parent().scene.createBackDrop()
-                self.hide()
+            self.onEnterPressed()
         elif event.key() in (QtCore.Qt.Key_Down, QtCore.Qt.Key_Up):
             return self.nodeListWidget.keyPressEvent(event)
         super(NodesBox, self).keyPressEvent(event)
+
+    def onEnterPressed(self):
+        currentText = self.nodeListWidget.currentItem().text()
+        if currentText in self.uiApplication.registeredNodes().keys():
+            self.uiApplication.onNodeCreated(currentText)
+            self.hide()
+        elif currentText == "Group":
+            self.parent().scene.createBackDrop()
+            self.hide()
 
     def onDoubleClicked(self, item):
         self.uiApplication.onNodeCreated(item.text())
