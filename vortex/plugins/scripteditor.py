@@ -1,17 +1,13 @@
 import logging
 import os
-import traceback
-
 import sys
 
 from zoo.libs.pyqt.extended import pythoneditor
 from zoo.libs.pyqt import utils as qtutils
 from zoo.libs.pyqt.widgets import logoutput
 from zoo.libs.pyqt.syntaxhighlighter import highlighter
-from zoo.libs.pyqt import thread
 from vortex.ui import plugin
 from qt import QtCore, QtWidgets
-from Queue import Queue
 
 
 class XStream(QtCore.QObject):

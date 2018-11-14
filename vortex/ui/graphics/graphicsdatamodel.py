@@ -213,7 +213,7 @@ class ObjectModel(QtCore.QObject):
         return QtGui.QColor(0.0, 0.0, 0.0, 255)
 
     def edgeThickness(self):
-        return 2
+        return 3
 
     def deleteChild(self, child):
         return False
@@ -279,10 +279,10 @@ class AttributeModel(QtCore.QObject):
         return False
 
     def elements(self):
-        return [AttributeModel(self.objectModel, parent=self)]
+        return []
 
     def children(self):
-        return [AttributeModel(self.objectModel, parent=self)]
+        return []
 
     def canAcceptConnection(self, plug):
         return True

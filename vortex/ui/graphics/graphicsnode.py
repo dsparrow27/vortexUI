@@ -21,7 +21,7 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
         self.setMinimumWidth(size)
         self.setMaximumWidth(size)
         self.state = 0
-        self.update()
+        self._defaultPen = QtGui.QPen(QtGui.QColor(0.0, 0.0, 0.0))
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
@@ -35,6 +35,7 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
             self.update()
 
     def paint(self, painter, option, widget):
+        painter.setPen(self._defaultPen)
         avg = self._size / 3.0
         mid = self._size / 2.0
         if self.state == ATTRIBUTE_VIS_LEVEL_ZERO:
@@ -70,7 +71,7 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
         rounded_rect.addRoundRect(rect,
                                   roundingX, roundingY
                                   )
-        painter.strokePath(rounded_rect, QtGui.QPen(self.color, 1))
+        painter.strokePath(rounded_rect, self._defaultPen)
 
 
 class HeaderPixmap(QtWidgets.QGraphicsWidget):
@@ -115,7 +116,6 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
 
     def _createLabels(self, primary, secondary, parentLayout):
         container = graphicitems.ItemContainer(QtCore.Qt.Vertical, parent=self)
-        container.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
         self._titleWidget = graphicitems.GraphicsText(primary, self)
         self._titleWidget.textChanged.connect(self.headerTextChanged)
         self._titleWidget.font = QtGui.QFont("Roboto-Bold.ttf", 8)
@@ -130,7 +130,6 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
 
     def setText(self, text):
         self._titleWidget.setText(text)
-
 
 
 class GraphicsNode(QtWidgets.QGraphicsWidget):
@@ -239,6 +238,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         else:
             standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
         rect = self.childrenBoundingRect()
+        rect.setWidth(rect.width() + 2)
         rounded_rect = QtGui.QPainterPath()
         roundingX = 0.0
         roundingY = int(150.0 * self.cornerRounding / rect.height())
@@ -248,13 +248,13 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         painter.setBrush(self.backgroundColour)
         painter.fillPath(rounded_rect, painter.brush())
         # Title BG
+        painter.setPen(QtGui.QPen(self.model.headerColor()))
         titleHeight = self.header.size().height()
         #
         painter.setBrush(self.model.headerColor())
         painter.drawRoundedRect(0, 0, rect.width(), titleHeight, 0.0, roundingY, QtCore.Qt.AbsoluteSize)
         painter.drawRect(0, 0, rect.width(), titleHeight)
 
-        # horizontal line
         painter.strokePath(rounded_rect, standardPen)
 
         super(GraphicsNode, self).paint(painter, option, widget)

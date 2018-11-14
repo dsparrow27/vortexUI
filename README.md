@@ -10,13 +10,11 @@ instead of asking clients to deal directly with QtWidgets and knowing much of th
 we provide few high level objects to customize which should handle all aspects.
 
 The Widget supports tabs, each tab consists of a new view and scene instance
-but would be bound to global application instance sharing a root objectModel,
+but would be bound to a single global application instance sharing a root objectModel,
 a ui config object and events.
 
 Each objectModel instance would handle creating it's own attributes and handle
 signally the ui for refresh.
-
-
 
 
 ###### Objects ######
@@ -32,4 +30,4 @@ AttributeModel
 ##### Dependencies #####
 zoocore
 slither #temp
-PySide 1.2.2 or PySide2 # note pyside 1.2.4 has a qgraphicWidget bug which draws widgets with 100% transparent.
+PySide2

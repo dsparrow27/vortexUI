@@ -49,7 +49,8 @@ class Panel(QtWidgets.QGraphicsWidget):
         if currentModel is None:
             return
         self.attributeContainer.clear()
-        for attr in currentModel.attributes(self.ioType == "Input", self.ioType == "Output"):
+        for attr in currentModel.attributes(self.ioType == "Input", self.ioType == "Output",
+                                            3):
             self.addAttribute(attr)
 
     def mousePressEvent(self, event):
