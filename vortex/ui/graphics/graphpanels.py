@@ -70,10 +70,10 @@ class Panel(QtWidgets.QGraphicsWidget):
         #     # insert the inCircle to the far right
             layout.insertItem(3, plug.inCircle)
             layout.insertItem(2, plug.inCrossItem)
-            layoutStretchIndex = 2
             # we switch this around for panels because the model input would be connected to another input
             # making it difficult to which is the start point and end point of a connection
             plug.inCircle.ioType = "Output"
+            layout.insertStretch(2, 1)
         else:
             if attribute.isArray() or attribute.isCompound():
                 plug.outCrossItem.show()
@@ -84,8 +84,8 @@ class Panel(QtWidgets.QGraphicsWidget):
             layout.insertItem(1, plug.outCrossItem)
             layout.itemAt(layout.count()-1)
             plug.inCircle.ioType = "Input"
-            layoutStretchIndex = 3
-        layout.insertStretch(layoutStretchIndex, 1)
+            plug.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+
         # swap the layout alignment
         plug.setInputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         plug.layout().setAlignment(plug.inCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
@@ -110,5 +110,6 @@ class Panel(QtWidgets.QGraphicsWidget):
         if menu:
             menu.exec_(pos)
             self.refresh()
+
     def handleConnectionDrop(self, model):
         print "drop", self.ioType, model

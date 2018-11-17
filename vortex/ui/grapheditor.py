@@ -33,7 +33,6 @@ class GraphEditor(QtWidgets.QWidget):
         registeredItems = self.application.registeredNodes()
         if not registeredItems:
             raise ValueError("No registered nodes to display")
-        # registeredItems.append("Group")
         self.nodeLibraryWidget.reload(registeredItems)
         self.nodeLibraryWidget.show()
         self.nodeLibraryWidget.move(self.mapFromGlobal(point))
@@ -267,6 +266,7 @@ class View(graphicsview.GraphicsView):
 
     def __init__(self, application, model, parent=None, setAntialiasing=True):
         super(View, self).__init__(application.config, parent, setAntialiasing)
+        self.application = application
         self.model = model
         self.newScale = None
         self.updateRequested.connect(self.rescaleGraphWidget)
@@ -283,10 +283,8 @@ class View(graphicsview.GraphicsView):
     def keyPressEvent(self, event):
         ctrl = event.modifiers() == QtCore.Qt.ControlModifier
         key = event.key()
-        if key == QtCore.Qt.Key_C and ctrl:
-            self.requestCopy.emit()
-        elif key == QtCore.Qt.Key_V and ctrl:
-            self.requestPaste.emit(QtGui.QCursor.pos())
+        if key in (QtCore.Qt.Key_C, QtCore.Qt.Key_V, QtCore.Qt.Key_G) and ctrl:
+            self.application.keyPressEvent(event)
         super(View, self).keyPressEvent(event)
 
     def resizeEvent(self, event):

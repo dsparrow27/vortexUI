@@ -50,6 +50,7 @@ class ScriptEditor(plugin.UIPlugin):
     def initializeWidget(self):
         window = self.application.mainWindow()
         self.editorParent = QtWidgets.QWidget(parent=window)
+        self.editorParent.setObjectName("ScriptEditor")
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.layout = qtutils.vBoxLayout(parent=self.editorParent)
         self.layout.addWidget(self.splitter)

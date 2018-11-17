@@ -54,24 +54,14 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
 
     def _solidRect(self, painter, x, y, width, height):
         rect = QtCore.QRect(x, y, width, height)
-        rounded_rect = QtGui.QPainterPath()
-        roundingX = 20
-        roundingY = int(150.0 * 20 / rect.height())
-        rounded_rect.addRoundRect(rect,
-                                  roundingX, roundingY
-                                  )
         painter.setBrush(self.color)
-        painter.fillPath(rounded_rect, painter.brush())
+        painter.drawRect(rect)
 
     def _stroke(self, painter, x, y, width, height):
         rect = QtCore.QRect(x, y, width, height)
-        rounded_rect = QtGui.QPainterPath()
-        roundingX = 20
-        roundingY = int(150.0 * 20 / rect.height())
-        rounded_rect.addRoundRect(rect,
-                                  roundingX, roundingY
-                                  )
-        painter.strokePath(rounded_rect, self._defaultPen)
+        painter.setPen(self._defaultPen)
+        painter.setBrush(QtGui.QBrush(QtGui.QColor(0.0,0.0,0.0,0.0)))
+        painter.drawRect(rect)
 
 
 class HeaderPixmap(QtWidgets.QGraphicsWidget):
@@ -93,6 +83,7 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
     def __init__(self, node, text, secondaryText="", icon=None, parent=None):
         super(NodeHeader, self).__init__(parent)
         self._node = node
+
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
         layout = QtWidgets.QGraphicsLinearLayout()
@@ -110,12 +101,14 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
         headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
         layout.addItem(headerButton)
         layout.setAlignment(headerButton, QtCore.Qt.AlignCenter | QtCore.Qt.AlignCenter)
+        headerButton.hide()
 
     def setIcon(self, path):
         self.headerIcon.setPixmap(path)
 
     def _createLabels(self, primary, secondary, parentLayout):
         container = graphicitems.ItemContainer(QtCore.Qt.Vertical, parent=self)
+        container.layout().setSpacing(0)
         self._titleWidget = graphicitems.GraphicsText(primary, self)
         self._titleWidget.textChanged.connect(self.headerTextChanged)
         self._titleWidget.font = QtGui.QFont("Roboto-Bold.ttf", 8)
@@ -240,10 +233,9 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         rect = self.childrenBoundingRect()
         rect.setWidth(rect.width() + 2)
         rounded_rect = QtGui.QPainterPath()
-        roundingX = 0.0
         roundingY = int(150.0 * self.cornerRounding / rect.height())
         rounded_rect.addRoundRect(rect,
-                                  roundingX, roundingY
+                                  0.0, roundingY
                                   )
         painter.setBrush(self.backgroundColour)
         painter.fillPath(rounded_rect, painter.brush())
@@ -252,9 +244,8 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         titleHeight = self.header.size().height()
         #
         painter.setBrush(self.model.headerColor())
-        painter.drawRoundedRect(0, 0, rect.width(), titleHeight, 0.0, roundingY, QtCore.Qt.AbsoluteSize)
         painter.drawRect(0, 0, rect.width(), titleHeight)
-
+        # outer node edge
         painter.strokePath(rounded_rect, standardPen)
 
         super(GraphicsNode, self).paint(painter, option, widget)

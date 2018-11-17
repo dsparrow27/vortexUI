@@ -6,7 +6,6 @@ from qt import QtCore, QtWidgets
 
 class AttributeEditorPlugin(plugin.UIPlugin):
     id = "AttributeEditor"
-    type = "Widget"
     autoLoad = True
     creator = "David Sparrow"
 

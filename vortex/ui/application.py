@@ -81,17 +81,17 @@ class UIApplication(QtCore.QObject):
         """
         modifiers = event.modifiers()
         key = event.key()
+
         if key == 16777249:
             return
         sequence = []
         if modifiers == QtCore.Qt.ControlModifier:
-            sequence.append(QtCore.Qt.SHIFT + key)
+            sequence.append(QtCore.Qt.CTRL)
         if modifiers == QtCore.Qt.ShiftModifier:
-            sequence.append(QtCore.Qt.CTRL + key)
+            sequence.append(QtCore.Qt.SHIFT)
         if modifiers == QtCore.Qt.AltModifier:
-            sequence.append(QtCore.Qt.ALT + key)
-        if not sequence:
-            sequence = [key]
+            sequence.append(QtCore.Qt.ALT)
+        sequence.append(key)
         results = QtGui.QKeySequence(*sequence)
         self.keyBoardMapping(str(results.toString()), key, modifiers)
 

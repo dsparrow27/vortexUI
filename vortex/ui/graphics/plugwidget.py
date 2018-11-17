@@ -106,7 +106,7 @@ class CrossSquare(QtWidgets.QGraphicsWidget):
             self.leftMouseButtonClicked.emit()
 
     def paint(self, painter, options, widget=None):
-        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255), 0.25))
+        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 1.0), 0.25))
         # draw the square
 
         if self.isElement:
