@@ -101,7 +101,7 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
         headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
         layout.addItem(headerButton)
         layout.setAlignment(headerButton, QtCore.Qt.AlignCenter | QtCore.Qt.AlignCenter)
-        headerButton.hide()
+
 
     def setIcon(self, path):
         self.headerIcon.setPixmap(path)
