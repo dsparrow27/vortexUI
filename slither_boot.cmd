@@ -9,7 +9,7 @@ set SLITHER=%RETVAL%
 set PATH=%PATH%;%ABS_PATH%;%SLITHER%;%SLITHER%\thirdparty;
 set PYTHONPATH=%PYTHONPATH%;%ABS_PATH%;%SLITHER%;%SLITHER%\thirdparty;
 set VORTEX_UI_PLUGINS=%ABS_PATH%\vortex\plugins
-CALL :NORMALIZEPATH "..\zootools\bin"
+CALL :NORMALIZEPATH "..\zootools_pro\bin"
 cd %RETVAL%
 call %RETVAL%\zoo_cmd.bat
 :: ========== FUNCTIONS ==========
