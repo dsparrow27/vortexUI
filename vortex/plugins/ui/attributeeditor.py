@@ -8,12 +8,15 @@ class AttributeEditorPlugin(plugin.UIPlugin):
     id = "AttributeEditor"
     autoLoad = True
     creator = "David Sparrow"
+    dockArea = QtCore.Qt.RightDockWidgetArea
 
-    def initializeWidget(self):
-        window = self.application.mainWindow()
-        self.attributeEditor = AttributeEditor(self.application, parent=window)
-        window.createDock(self.attributeEditor, QtCore.Qt.RightDockWidgetArea)
-        return self.attributeEditor
+
+    def close(self):
+        self._widget.close()
+        self._widget = None
+
+    def show(self, parent):
+        return AttributeEditor(self.application, parent=parent)
 
 
 class AttributeEditor(treewidget.TreeWidgetFrame):
@@ -26,6 +29,7 @@ class AttributeEditor(treewidget.TreeWidgetFrame):
         self.nodes = {}
         self.application.onSelectionChanged.connect(self.onSceneSelection)
         self.application.onNodeDeleteRequested.connect(self.removeNode)
+        self.application.setShortcutForWidget(self, "AttributeEditor")
 
     def onSceneSelection(self, selection, state):
         if state:

@@ -26,16 +26,13 @@ class GraphEditor(QtWidgets.QWidget):
         self.init()
         self.view.tabPress.connect(self.showNodeLibrary)
         self.view.deletePress.connect(self.scene.onDelete)
-        self.nodeLibraryWidget = application.nodeLibraryWidget(parent=self)
+        self.nodeLibraryWidget = application.loadUIPlugin("NodeLibrary", dock=False)
+        self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
         self.nodeLibraryWidget.hide()
 
     def showNodeLibrary(self, point):
-        registeredItems = self.application.registeredNodes()
-        if not registeredItems:
-            raise ValueError("No registered nodes to display")
-        self.nodeLibraryWidget.reload(registeredItems)
-        self.nodeLibraryWidget.show()
-        self.nodeLibraryWidget.move(self.mapFromGlobal(point))
+        self.nodeLibraryWidget.initUI(dock=False)
+        self.nodeLibraryWidget.widget.move(self.mapFromGlobal(point))
 
     def showPanels(self, state):
         self.view.showPanels(state)
@@ -271,6 +268,7 @@ class View(graphicsview.GraphicsView):
         self.newScale = None
         self.updateRequested.connect(self.rescaleGraphWidget)
         self.panelWidget = None
+        self.application.setShortcutForWidget(self, "nodeEditor")
 
     def showPanels(self, state):
         if state:
@@ -279,13 +277,6 @@ class View(graphicsview.GraphicsView):
             self.scene().addItem(self.panelWidget)
             size = self.size()
             self.setSceneRect(0, 0, size.width(), size.height())
-
-    def keyPressEvent(self, event):
-        ctrl = event.modifiers() == QtCore.Qt.ControlModifier
-        key = event.key()
-        if key in (QtCore.Qt.Key_C, QtCore.Qt.Key_V, QtCore.Qt.Key_G) and ctrl:
-            self.application.keyPressEvent(event)
-        super(View, self).keyPressEvent(event)
 
     def resizeEvent(self, event):
         super(View, self).resizeEvent(event)
@@ -303,9 +294,7 @@ class View(graphicsview.GraphicsView):
             self.rescaleGraphWidget()
 
     def mousePressEvent(self, event):
-        if self.parent().nodeLibraryWidget.isVisible():
-            self.parent().nodeLibraryWidget.hide()
-
+        self.parent().nodeLibraryWidget.hide()
         super(View, self).mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):

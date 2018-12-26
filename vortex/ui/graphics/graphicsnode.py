@@ -160,13 +160,12 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.model.nodeNameChangedSig.connect(self.header.setText)
         self.model.removeAttributeSig.connect(self.removeAttribute)
 
-        # objectModel.valueChangedSig.connect(self)
         self.model.selectionChangedSig.connect(self.setSelected)
         # objectModel.progressUpdatedSig.connect(self)
         # objectModel.parentChangedSig.connect(self)
         self.setLayout(layout)
         # now bind the attributes from the model if it has any
-        for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=ATTRIBUTE_VIS_LEVEL_ZERO):
+        for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=ATTRIBUTE_VIS_LEVEL_ONE):
             self.addAttribute(attr)
 
     def onHeaderTextChanged(self, text):

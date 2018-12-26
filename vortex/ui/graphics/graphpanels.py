@@ -112,4 +112,6 @@ class Panel(QtWidgets.QGraphicsWidget):
             self.refresh()
 
     def handleConnectionDrop(self, model):
+        if not model.objectModel.canCreateAttributes():
+            return
         print "drop", self.ioType, model

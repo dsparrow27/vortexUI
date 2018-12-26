@@ -1,7 +1,7 @@
 import os
+from functools import partial
 
 from qt import QtCore, QtWidgets, QtGui
-from vortex.ui import nodelibrary
 from zoo.libs.plugin import pluginmanager
 from vortex.ui import plugin
 
@@ -26,32 +26,25 @@ class UIApplication(QtCore.QObject):
         self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin, variableName="id")
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
         self.config = uiConfig
-
+        self._keyBoardMapping = {}
         self.models = {}
         self.currentModel = None
+
+    def loadUIPlugin(self, pluginId, dock=True):
+        uiExt = self.pluginManager.loadPlugin(pluginId, application=self)
+        uiExt.initUI(dock=dock)
+        return uiExt
 
     def loadPlugins(self):
         for uiPlugin in self.pluginManager.plugins.values():
             if uiPlugin.autoLoad:
-                uiExt = self.pluginManager.loadPlugin(uiPlugin.id, application=self)
-                uiExt.initializeWidget()
+                self.loadUIPlugin(uiPlugin.id)
 
     def mainWindow(self):
 
         for wid in QtWidgets.QApplication.topLevelWidgets():
             if wid.objectName() == "VortexMainWindow":
                 return wid
-
-    def nodeLibraryWidget(self, parent):
-        """Returns the custom node library widget which will popup within the graphview on ctrl+tab. This widget will
-        only get created once per session.
-
-        :param parent: the graphicsEditor widget used as the parent
-        :type parent:  GraphEditor
-        :return: The node library widget
-        :rtype: QtWidget
-        """
-        return nodelibrary.NodesBox(self, parent=parent)
 
     def customToolbarActions(self, parent):
         pass
@@ -70,40 +63,17 @@ class UIApplication(QtCore.QObject):
         """
         return []
 
-    def keyPressEvent(self, event):
-        """Gets executed any time a key gets pressed
-
-        :note not yet hooked up to the ui
-        :param event: The keyevent
-        :type event: ::class:`QtGui.QKeyEvent`
-        :rtype: str
-        :return: eg. 'Ctrl+Z'
-        """
-        modifiers = event.modifiers()
-        key = event.key()
-
-        if key == 16777249:
+    def setShortcutForWidget(self, widget, name):
+        keymap = self._keyBoardMapping.get(name)
+        if not keymap:
             return
-        sequence = []
-        if modifiers == QtCore.Qt.ControlModifier:
-            sequence.append(QtCore.Qt.CTRL)
-        if modifiers == QtCore.Qt.ShiftModifier:
-            sequence.append(QtCore.Qt.SHIFT)
-        if modifiers == QtCore.Qt.AltModifier:
-            sequence.append(QtCore.Qt.ALT)
-        sequence.append(key)
-        results = QtGui.QKeySequence(*sequence)
-        self.keyBoardMapping(str(results.toString()), key, modifiers)
 
-    def keyBoardMapping(self, sequenceString, key, modifiers):
-        """Key mapping to operation
+        for k, command in keymap:
+            if command:
+                QtWidgets.QShortcut(QtGui.QKeySequence(k), widget, partial(self.executeCommand, widget, command))
 
-        :param sequenceString: eg. 'Ctrl+Z'
-        :type sequenceString: str
-        :return:
-        :rtype:
-        """
-        print sequenceString, key, modifiers
+    def executeCommand(self, widget, command):
+        print "executingCommand", widget, command
 
     def save(self, filePath):
         print "saving", filePath
