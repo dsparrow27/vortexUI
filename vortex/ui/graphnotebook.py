@@ -32,8 +32,6 @@ class GraphNotebook(QtWidgets.QWidget):
         self.setLayout(layout)
 
         self.notebook = tabwidget.TabWidget("NoteBook", parent=self)
-        # self.notebook.newTabRequested
-        # self.notebook.tabCloseRequested.connect(self.deletePage)
 
         layout.addWidget(self.notebook)
 
