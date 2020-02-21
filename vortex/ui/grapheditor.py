@@ -5,7 +5,7 @@ Each editor houses a graphicsview and graphicsScene.
 import os, logging
 from functools import partial
 
-from qt import QtWidgets, QtCore, QtGui
+from Qt import QtWidgets, QtCore, QtGui
 
 from zoo.libs.pyqt.widgets.graphics import graphicsview
 from zoo.libs.pyqt.widgets.graphics import graphicsscene
@@ -17,6 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 class GraphEditor(QtWidgets.QWidget):
+    """Graph manager
+    """
     requestCompoundExpansion = QtCore.Signal(object)
 
     def __init__(self, model, application, parent=None):
@@ -75,8 +77,13 @@ class GraphEditor(QtWidgets.QWidget):
 
     def _onViewContextMenu(self, menu, item):
         if item:
+
             if isinstance(item, (graphicsnode.GraphicsNode, graphpanels.Panel)) and item.model.supportsContextMenu():
                 item.model.contextMenu(menu)
+            elif isinstance(item.parentObject(), (graphicsnode.GraphicsNode, graphpanels.Panel)):
+                model = item.parentObject().model
+                if model.supportsContextMenu():
+                    model.contextMenu(menu)
             return
         edgeStyle = menu.addMenu("ConnectionStyle")
         for i in self.application.config.connectionStyles.keys():
@@ -284,8 +291,11 @@ class View(graphicsview.GraphicsView):
 
     def mouseDoubleClickEvent(self, event):
         item = self.itemAt(event.pos())
-        if isinstance(item, graphicsnode.GraphicsNode) and item.model.isCompound():
+        modifiers = event.modifiers
+        if isinstance(item, graphicsnode.GraphicsNode) and item.model.isCompound() and\
+                modifiers == QtCore.Qt.ShiftModifier:
             self.requestCompoundExpansion.emit(item)
+
         super(View, self).mouseDoubleClickEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -294,7 +304,7 @@ class View(graphicsview.GraphicsView):
             self.rescaleGraphWidget()
 
     def mousePressEvent(self, event):
-        self.parent().nodeLibraryWidget.hide()
+        # self.parent().nodeLibraryWidget.hide()
         super(View, self).mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):

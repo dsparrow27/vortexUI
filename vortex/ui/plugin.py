@@ -4,7 +4,7 @@ Class: UIPlugin()
 """
 
 from zoo.libs.plugin import plugin
-from qt import QtCore
+from Qt import QtCore
 
 
 class UIPlugin(plugin.Plugin):
@@ -47,13 +47,13 @@ class UIPlugin(plugin.Plugin):
             return
         window = self.application.mainWindow()
         widget = self.show(window)
-        if dock:
+        if dock and window:
             window.createDock(widget, self.dockArea, tabify=self.tabify)
         self._widget = widget
 
     def show(self, parent):
         """
         :return:
-        :rtype: ::class`qt.QtWidget` or None
+        :rtype: ::class`Qt.QtWidget` or None
         """
         raise NotImplementedError

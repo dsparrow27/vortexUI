@@ -1,4 +1,4 @@
-from qt import QtGui, QtCore
+from Qt import QtGui, QtCore
 
 
 class ObjectModel(QtCore.QObject):
@@ -195,7 +195,7 @@ class ObjectModel(QtCore.QObject):
 
     # colors
     def backgroundColour(self):
-        return QtGui.QColor(31, 33, 34, 200)
+        return QtGui.QColor(50, 50, 50, 225)
 
     def headerColor(self):
         return QtGui.QColor("#4A71AB")

@@ -1,4 +1,4 @@
-from qt import QtWidgets, QtCore, QtGui
+from Qt import QtWidgets, QtCore, QtGui
 from vortex.ui import grapheditor
 from zoo.libs.pyqt.extended import tabwidget
 import logging
@@ -10,6 +10,7 @@ class GraphNotebook(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(GraphNotebook, self).__init__(parent=parent)
         self.pages = []
+        self.notebook = None
         self.initLayout()
 
     def bindApplication(self, uiApplication):

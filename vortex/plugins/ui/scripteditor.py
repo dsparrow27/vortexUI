@@ -3,15 +3,15 @@ import os
 import sys
 
 from zoo.libs.pyqt.extended import pythoneditor
-from zoo.libs.pyqt import utils as qtutils
+from zoo.libs.pyqt import utils as Qtutils
 from zoo.libs.pyqt.widgets import logoutput
 from zoo.libs.pyqt.syntaxhighlighter import highlighter
 from vortex.ui import plugin
-from qt import QtCore, QtWidgets
+from Qt import QtCore, QtWidgets
 
 
 class XStream(QtCore.QObject):
-    """https://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyqt-text-widget
+    """https://stackoverflow.com/questions/24469662/how-to-redirect-logger-output-into-pyQt-text-widget
     """
     _stdout = None
     _stderr = None
@@ -52,7 +52,7 @@ class ScriptEditor(plugin.UIPlugin):
         self.editorParent = QtWidgets.QWidget(parent=parent)
         self.editorParent.setObjectName("ScriptEditor")
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
-        self.layout = qtutils.vBoxLayout(parent=self.editorParent)
+        self.layout = Qtutils.vBoxLayout(parent=self.editorParent)
         self.layout.addWidget(self.splitter)
         self.editor = pythoneditor.TabbedEditor(parent=parent)
         self.editor.setObjectName("Script Editor")

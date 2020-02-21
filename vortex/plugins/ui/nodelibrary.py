@@ -1,4 +1,4 @@
-from qt import QtWidgets, QtCore, QtGui
+from Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets import frame
 from vortex.ui import plugin
 import logging

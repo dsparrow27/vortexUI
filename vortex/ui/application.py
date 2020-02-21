@@ -1,7 +1,7 @@
 import os
 from functools import partial
 
-from qt import QtCore, QtWidgets, QtGui
+from Qt import QtCore, QtWidgets, QtGui
 from zoo.libs.plugin import pluginmanager
 from vortex.ui import plugin
 
@@ -14,15 +14,12 @@ class UIApplication(QtCore.QObject):
     onAfterRemoveTab = QtCore.Signal(object)
     onSelectionChanged = QtCore.Signal(object, bool)
 
-    def __init__(self, uiConfig, apiApplication):
+    def __init__(self, uiConfig):
         """
         :param uiConfig:
         :type uiConfig:
-        :param apiApplication:
-        :type apiApplication:
         """
         super(UIApplication, self).__init__()
-        self._apiApplication = apiApplication
         self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin, variableName="id")
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
         self.config = uiConfig
@@ -31,7 +28,10 @@ class UIApplication(QtCore.QObject):
         self.currentModel = None
 
     def loadUIPlugin(self, pluginId, dock=True):
+        # pass
         uiExt = self.pluginManager.loadPlugin(pluginId, application=self)
+        if not uiExt:
+            return
         uiExt.initUI(dock=dock)
         return uiExt
 
@@ -55,6 +55,9 @@ class UIApplication(QtCore.QObject):
     def createContextMenu(self, objectModel):
         pass
 
+    def initialize(self):
+        pass
+
     def registeredNodes(self):
         """Returns a full list of registered nodes
 
@@ -73,10 +76,11 @@ class UIApplication(QtCore.QObject):
                 QtWidgets.QShortcut(QtGui.QKeySequence(k), widget, partial(self.executeCommand, widget, command))
 
     def executeCommand(self, widget, command):
-        print "executingCommand", widget, command
+        print("executingCommand", widget, command)
 
     def save(self, filePath):
-        print "saving", filePath
+        print ("saving", filePath)
 
     def load(self, filePath):
-        print "loading", filePath
+        print("loading", filePath)
+

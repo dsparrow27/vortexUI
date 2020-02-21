@@ -1,6 +1,6 @@
 from zoo.libs.pyqt.widgets.graphics import graphicitems
 from vortex.ui.graphics import plugwidget
-from qt import QtWidgets, QtCore, QtGui
+from Qt import QtWidgets, QtCore, QtGui
 
 from PySide2 import QtWidgets, QtGui, QtCore
 
@@ -25,12 +25,12 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
-            if self.state >= 2:
-                self.state = 0
-            elif self.state <= 0:
-                self.state += 1
+            if self.state >= ATTRIBUTE_VIS_LEVEL_TWO:
+                self.state = ATTRIBUTE_VIS_LEVEL_ZERO
+            elif self.state <= ATTRIBUTE_VIS_LEVEL_ZERO:
+                self.state += ATTRIBUTE_VIS_LEVEL_ONE
             else:
-                self.state += 1
+                self.state += ATTRIBUTE_VIS_LEVEL_ONE
             self.stateChanged.emit(self.state)
             self.update()
 
@@ -60,7 +60,7 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
     def _stroke(self, painter, x, y, width, height):
         rect = QtCore.QRect(x, y, width, height)
         painter.setPen(self._defaultPen)
-        painter.setBrush(QtGui.QBrush(QtGui.QColor(0.0,0.0,0.0,0.0)))
+        painter.setBrush(QtGui.QBrush(QtGui.QColor(0.0, 0.0, 0.0, 0.0)))
         painter.drawRect(rect)
 
 
@@ -83,14 +83,12 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
     def __init__(self, node, text, secondaryText="", icon=None, parent=None):
         super(NodeHeader, self).__init__(parent)
         self._node = node
-
-        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
-
-        layout = QtWidgets.QGraphicsLinearLayout()
+        self.setMaximumHeight(35)
+        layout = QtWidgets.QGraphicsLinearLayout(parent=self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.setOrientation(QtCore.Qt.Horizontal)
-        self.setLayout(layout)
+        # self.setLayout()
         self.headerIcon = HeaderPixmap(pixmap=icon or "", parent=self)
         layout.addItem(self.headerIcon)
         if not icon:
@@ -100,8 +98,7 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
         headerButton = NodeHeaderButton(size=12, color=node.model.headerButtonColor())
         headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
         layout.addItem(headerButton)
-        layout.setAlignment(headerButton, QtCore.Qt.AlignCenter | QtCore.Qt.AlignCenter)
-
+        layout.setAlignment(headerButton, QtCore.Qt.AlignCenter)
 
     def setIcon(self, path):
         self.headerIcon.setPixmap(path)
@@ -109,16 +106,18 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
     def _createLabels(self, primary, secondary, parentLayout):
         container = graphicitems.ItemContainer(QtCore.Qt.Vertical, parent=self)
         container.layout().setSpacing(0)
+        container.layout().setContentsMargins(0, 0, 0, 0)
         self._titleWidget = graphicitems.GraphicsText(primary, self)
         self._titleWidget.textChanged.connect(self.headerTextChanged)
-        self._titleWidget.font = QtGui.QFont("Roboto-Bold.ttf", 8)
+        self._titleWidget.font = QtGui.QFont("Roboto-Bold.ttf", 12)
         self._secondarytitle = graphicitems.GraphicsText(secondary, self)
         self._secondarytitle.setTextFlags(
             QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
             QtWidgets.QGraphicsItem.ItemIsMovable)
-        self._secondarytitle.font = QtGui.QFont("Roboto-Bold.ttf", 6)
+        self._secondarytitle.font = QtGui.QFont("Roboto-Bold.ttf", 8)
         container.addItem(self._titleWidget, QtCore.Qt.AlignCenter | QtCore.Qt.AlignTop)
         container.addItem(self._secondarytitle, QtCore.Qt.AlignCenter | QtCore.Qt.AlignTop)
+        self._secondarytitle.hide()
         parentLayout.addItem(container)
 
     def setText(self, text):
@@ -135,6 +134,8 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.setMinimumWidth(objectModel.minimumWidth())
         self.setMinimumHeight(objectModel.minimumHeight())
         self.model = objectModel
+        self.header = None
+        self.attributeContainer = None
 
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
@@ -154,19 +155,21 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.setToolTip(self.model.toolTip())
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
+
+        self.setLayout(layout)
+        # now bind the attributes from the model if it has any
+        for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=ATTRIBUTE_VIS_LEVEL_ONE):
+            self.addAttribute(attr)
+
+    def _connections(self):
         # bind the objectModel signals to this qNode
         self.model.addAttributeSig.connect(self.addAttribute)
         self.model.attributeNameChangedSig.connect(self.setAttributeName)
         self.model.nodeNameChangedSig.connect(self.header.setText)
         self.model.removeAttributeSig.connect(self.removeAttribute)
-
         self.model.selectionChangedSig.connect(self.setSelected)
         # objectModel.progressUpdatedSig.connect(self)
         # objectModel.parentChangedSig.connect(self)
-        self.setLayout(layout)
-        # now bind the attributes from the model if it has any
-        for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=ATTRIBUTE_VIS_LEVEL_ONE):
-            self.addAttribute(attr)
 
     def onHeaderTextChanged(self, text):
         self.model.setText(text)

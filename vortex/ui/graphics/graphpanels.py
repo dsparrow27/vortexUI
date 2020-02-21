@@ -1,4 +1,4 @@
-from qt import QtWidgets, QtCore, QtGui
+from Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets.graphics import graphicitems
 from vortex.ui.graphics import plugwidget
 
@@ -114,4 +114,4 @@ class Panel(QtWidgets.QGraphicsWidget):
     def handleConnectionDrop(self, model):
         if not model.objectModel.canCreateAttributes():
             return
-        print "drop", self.ioType, model
+        print("drop", self.ioType, model)

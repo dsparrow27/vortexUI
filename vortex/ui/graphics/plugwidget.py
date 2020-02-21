@@ -1,6 +1,6 @@
 from zoo.libs.pyqt.widgets.graphics import graphicitems
 from vortex.ui.graphics import edge
-from qt import QtWidgets, QtCore, QtGui
+from Qt import QtWidgets, QtCore, QtGui
 
 
 class Plug(QtWidgets.QGraphicsWidget):
@@ -172,6 +172,11 @@ class PlugContainer(graphicitems.ItemContainer):
         self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.label.allowHoverHighlight = True
+
+        # used purely to store the connection request transaction
+        self._currentConnection = None
+
+    def _connections(self):
         self.inCircle.leftMouseButtonClicked.connect(self.onPlugClicked)
         self.outCircle.leftMouseButtonClicked.connect(self.onPlugClicked)
         self.inCircle.moveEventRequested.connect(self.onPlugMove)
@@ -180,8 +185,6 @@ class PlugContainer(graphicitems.ItemContainer):
         self.outCircle.releaseEventRequested.connect(self.onPlugRelease)
         self.inCrossItem.leftMouseButtonClicked.connect(self.onExpandInput)
         self.outCrossItem.leftMouseButtonClicked.connect(self.onExpandOutput)
-        # used purely to store the connection request transaction
-        self._currentConnection = None
 
     def setLabel(self, label):
         self.label.setText(label)
