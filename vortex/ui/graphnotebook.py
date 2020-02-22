@@ -7,25 +7,12 @@ logger = logging.getLogger(__name__)
 
 
 class GraphNotebook(QtWidgets.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, uiApplication, parent=None):
         super(GraphNotebook, self).__init__(parent=parent)
         self.pages = []
         self.notebook = None
         self.initLayout()
-
-    def bindApplication(self, uiApplication):
-        logger.debug("Binding UIApplication to notebook")
         self.uiApplication = uiApplication
-        uiApplication.onNewNodeRequested.connect(self.onRequestaddNodeToScene)
-        uiApplication.initialize()
-
-    def onRequestaddNodeToScene(self, data):
-        # {model: objectModel, newTab: True}
-        if data["newTab"]:
-            editor = self.addPage(data["model"])
-        else:
-            editor = self.currentPage()
-            editor.scene.createNode(model=data["model"], position=editor.view.centerPosition())
 
     def initLayout(self):
         layout = QtWidgets.QVBoxLayout()
@@ -42,7 +29,7 @@ class GraphNotebook(QtWidgets.QWidget):
 
     def addPage(self, model):
         editor = grapheditor.GraphEditor(model, self.uiApplication, parent=self)
-        model.addConnectionSig.connect(editor.scene.createConnection)
+        # model.addConnectionSig.connect(editor.scene.createConnection)
         editor.requestCompoundExpansion.connect(self.onRequestExpandCompoundAsTab)
         editor.showPanels(True)
         self.pages.append(editor)

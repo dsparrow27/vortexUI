@@ -1,8 +1,9 @@
-from vortex.ui import plugin
+from vortex import api
 from Qt import QtCore, QtWidgets
 from zoo.libs.pyqt.widgets import elements
 
-class OutlinerPlugin(plugin.UIPlugin):
+
+class OutlinerPlugin(api.UIPlugin):
     id = "Outliner"
     autoLoad = True
     creator = "David Sparrow"
@@ -21,10 +22,10 @@ class Outliner(QtWidgets.QFrame):
         self.tree = QtWidgets.QTreeWidget(parent=self)
         layout.addWidget(self.tree)
         # self.initUi(tree)
-        self.application.onSelectionChanged.connect(self.onSceneSelection)
-        self.application.onNodeDeleteRequested.connect(self.removeNode)
-        self.application.onNewNodeRequested.connect(self.newNode)
-        self.newNode({"model": self.application.currentModel})
+        # self.application.onSelectionChanged.connect(self.onSceneSelection)
+        # self.application.onNodeDeleteRequested.connect(self.removeNode)
+        # self.application.onNewNodeRequested.connect(self.newNode)
+        # self.newNode({"model": self.application.currentModel})
         self.application.setShortcutForWidget(self, "Outliner")
 
     def onSceneSelection(self, selection, state):
@@ -42,7 +43,7 @@ class Outliner(QtWidgets.QFrame):
         parentModel = objectModel.parentObject()
         if parentModel:
             parentItem = self.tree.findItems(objectModel.parentObject().text(),
-                                                   QtCore.Qt.MatchWildcard)[0]
+                                             QtCore.Qt.MatchWildcard)[0]
         else:
             parentItem = self.tree.invisibleRootItem()
 

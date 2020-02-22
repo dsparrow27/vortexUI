@@ -1,12 +1,12 @@
 from Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets import frame
-from vortex.ui import plugin
+from vortex import api
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class NodeLibraryPlugin(plugin.UIPlugin):
+class NodeLibraryPlugin(api.UIPlugin):
     id = "NodeLibrary"
     autoLoad = True
     creator = "David Sparrow"
@@ -63,6 +63,12 @@ class NodesBox(frame.QFrame):
 
     def show(self, *args, **kwargs):
         self.lineEdit.setFocus()
+        self.nodeListWidget.clear()
+        print(">>>>>>>>>>>>")
+        for item, category in self.uiApplication.registeredNodes().items():
+            self.nodeListWidget.addItem(item)
+            print(item)
+        print("ssssh")
         super(NodesBox, self).show(*args, **kwargs)
 
     def searchTextChanged(self, text):
@@ -100,6 +106,7 @@ class NodesBox(frame.QFrame):
     def reload(self, items, searchText=None):
         searchText = (searchText or "").lower()
         self.nodeListWidget.clear()
+
         for item, category in items.items():
             if searchText not in item.lower():
                 continue

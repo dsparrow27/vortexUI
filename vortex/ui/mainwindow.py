@@ -1,19 +1,16 @@
-import os
-
-from zoo.libs.pyqt.widgets import mainwindow
 from vortex.ui import graphnotebook
 from Qt import QtWidgets
+from zoo.libs.pyqt.widgets import mainwindow
 from zoo.preferences.core import preference
 
 
 class ApplicationWindow(mainwindow.MainWindow):
-    def __init__(self, applicationModel, title="Vortex", width=1920, height=1080, icon="", parent=None,
-                 showOnInitialize=True):
-        super(ApplicationWindow, self).__init__(title, width, height, icon, parent, showOnInitialize)
+    def __init__(self, applicationModel, title="Vortex", width=800, height=600, parent=None):
+        super(ApplicationWindow, self).__init__(title=title, width=width, height=height, parent=parent)
+
         self.setStyleSheet(preference.interface("core_interface").stylesheet().data)
-        self.noteBook = graphnotebook.GraphNotebook(parent=self)
+        self.noteBook = graphnotebook.GraphNotebook(applicationModel, parent=self)
         self.setCustomCentralWidget(self.noteBook)
-        self.noteBook.bindApplication(applicationModel)
         self.setupMenuBar()
         self.loadAction = QtWidgets.QAction("Load", parent=self)
         self.saveAction = QtWidgets.QAction("Save", parent=self)
@@ -24,6 +21,7 @@ class ApplicationWindow(mainwindow.MainWindow):
         self.fileMenu.insertMenu(self.exitAction, self.recentFilesMenu)
         self.saveAction.triggered.connect(self.onSave)
         self.loadAction.triggered.connect(self.onLoad)
+        applicationModel.loadPlugins()
 
     def onSave(self):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent=self, caption="Select Graph")

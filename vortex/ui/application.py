@@ -7,12 +7,8 @@ from vortex.ui import plugin
 
 
 class UIApplication(QtCore.QObject):
-    # from api to ui signals
-    onNewNodeRequested = QtCore.Signal(dict)
-    onNodeDeleteRequested = QtCore.Signal(object)
-    onBeforeRemoveTab = QtCore.Signal(object)
-    onAfterRemoveTab = QtCore.Signal(object)
-    onSelectionChanged = QtCore.Signal(object, bool)
+    """High Level Application object, handles node plugins, UI Plugins, global events
+    """
 
     def __init__(self, uiConfig):
         """
@@ -24,8 +20,6 @@ class UIApplication(QtCore.QObject):
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
         self.config = uiConfig
         self._keyBoardMapping = {}
-        self.models = {}
-        self.currentModel = None
 
     def loadUIPlugin(self, pluginId, dock=True):
         # pass
@@ -35,24 +29,20 @@ class UIApplication(QtCore.QObject):
         uiExt.initUI(dock=dock)
         return uiExt
 
+    def uiPlugin(self, pluginId):
+        return self.pluginManager.getPlugin(pluginId)
+
     def loadPlugins(self):
         for uiPlugin in self.pluginManager.plugins.values():
             if uiPlugin.autoLoad:
                 self.loadUIPlugin(uiPlugin.id)
 
     def mainWindow(self):
-
         for wid in QtWidgets.QApplication.topLevelWidgets():
-            if wid.objectName() == "VortexMainWindow":
+            if wid.objectName() == "Vortex":
                 return wid
 
     def customToolbarActions(self, parent):
-        pass
-
-    def onNodeCreated(self, Type):
-        pass
-
-    def createContextMenu(self, objectModel):
         pass
 
     def initialize(self):
@@ -78,9 +68,6 @@ class UIApplication(QtCore.QObject):
     def executeCommand(self, widget, command):
         print("executingCommand", widget, command)
 
-    def save(self, filePath):
-        print ("saving", filePath)
-
-    def load(self, filePath):
-        print("loading", filePath)
-
+    def saveGraph(self, objectModel):
+        print("test")
+        return {}

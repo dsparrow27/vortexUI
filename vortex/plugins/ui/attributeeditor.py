@@ -1,10 +1,10 @@
 # from zoo.libs.pyqt.widgets import treewidget
 # from zoo.libs.pyqt.extended import stackwidget
-# from vortex.ui import plugin
+# from vortex import api
 # from Qt import QtCore, QtWidgets
 #
 #
-# class AttributeEditorPlugin(plugin.UIPlugin):
+# class AttributeEditorPlugin(api.UIPlugin):
 #     id = "AttributeEditor"
 #     autoLoad = True
 #     creator = "David Sparrow"

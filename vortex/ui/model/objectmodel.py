@@ -99,6 +99,19 @@ class ObjectModel(QtCore.QObject):
         """
         return self._parent
 
+    def root(self):
+        def _iterParents(objectModel):
+            parent = objectModel.parentObject()
+            while parent is not None:
+                yield parent
+                parent = parent.parentObject()
+        current = self
+        for node in _iterParents(self):
+            if node is None:
+                return current
+            current = node
+        return current
+
     def child(self, index):
         """Retrieve's the child objectModel by index
 
@@ -107,7 +120,7 @@ class ObjectModel(QtCore.QObject):
         :return: The child Node ObjectModel
         :rtype: ::class:`ObjectModel`
         """
-        if index in xrange(len(self._children)):
+        if index in range(len(self._children)):
             return self._children[index]
 
     def children(self):
@@ -193,6 +206,12 @@ class ObjectModel(QtCore.QObject):
     def cornerRounding(self):
         return 10
 
+    def position(self):
+        return (0, 0)
+
+    def setPosition(self, position):
+        pass
+
     # colors
     def backgroundColour(self):
         return QtGui.QColor(50, 50, 50, 225)
@@ -218,6 +237,9 @@ class ObjectModel(QtCore.QObject):
     def deleteChild(self, child):
         return False
 
+    def delete(self):
+        return False
+
     def supportsContextMenu(self):
         return False
 
@@ -227,100 +249,6 @@ class ObjectModel(QtCore.QObject):
     def attributeWidget(self, parent):
         pass
 
+    def serialize(self):
+        return {}
 
-class AttributeModel(QtCore.QObject):
-    def __init__(self, objectModel, parent=None):
-        """
-        :param objectModel: The Node ObjectModel
-        :type objectModel: ::class:`ObjectModel`
-        """
-        super(AttributeModel, self).__init__()
-        self.objectModel = objectModel
-        self.parent = parent
-
-    def __repr__(self):
-        return "<{}-{}>".format(self.__class__.__name__, self.text())
-
-    def __eq__(self, other):
-        return hash(self) == hash(other)
-
-    def __ne__(self, other):
-        return hash(self) != hash(other)
-
-    def __hash__(self):
-        return id(self)
-
-    def text(self):
-        return "attributeName"
-
-    def setValue(self, value):
-        pass
-
-    def value(self):
-        return
-
-    def textAlignment(self):
-        if self.isInput():
-            return QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-        else:
-            return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
-
-    def setText(self, text):
-        return False
-
-    def isArray(self):
-        return False
-
-    def isElement(self):
-        if self.parent is not None:
-            return self.parent.isArray()
-
-    def isCompound(self):
-        return False
-
-    def elements(self):
-        return []
-
-    def children(self):
-        return []
-
-    def canAcceptConnection(self, plug):
-        return True
-
-    def acceptsMultipleConnections(self):
-        if self.isInput():
-            return False
-        return True
-
-    def isConnected(self):
-        return False
-
-    def createConnection(self, attribute):
-        return False
-
-    def deleteConnection(self, attribute):
-        return False
-
-    def toolTip(self):
-        return "Im a tooltip for attributes"
-
-    def size(self):
-        return QtCore.QSize(150, 30)
-
-    def textColour(self):
-        return QtGui.QColor(200, 200, 200)
-
-    def isInput(self):
-        return True
-
-    def isOutput(self):
-        return True
-
-    def highlightColor(self):
-        return QtGui.QColor(255, 255, 255)
-
-    def itemEdgeColor(self):
-        return QtGui.QColor(0, 180, 0)
-
-    def itemColour(self):
-        return QtGui.QColor(0, 180, 0)

@@ -1,5 +1,4 @@
 from zoo.libs.pyqt.widgets.graphics import graphicitems
-from vortex.ui.graphics import edge
 from Qt import QtWidgets, QtCore, QtGui
 
 
@@ -15,7 +14,7 @@ class Plug(QtWidgets.QGraphicsWidget):
     def __init__(self, color, edgeColor, highlightColor, ioType, parent=None):
         super(Plug, self).__init__(parent=parent)
         size = QtCore.QSizeF(self._diameter, self._diameter)
-        self.ioType = ""
+        self.ioType = ioType
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
         self.setWindowFrameMargins(0, 0, 0, 0)
@@ -24,6 +23,9 @@ class Plug(QtWidgets.QGraphicsWidget):
         self._defaultBrush = QtGui.QBrush(color)
         self._currentBrush = QtGui.QBrush(color)
         self.setAcceptHoverEvents(True)
+
+    def container(self):
+        return self.parentObject()
 
     @property
     def color(self):
@@ -57,15 +59,9 @@ class Plug(QtWidgets.QGraphicsWidget):
     def mousePressEvent(self, event):
         btn = event.button()
         if btn == QtCore.Qt.LeftButton:
-            self.leftMouseButtonClicked.emit(self, event)
+            event.accept()
         elif btn == QtCore.Qt.RightButton:
-            self.rightMouseButtonClicked.emit(self, event)
-
-    def mouseMoveEvent(self, event):
-        self.moveEventRequested.emit(self, event)
-
-    def mouseReleaseEvent(self, event):
-        self.releaseEventRequested.emit(self, event)
+            event.accept()
 
     def paint(self, painter, options, widget=None):
         painter.setBrush(self._currentBrush)
@@ -85,9 +81,10 @@ class Plug(QtWidgets.QGraphicsWidget):
 class CrossSquare(QtWidgets.QGraphicsWidget):
     leftMouseButtonClicked = QtCore.Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, ioType, parent=None):
         super(CrossSquare, self).__init__(parent)
         size = QtCore.QSizeF(Plug._diameter, Plug._diameter)
+        self.ioType = ioType
         self.expanded = False
         self.isElement = False
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
@@ -100,19 +97,22 @@ class CrossSquare(QtWidgets.QGraphicsWidget):
                                     QtCore.QPoint(Plug._diameter - 3.0, Plug._diameter * 0.5))
                       ]
 
+    def plug(self):
+        return self.parentObject()
+
+    #
     def mousePressEvent(self, event):
         btn = event.button()
         if btn == QtCore.Qt.LeftButton and not self.isElement:
-            self.leftMouseButtonClicked.emit()
+            event.accept()
 
     def paint(self, painter, options, widget=None):
-        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 1.0), 0.25))
+        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 1.0), 5))
         # draw the square
-
         if self.isElement:
             parentHeight = self.parentObject().size().height()
-            lines = [QtCore.QLineF(QtCore.QPoint(Plug._diameter*0.5, Plug._diameter*0.5),
-                                   QtCore.QPoint(Plug._diameter*0.5, -(parentHeight -Plug._diameter))),
+            lines = [QtCore.QLineF(QtCore.QPoint(Plug._diameter * 0.5, Plug._diameter * 0.5),
+                                   QtCore.QPoint(Plug._diameter * 0.5, -(parentHeight - Plug._diameter))),
                      QtCore.QLineF(QtCore.QPoint(Plug._diameter * 0.5, Plug._diameter * 0.5),
                                    QtCore.QPoint(Plug._diameter, Plug._diameter * 0.5))]
             painter.drawLines(lines)
@@ -140,8 +140,8 @@ class PlugContainer(graphicitems.ItemContainer):
         super(PlugContainer, self).__init__(QtCore.Qt.Horizontal, parent)
         self.model = attributeModel
         self.childContainers = []
-        self.inCrossItem = CrossSquare(parent=self)
-        self.outCrossItem = CrossSquare(parent=self)
+        self.inCrossItem = CrossSquare(ioType="input", parent=self)
+        self.outCrossItem = CrossSquare(ioType="output", parent=self)
 
         self.inCircle = Plug(self.model.itemColour(),
                              self.model.itemEdgeColor(),
@@ -159,6 +159,7 @@ class PlugContainer(graphicitems.ItemContainer):
 
         self.label.text.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         self.label.color = attributeModel.textColour() or QtGui.QColor(200, 200, 200)
+        self.label.allowHoverHighlight = True
 
         if not attributeModel.isOutput():
             self.outCircle.hide()
@@ -166,25 +167,11 @@ class PlugContainer(graphicitems.ItemContainer):
             self.inCircle.hide()
         self.inCircle.setToolTip(self.model.toolTip())
         self.outCircle.setToolTip(self.model.toolTip())
-        self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.addItem(self.label, attributeModel.textAlignment())
-        self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        self.label.allowHoverHighlight = True
-
-        # used purely to store the connection request transaction
-        self._currentConnection = None
-
-    def _connections(self):
-        self.inCircle.leftMouseButtonClicked.connect(self.onPlugClicked)
-        self.outCircle.leftMouseButtonClicked.connect(self.onPlugClicked)
-        self.inCircle.moveEventRequested.connect(self.onPlugMove)
-        self.outCircle.moveEventRequested.connect(self.onPlugMove)
-        self.inCircle.releaseEventRequested.connect(self.onPlugRelease)
-        self.outCircle.releaseEventRequested.connect(self.onPlugRelease)
-        self.inCrossItem.leftMouseButtonClicked.connect(self.onExpandInput)
-        self.outCrossItem.leftMouseButtonClicked.connect(self.onExpandOutput)
+        self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
     def setLabel(self, label):
         self.label.setText(label)
@@ -209,25 +196,6 @@ class PlugContainer(graphicitems.ItemContainer):
 
     def setOutputAlignment(self, alignment):
         self.layout().setAlignment(self.outCircle, alignment)
-
-    def addConnection(self, plug):
-        plug.outCircle.color = plug.model.itemColour()
-        self.inCircle.color = self.model.itemColour()
-        connection = edge.ConnectionEdge(plug.outCircle, self.inCircle,
-                                         curveType=self.model.objectModel.config.defaultConnectionShape,
-                                         color=plug.outCircle.color)
-        connection.setLineStyle(self.model.objectModel.config.defaultConnectionStyle)
-        connection.setWidth(self.model.objectModel.config.connectionLineWidth)
-        connection.updatePosition()
-        plug.outCircle.color = plug.model.itemColour()
-        self.inCircle.color = self.model.itemColour()
-        scene = self.scene()
-
-        scene.connections.add(connection)
-        return connection
-
-    def updateConnections(self):
-        self.scene().updateConnectionsForPlug(self)
 
     def expand(self):
         parentContainer = self.parentObject()
@@ -268,52 +236,3 @@ class PlugContainer(graphicitems.ItemContainer):
         self.expand()
         self.outCrossItem.expanded = not self.outCrossItem.expanded
         self.update()
-
-    # handle connection methods
-    def onPlugClicked(self, plug, event):
-        """Trigger when either the inCircle or outCircle is clicked, this method will handle setup of the connection
-        object and appropriately call the attributeModel.
-
-        :param plug: Plug class
-        :type plug: ::class:`Plug`
-        :param event:
-        :type event: ::class:`QEvent`
-        :return:
-        :rtype:
-        """
-        plug.color = plug.parentObject().model.itemColour()
-        self._currentConnection = edge.ConnectionEdge(plug,
-                                                      curveType=self.model.objectModel.config.defaultConnectionShape,
-                                                      color=plug.color)
-        self._currentConnection.setLineStyle(self.model.objectModel.config.defaultConnectionStyle)
-        self._currentConnection.setWidth(self.model.objectModel.config.connectionLineWidth)
-        self._currentConnection.destinationPoint = plug.center()
-        self.scene().addItem(self._currentConnection)
-
-    def onPlugMove(self, plug, event):
-        newPosition = event.scenePos()
-        self._currentConnection.destinationPoint = newPosition
-
-    def onPlugRelease(self, plug, event):
-        scene = self.scene()
-        if self._currentConnection is not None:
-            end = self._currentConnection.path().pointAtPercent(1)
-            endItem = self.scene().itemAt(end, QtGui.QTransform())
-            # if we're a plugItem then offload the connection handling to the model
-            # the model will then call the scene.createConnection via a signal
-            # this is so we let the client code determine if the connection is legal
-
-            if isinstance(endItem, Plug):
-                endItem = endItem.parentObject()
-                if endItem.model.isInput():
-                    endItem.model.createConnection(plug.parentObject().model)
-                else:
-                    plug.parentObject().model.createConnection(endItem.model)
-            # could be the side panel, just use the left panel
-            elif endItem == scene.panelWidget.leftPanel:
-                scene.panelWidget.leftPanel.handleConnectionDrop(plug.parentObject().model)
-            elif endItem == scene.panelWidget.rightPanel:
-                scene.panelWidget.rightPanel.handleConnectionDrop(plug.parentObject().model)
-            scene.removeItem(self._currentConnection)
-            self._currentConnection = None
-        scene.update()

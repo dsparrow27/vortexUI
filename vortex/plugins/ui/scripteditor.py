@@ -6,7 +6,7 @@ from zoo.libs.pyqt.extended import pythoneditor
 from zoo.libs.pyqt import utils as Qtutils
 from zoo.libs.pyqt.widgets import logoutput
 from zoo.libs.pyqt.syntaxhighlighter import highlighter
-from vortex.ui import plugin
+from vortex import api
 from Qt import QtCore, QtWidgets
 
 
@@ -25,7 +25,7 @@ class XStream(QtCore.QObject):
 
     def write(self, msg):
         if not self.signalsBlocked():
-            self.messageWritten.emit(unicode(msg))
+            self.messageWritten.emit(str(msg))
 
     @staticmethod
     def stdout():
@@ -42,8 +42,8 @@ class XStream(QtCore.QObject):
         return XStream._stderr
 
 
-class ScriptEditor(plugin.UIPlugin):
-    autoLoad = True
+class ScriptEditor(api.UIPlugin):
+    autoLoad = False
     id = "ScriptEditor"
     creator = "David Sparrow"
     dockArea = QtCore.Qt.BottomDockWidgetArea

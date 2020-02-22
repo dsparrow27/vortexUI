@@ -41,7 +41,7 @@ class Panel(QtWidgets.QGraphicsWidget):
 
         self.setLayout(layout)
         self.setFlags(self.flags() & QtCore.Qt.ItemIsSelectable)
-        self.setZValue(100)
+        self.setZValue(-1)
         self.refresh()
 
     def refresh(self):

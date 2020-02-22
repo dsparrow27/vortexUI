@@ -1,6 +1,6 @@
 from Qt import QtCore, QtGui
 from zoo.libs.pyqt.widgets.graphics import graphviewconfig
-from vortex.vortexmodel import attributewidgets
+# from vortex.vortexmodel import attributewidgets
 
 connectionStyle = {"SolidLine": QtCore.Qt.SolidLine,
                    "DashLine": QtCore.Qt.DashLine,
@@ -23,8 +23,8 @@ class VortexConfig(graphviewconfig.Config):
         self.defaultConnectionStyle = connectionStyle["SolidLine"]
         self.defaultConnectionShape = connectionStyle["cubic"]
 
-        self.ATTRIBUTETYPEMAP = {
-            'Quaternion': {"color": QtGui.QColor(126.999945, 24.999944999999997, 24.999944999999997),
+        self.attributeMapping = {
+            'quaternion': {"color": QtGui.QColor(126.999945, 24.999944999999997, 24.999944999999997),
                            "widget": None},
             'color': {"color": QtGui.QColor(22.999980000000015, 255, 255)},
             'matrix4': {
@@ -33,16 +33,16 @@ class VortexConfig(graphviewconfig.Config):
             'vector2D': {"color": QtGui.QColor(147.000105, 102.0, 156.000075)},
             'vector3D': {"color": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998)},
             "file": {"color": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998),
-                     "widget": attributewidgets.PathWidget},
+                     "widget": None},
             "directory": {"color": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998),
-                          "widget": attributewidgets.DirectoryWidget},
+                          "widget": None},
             "boolean": {"color": QtGui.QColor(38.00010000000001, 73.99998000000001, 114.000045)},
             "dict": {"color": QtGui.QColor(204.0, 127.5, 163.20000000000002)},
             "float": {"color": QtGui.QColor(133.000095, 102.0, 147.99996000000002),
-                      "widget": attributewidgets.NumericAttributeWidget},
+                      "widget": None},
             "integer": {"color": QtGui.QColor(133.000095, 102.0, 147.99996000000002),
-                        "widget": attributewidgets.NumericAttributeWidget},
+                        "widget": None},
             "list": {"color": QtGui.QColor(56.000040000000006, 47.99992500000001, 45.00010500000001)},
             "string": {"color": QtGui.QColor(244.9999965, 214.999935, 59.99997),
-                       "widget": attributewidgets.StringWidget}
+                       "widget": None}
             }

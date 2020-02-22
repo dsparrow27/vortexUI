@@ -127,9 +127,9 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
 class GraphicsNode(QtWidgets.QGraphicsWidget):
     requestExpansion = QtCore.Signal()
 
-    def __init__(self, objectModel, position=(0, 0, 0)):
+    def __init__(self, objectModel):
         super(GraphicsNode, self).__init__()
-        self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
+        self.setFlags(self.ItemIsSelectable | self.ItemIsMovable)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setMinimumWidth(objectModel.minimumWidth())
         self.setMinimumHeight(objectModel.minimumHeight())
@@ -140,7 +140,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
         self.setZValue(1)
-        self.setPos(position)
+        self.setPos(QtCore.QPoint(*objectModel.position()))
 
     def init(self):
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
@@ -168,8 +168,6 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.model.nodeNameChangedSig.connect(self.header.setText)
         self.model.removeAttributeSig.connect(self.removeAttribute)
         self.model.selectionChangedSig.connect(self.setSelected)
-        # objectModel.progressUpdatedSig.connect(self)
-        # objectModel.parentChangedSig.connect(self)
 
     def onHeaderTextChanged(self, text):
         self.model.setText(text)
@@ -188,6 +186,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         container = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
         if attribute.isInput():
             index = container.layout().count() - 2
+
             if attribute.isArray() or attribute.isCompound():
                 container.inCrossItem.show()
         else:
@@ -210,8 +209,12 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
                 return attr
 
     def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
-            self.setSelected(True)
+        self.model.setSelected(True)
+        super(GraphicsNode, self).mousePressEvent(event)
+
+    def setSelected(self, selected):
+        self.model.setSelected(True)
+        super(GraphicsNode, self).setSelected(selected)
 
     def mouseMoveEvent(self, event):
         scene = self.scene()
@@ -219,6 +222,8 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         for i in items:
             pos = i.pos() + i.mapToParent(event.pos()) - i.mapToParent(event.lastPos())
             i.setPos(pos)
+        pos = event.pos()
+        self.model.setPosition((pos.x(), pos.y))
         self.scene().updateAllConnections()
 
     def doubleClickEvent(self, event):
