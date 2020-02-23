@@ -52,7 +52,7 @@ class ScriptEditor(api.UIPlugin):
         self.editorParent = QtWidgets.QWidget(parent=parent)
         self.editorParent.setObjectName("ScriptEditor")
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
-        self.layout = Qtutils.vBoxLayout(parent=self.editorParent)
+        self.layout = elements.vBoxLayout(parent=self.editorParent)
         self.layout.addWidget(self.splitter)
         self.editor = pythoneditor.TabbedEditor(parent=parent)
         self.editor.setObjectName("Script Editor")

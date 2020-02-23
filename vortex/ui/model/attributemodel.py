@@ -47,12 +47,18 @@ class AttributeModel(QtCore.QObject):
     def isArray(self):
         return False
 
+    def setIsArray(self):
+        pass
+
     def isElement(self):
         if self.parent is not None:
             return self.parent.isArray()
 
     def isCompound(self):
         return False
+
+    def setIsCompound(self):
+        pass
 
     def elements(self):
         return []

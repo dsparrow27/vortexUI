@@ -1,4 +1,5 @@
 from Qt import QtWidgets, QtCore, QtGui
+from zoo.libs.pyqt.widgets import elements
 from zoo.libs.pyqt.widgets import frame
 from vortex import api
 import logging
@@ -43,10 +44,9 @@ class NodesBox(frame.QFrame):
         super(NodesBox, self).__init__(parent)
         self.uiApplication = uiApplication
         self.setObjectName("NodeLibrary")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self)
+        self.verticalLayout = elements.vBoxLayout(self)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.verticalLayout.setContentsMargins(4, 4, 4, 4)
-        self.lineEdit = QtWidgets.QLineEdit(self)
+        self.lineEdit = elements.LineEdit("Name: ", parent=self)
         self.lineEdit.setObjectName("nodelibraryLineEdit")
         self.lineEdit.setPlaceholderText("Enter node name..")
         self.verticalLayout.addWidget(self.lineEdit)
@@ -64,16 +64,13 @@ class NodesBox(frame.QFrame):
     def show(self, *args, **kwargs):
         self.lineEdit.setFocus()
         self.nodeListWidget.clear()
-        print(">>>>>>>>>>>>")
         for item, category in self.uiApplication.registeredNodes().items():
             self.nodeListWidget.addItem(item)
-            print(item)
-        print("ssssh")
         super(NodesBox, self).show(*args, **kwargs)
 
     def searchTextChanged(self, text):
         if not self.lineEdit.text():
-            self.lineEdit.setPlaceholderText("enter node name..")
+            self.lineEdit.setPlaceholderText("Enter node name..")
         nodes = self.uiApplication.registeredNodes()
         nodes["Group"] = "misc"
         self.reload(nodes, text)
@@ -90,14 +87,14 @@ class NodesBox(frame.QFrame):
     def onEnterPressed(self):
         currentText = self.nodeListWidget.currentItem().text()
         if currentText in self.uiApplication.registeredNodes().keys():
-            self.uiApplication.onNodeCreated(currentText)
+            # self.uiApplication.onNodeCreated(currentText)
             self.finished.emit()
         elif currentText == "Group":
             self.parent().scene.createBackDrop()
             self.finished.emit()
 
     def onDoubleClicked(self, item):
-        self.uiApplication.onNodeCreated(item.text())
+        # self.uiApplication.onNodeCreated(item.text())
         self.finished.emit()
 
     def onSelectionChanged(self, current):

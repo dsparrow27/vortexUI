@@ -25,20 +25,20 @@ class ObjectModel(QtCore.QObject):
 
     # subclass should emit these signals to update the GUI from the core
 
-    # signals connected by the graphics scene
-    addConnectionSig = QtCore.Signal(object, object)  # sourceAttrModel, destAttrModel
-    removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
-
-    # connected by the GraphicsNode
-    addAttributeSig = QtCore.Signal(object)  # attributeModel
-    nodeNameChangedSig = QtCore.Signal(object)  # objectModel
-    removeAttributeSig = QtCore.Signal(object)  # attributeModel
-    attributeNameChangedSig = QtCore.Signal(object)  # attributeModel
-    valueChangedSig = QtCore.Signal(object)  # attributeModel
-    selectionChangedSig = QtCore.Signal(bool)  # selectionState
-    parentChangedSig = QtCore.Signal(object, object)  # childObjectModel, parentObjectModel
-    progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
-    requestRefresh = QtCore.Signal()
+    # # signals connected by the graphics scene
+    # addConnectionSig = QtCore.Signal(object, object)  # sourceAttrModel, destAttrModel
+    # removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
+    #
+    # # connected by the GraphicsNode
+    # addAttributeSig = QtCore.Signal(object)  # attributeModel
+    # nodeNameChangedSig = QtCore.Signal(object)  # objectModel
+    # removeAttributeSig = QtCore.Signal(object)  # attributeModel
+    # attributeNameChangedSig = QtCore.Signal(object)  # attributeModel
+    # valueChangedSig = QtCore.Signal(object)  # attributeModel
+    # selectionChangedSig = QtCore.Signal(bool)  # selectionState
+    # parentChangedSig = QtCore.Signal(object, object)  # childObjectModel, parentObjectModel
+    # progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
+    # requestRefresh = QtCore.Signal()
 
     def __init__(self, config, parent=None):
         super(ObjectModel, self).__init__()
@@ -105,6 +105,7 @@ class ObjectModel(QtCore.QObject):
             while parent is not None:
                 yield parent
                 parent = parent.parentObject()
+
         current = self
         for node in _iterParents(self):
             if node is None:
@@ -197,6 +198,9 @@ class ObjectModel(QtCore.QObject):
         """
         return "hello world"
 
+    def properties(self):
+        return {}
+
     def minimumHeight(self):
         return 80
 
@@ -251,4 +255,3 @@ class ObjectModel(QtCore.QObject):
 
     def serialize(self):
         return {}
-

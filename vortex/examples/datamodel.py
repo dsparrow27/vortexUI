@@ -24,7 +24,9 @@ class Application(vortexApi.UIApplication):
         super(Application, self).__init__(uiConfig)
 
     def registeredNodes(self):
-        return {"comment": "organization", "sum": "math", "float": "math"}
+        return {"comment": "organization",
+                "sum": "math",
+                "float": "math"}
 
     def saveGraph(self, model):
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
@@ -215,15 +217,18 @@ class SlitherUIObject(vortexApi.ObjectModel):
 
 
 class AttributeModel(vortexApi.AttributeModel):
-    def __init__(self, slitherAttribute, objectModel):
+    def __init__(self, data, objectModel):
         super(AttributeModel, self).__init__(objectModel)
-        self.internalAttr = slitherAttribute
+        self.internalAttr = data
 
     def fullPathName(self):
         return self.objectModel.fullPathName() + "." + self.text()
 
     def text(self):
         return self.internalAttr.get("label", "unknown")
+
+    def setText(self, text):
+        self.internalAttr["label"] = text
 
     def isInput(self):
         return self.internalAttr.get("isInput", False)
@@ -356,10 +361,19 @@ def data():
                          "isInput": True,
                          "isArray": True,
                          "type": "multi",
-                         "isOutput": False}]
+                         "isOutput": False},
+                        {"label": "output",
+                         "isInput": False,
+                         "isArray": False,
+                         "type": "multi",
+                         "isOutput": True}
+                        ]
          },
-        {"data": {"label": "search", "category": "strings",
-                  "secondaryLabel": "bob", "script": "", "commands": [],
+        {"data": {"label": "search",
+                  "category": "strings",
+                  "secondaryLabel": "bob",
+                  "script": "",
+                  "commands": [],
                   "description": ""},
          "attributes": [{"label": "search", "isInput": True, "type": "string", "isOutput": False},
                         {"label": "toReplace", "isInput": True, "type": "string", "isOutput": False},

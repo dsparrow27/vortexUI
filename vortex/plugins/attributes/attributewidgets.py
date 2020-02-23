@@ -31,13 +31,10 @@ class PathWidget(QtWidgets.QFrame):
         super(PathWidget, self).__init__(parent=parent)
         self.directory = False
         self.model = model
-        self.edit = QtWidgets.QLineEdit(parent=self)
-        self.layout = QtWidgets.QHBoxLayout()
-        self.layout.setSpacing(0)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.layout)
+        self.layout = elements.hBoxLayout(parent=self)
+        self.edit = elements.LineEdit(parent=self)
         self.layout.addWidget(self.edit)
-        self.browserBtn = QtWidgets.QPushButton("...", parent=self)
+        self.browserBtn = elements.regularButton(label="...", parent=self)
         self.layout.addWidget(self.browserBtn)
         self.browserBtn.clicked.connect(self.onBrowserClicked)
         self.edit.editingFinished.connect(self.onEditChanged)
@@ -70,12 +67,10 @@ class NumericAttributeWidget(QtWidgets.QFrame):
     def __init__(self, model, parent=None):
         super(NumericAttributeWidget, self).__init__(parent=parent)
         self.model = weakref.ref(model)
-        layout = QtWidgets.QHBoxLayout()
-        layout.setSpacing(1)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = elements.hBoxLayout()
         self.setLayout(layout)
 
-        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, parent=self)
+        self.slider = elements.HSlider(QtCore.Qt.Horizontal, parent=self)
         self.valueSpinBox = QtWidgets.QSpinBox(parent=self)
         self.valueSpinBox.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.valueSpinBox.setRange(-100, 100)

@@ -117,6 +117,7 @@ class View(graphicsview.GraphicsView):
     requestCopy = QtCore.Signal()
     requestPaste = QtCore.Signal(object)
     requestCompoundExpansion = QtCore.Signal(object)
+    nodeDoubleClicked = QtCore.Signal(object)
 
     def __init__(self, application, model, parent=None, setAntialiasing=True):
         super(View, self).__init__(application.config, parent, setAntialiasing)
@@ -143,10 +144,18 @@ class View(graphicsview.GraphicsView):
 
     def mouseDoubleClickEvent(self, event):
         item = self.itemAt(event.pos())
-        modifiers = event.modifiers
+        modifiers = event.modifiers()
+        button = event.buttons()
         if isinstance(item, graphicsnode.GraphicsNode) and item.model.isCompound() and \
                 modifiers == QtCore.Qt.ShiftModifier:
             self.requestCompoundExpansion.emit(item)
+
+        elif button == QtCore.Qt.LeftButton and modifiers == QtCore.Qt.ControlModifier:
+            if isinstance(item, plugwidget.PlugContainer):
+                self.nodeDoubleClicked.emit(item.model.objectModel)
+            elif isinstance(item.parentObject(), graphicsnode.GraphicsNode):
+                item = item.parentObject()
+                self.nodeDoubleClicked.emit(item.model)
 
         super(View, self).mouseDoubleClickEvent(event)
 
@@ -250,8 +259,8 @@ class View(graphicsview.GraphicsView):
         """
         plug.color = plug.parentObject().model.itemColour()
         self._interactiveEdge = graphicitems.InteractiveEdge(plug,
-                                                     curveType=self.config.defaultConnectionShape,
-                                                     color=plug.color)
+                                                             curveType=self.config.defaultConnectionShape,
+                                                             color=plug.color)
         self._interactiveEdge.setLineStyle(self.config.defaultConnectionStyle)
         self._interactiveEdge.setWidth(self.config.connectionLineWidth)
         self._interactiveEdge.destinationPoint = plug.center()
@@ -267,8 +276,8 @@ class View(graphicsview.GraphicsView):
         if not source.container().model.createConnection(destination.container().model):
             return
         newConnection = graphicitems.ConnectionEdge(source, destination,
-                                            curveType=self.config.defaultConnectionShape,
-                                            color=source.color)
+                                                    curveType=self.config.defaultConnectionShape,
+                                                    color=source.color)
         newConnection.setLineStyle(self.config.defaultConnectionStyle)
         newConnection.setWidth(self.config.connectionLineWidth)
         scene = self.scene()

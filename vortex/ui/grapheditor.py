@@ -6,9 +6,10 @@ import os, logging
 from functools import partial
 
 from Qt import QtWidgets, QtCore, QtGui
-
+from zoo.libs.pyqt.widgets import elements
 from vortex.ui import utils
 from vortex.ui.graphics import graphpanels, graphicsnode, graph
+from vortex.ui import nodepropertiesdialog
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +24,14 @@ class GraphEditor(QtWidgets.QWidget):
         self.model = model
         self.application = application
         self.init()
-        self.view.deletePress.connect(self.scene.onDelete)
-        self.view.tabPress.connect(self.showNodeLibrary)
+        self.connections()
         self.nodeLibraryWidget = application.loadUIPlugin("NodeLibrary", dock=False)
         # self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
         self.nodeLibraryWidget.hide()
+
+    def connections(self):
+        self.view.deletePress.connect(self.scene.onDelete)
+        self.view.tabPress.connect(self.showNodeLibrary)
 
     def showNodeLibrary(self, point):
         self.nodeLibraryWidget.initUI(dock=False)
@@ -37,9 +41,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.view.showPanels(state)
 
     def init(self):
-        self.editorLayout = QtWidgets.QVBoxLayout()
-        self.editorLayout.setContentsMargins(0, 0, 0, 0)
-        self.editorLayout.setSpacing(0)
+        self.editorLayout = elements.vBoxLayout(parent=self)
         self.toolbar = QtWidgets.QToolBar(parent=self)
         self.createAlignmentActions(self.toolbar)
         self.toolbar.addSeparator()
@@ -47,14 +49,18 @@ class GraphEditor(QtWidgets.QWidget):
         self.editorLayout.addWidget(self.toolbar)
         # constructor view and set scene
         self.scene = graph.Scene(self.application, parent=self)
-
+        # self.scene.selectionChanged.connect(self.application.onSelectionChanged.emit)
         self.view = graph.View(self.application, self.model, parent=self)
         self.view.setScene(self.scene)
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
         self.view.requestCompoundExpansion.connect(self.requestCompoundExpansion.emit)
+        self.view.nodeDoubleClicked.connect(self.displayNodeProperties)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
-        self.setLayout(self.editorLayout)
+
+    def displayNodeProperties(self, objectModel):
+        a = nodepropertiesdialog.NodePropertiesDialog(self.application, objectModel, parent=self)
+        a.exec_()
 
     def createAlignmentActions(self, parent):
         icons = os.environ["VORTEX_ICONS"]

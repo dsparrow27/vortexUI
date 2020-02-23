@@ -13,14 +13,11 @@ class GraphNotebook(QtWidgets.QWidget):
         self.notebook = None
         self.initLayout()
         self.uiApplication = uiApplication
+        uiApplication.notebook = self
 
     def initLayout(self):
-        layout = QtWidgets.QVBoxLayout()
-        layout.setContentsMargins(2, 2, 2, 2)
-        self.setLayout(layout)
-
+        layout = elements.vBoxLayout(parent=self)
         self.notebook = tabwidget.TabWidget("NoteBook", parent=self)
-
         layout.addWidget(self.notebook)
 
     def onRequestExpandCompoundAsTab(self, compound):
@@ -43,9 +40,9 @@ class GraphNotebook(QtWidgets.QWidget):
     def deletePage(self, index):
         if index in range(self.notebook.count()):
             # show popup
-            self.uiApplication.onBeforeRemoveTab.emit(self.pages[index])
             self.pages[index].close()
             self.notebook.removeTab(index)
+            self.uiApplication.onBeforeRemoveTab.emit(self.pages[index])
             self.uiApplication.onAfterRemoveTab.emit(self.pages[index])
 
     def clear(self):
