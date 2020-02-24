@@ -6,11 +6,12 @@ from vortex.ui.graphics import plugwidget
 class PanelWidget(QtWidgets.QGraphicsWidget):
     def __init__(self, model, acceptsContextMenu=True, parent=None):
         super(PanelWidget, self).__init__(parent=parent)
-        self.setFlag(self.ItemSendsScenePositionChanges)
-        self.setFlag(self.ItemIgnoresTransformations)
+        self.setFlags(self.ItemIgnoresTransformations)
+        self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
+        self.setZValue(1)
         self.model = model
-        self.leftPanel = Panel(model, ioType="Input", acceptsContextMenu=acceptsContextMenu)
-        self.rightPanel = Panel(model, ioType="Output", acceptsContextMenu=acceptsContextMenu)
+        self.leftPanel = Panel(model, ioType="Input", acceptsContextMenu=acceptsContextMenu, parent=self)
+        self.rightPanel = Panel(model, ioType="Output", acceptsContextMenu=acceptsContextMenu, parent=self)
         self.leftPanel.setMaximumWidth(model.config.panelWidth)
         self.rightPanel.setMaximumWidth(model.config.panelWidth)
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
@@ -41,7 +42,7 @@ class Panel(QtWidgets.QGraphicsWidget):
 
         self.setLayout(layout)
         self.setFlags(self.flags() & QtCore.Qt.ItemIsSelectable)
-        self.setZValue(-1)
+        self.setZValue(100)
         self.refresh()
 
     def refresh(self):
@@ -67,7 +68,7 @@ class Panel(QtWidgets.QGraphicsWidget):
                 plug.inCrossItem.show()
             plug.inCircle.show()
             plug.outCircle.hide()
-        #     # insert the inCircle to the far right
+            #     # insert the inCircle to the far right
             layout.insertItem(3, plug.inCircle)
             layout.insertItem(2, plug.inCrossItem)
             # we switch this around for panels because the model input would be connected to another input
@@ -79,10 +80,10 @@ class Panel(QtWidgets.QGraphicsWidget):
                 plug.outCrossItem.show()
             plug.outCircle.show()
             plug.inCircle.hide()
-        #     # insert the outCircle to the far left
+            #     # insert the outCircle to the far left
             layout.insertItem(0, plug.outCircle)
             layout.insertItem(1, plug.outCrossItem)
-            layout.itemAt(layout.count()-1)
+            layout.itemAt(layout.count() - 1)
             plug.inCircle.ioType = "Input"
             plug.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 

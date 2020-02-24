@@ -89,7 +89,6 @@ class Scene(graphicsscene.GraphicsScene):
                     self.deleteConnection(sel)
                 continue
             elif isinstance(sel, graphicsnode.GraphicsNode):
-
                 deleted = sel.model.delete()
                 del self.nodes[hash(sel.model)]
             elif isinstance(sel, graphbackdrop.BackDrop):
@@ -101,8 +100,8 @@ class Scene(graphicsscene.GraphicsScene):
 
     def onSetConnectionStyle(self):
         style = self.sender().text()
-        style = self.uiApplication.config.connectionStyles.get(style)
-        self.uiApplication.config.defaultConnectionStyle = style
+        style = self.graph.config.connectionStyles.get(style)
+        self.graph.config.defaultConnectionStyle = style
         if style == "Linear":
             for conn in self.connections:
                 conn.setAsLinearPath()
@@ -119,9 +118,9 @@ class View(graphicsview.GraphicsView):
     requestCompoundExpansion = QtCore.Signal(object)
     nodeDoubleClicked = QtCore.Signal(object)
 
-    def __init__(self, application, model, parent=None, setAntialiasing=True):
-        super(View, self).__init__(application.config, parent, setAntialiasing)
-        self.application = application
+    def __init__(self, graph, model, parent=None, setAntialiasing=True):
+        super(View, self).__init__(graph.config, parent, setAntialiasing)
+        self.application = graph
         self.model = model
         self.newScale = None
         self.panelWidget = None
@@ -173,8 +172,13 @@ class View(graphicsview.GraphicsView):
         button = event.buttons()
         self._origin_pos = event.pos()
         self.previousMousePos = event.pos()
-        item = self.itemAt(event.pos())
-        if button == QtCore.Qt.LeftButton:
+        # ignore any graphicsitems we don't care about, ie. containers
+        items=[i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
+                                                                        graphpanels.PanelWidget,
+                                                                        graphicsnode.NodeHeader))]
+
+        if button == QtCore.Qt.LeftButton and items:
+            item = items[0]
             if isinstance(item, plugwidget.Plug):
                 self._plugSelected = item
             elif isinstance(item, plugwidget.CrossSquare):
@@ -183,8 +187,7 @@ class View(graphicsview.GraphicsView):
                     plug.onExpandInput()
                 else:
                     plug.onExpandOutput()
-                return
-            elif isinstance(item, graphpanels.PanelWidget) and not self.scene().selectedItems():
+            elif not isinstance(item, graphicsnode.GraphicsNode) and not self.scene().selectedItems():
                 rect = QtCore.QRect(self.previousMousePos, QtCore.QSize())
                 rect = rect.normalized()
                 map_rect = self.mapToScene(rect).boundingRect()
@@ -204,8 +207,8 @@ class View(graphicsview.GraphicsView):
     def mouseReleaseEvent(self, event):
 
         if self._plugSelected and not self.pan_active:
-
-            self.scene().removeItem(self._interactiveEdge)
+            if self._interactiveEdge is not None:
+                self.scene().removeItem(self._interactiveEdge)
             self._interactiveEdge = None
             item = self.itemAt(event.pos())
             if isinstance(item, plugwidget.Plug):

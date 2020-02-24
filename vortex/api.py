@@ -1,4 +1,4 @@
-from .ui.application import UIApplication
+from .ui.model.graphmodel import GraphModel
 from .ui.model.objectmodel import ObjectModel
 from .ui.model.attributemodel import AttributeModel
 from .ui.config import VortexConfig

@@ -1,19 +1,20 @@
 from Qt import QtWidgets, QtCore, QtGui
 from vortex.ui import grapheditor
 from zoo.libs.pyqt.extended import tabwidget
+from zoo.libs.pyqt.widgets import elements
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class GraphNotebook(QtWidgets.QWidget):
-    def __init__(self, uiApplication, parent=None):
+    def __init__(self, vortexGraph, parent=None):
         super(GraphNotebook, self).__init__(parent=parent)
         self.pages = []
         self.notebook = None
         self.initLayout()
-        self.uiApplication = uiApplication
-        uiApplication.notebook = self
+        self.graph = vortexGraph
+        vortexGraph.notebook = self
 
     def initLayout(self):
         layout = elements.vBoxLayout(parent=self)
@@ -22,10 +23,10 @@ class GraphNotebook(QtWidgets.QWidget):
 
     def onRequestExpandCompoundAsTab(self, compound):
         self.addPage(compound.text())
-        self.uiApplication.models[compound.text()] = compound
+        self.graph.models[compound.text()] = compound
 
     def addPage(self, model):
-        editor = grapheditor.GraphEditor(model, self.uiApplication, parent=self)
+        editor = grapheditor.GraphEditor(model, self.graph, parent=self)
         # model.addConnectionSig.connect(editor.scene.createConnection)
         editor.requestCompoundExpansion.connect(self.onRequestExpandCompoundAsTab)
         editor.showPanels(True)
@@ -42,8 +43,8 @@ class GraphNotebook(QtWidgets.QWidget):
             # show popup
             self.pages[index].close()
             self.notebook.removeTab(index)
-            self.uiApplication.onBeforeRemoveTab.emit(self.pages[index])
-            self.uiApplication.onAfterRemoveTab.emit(self.pages[index])
+            self.graph.onBeforeRemoveTab.emit(self.pages[index])
+            self.graph.onAfterRemoveTab.emit(self.pages[index])
 
     def clear(self):
         self.notebook.clear()

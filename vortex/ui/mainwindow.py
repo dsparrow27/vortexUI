@@ -5,11 +5,11 @@ from zoo.preferences.core import preference
 
 
 class ApplicationWindow(mainwindow.MainWindow):
-    def __init__(self, applicationModel, title="Vortex", width=800, height=600, parent=None):
+    def __init__(self, vortexGraph, title="Vortex", width=800, height=600, parent=None):
         super(ApplicationWindow, self).__init__(title=title, width=width, height=height, parent=parent)
 
         self.setStyleSheet(preference.interface("core_interface").stylesheet().data)
-        self.noteBook = graphnotebook.GraphNotebook(applicationModel, parent=self)
+        self.noteBook = graphnotebook.GraphNotebook(vortexGraph, parent=self)
         self.setCustomCentralWidget(self.noteBook)
         self.setupMenuBar()
         self.loadAction = QtWidgets.QAction("Load", parent=self)
@@ -21,14 +21,14 @@ class ApplicationWindow(mainwindow.MainWindow):
         self.fileMenu.insertMenu(self.exitAction, self.recentFilesMenu)
         self.saveAction.triggered.connect(self.onSave)
         self.loadAction.triggered.connect(self.onLoad)
-        applicationModel.loadPlugins()
+        vortexGraph.loadPlugins()
 
     def onSave(self):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent=self, caption="Select Graph")
         if fname:
-            self.noteBook.uiApplication.save(fname)
+            self.noteBook.graph.save(fname)
 
     def onLoad(self):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(parent=self, caption="Select Graph")
         if fname:
-            self.noteBook.uiApplication.load(fname)
+            self.noteBook.graph.load(fname)

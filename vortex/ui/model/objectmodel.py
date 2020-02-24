@@ -255,3 +255,9 @@ class ObjectModel(QtCore.QObject):
 
     def serialize(self):
         return {}
+
+    def copy(self):
+        pass
+
+    def paste(self):
+        pass

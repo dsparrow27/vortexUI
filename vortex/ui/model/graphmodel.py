@@ -44,8 +44,10 @@ class EventManager(QtCore.QObject):
         return super(EventManager, self).__getattribute__(name)
 
 
-class UIApplication(QtCore.QObject):
+class GraphModel(QtCore.QObject):
     """High Level Application object, handles node plugins, UI Plugins, global events
+
+
     """
     # graph, list(objectModel), True
     onSelectionChanged = QtCore.Signal(object, list, bool)
@@ -55,7 +57,7 @@ class UIApplication(QtCore.QObject):
         :param uiConfig:
         :type uiConfig:
         """
-        super(UIApplication, self).__init__()
+        super(GraphModel, self).__init__()
         self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin, variableName="id")
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
         self.config = uiConfig
@@ -72,7 +74,7 @@ class UIApplication(QtCore.QObject):
 
     def loadUIPlugin(self, pluginId, dock=True):
         # pass
-        uiExt = self.pluginManager.loadPlugin(pluginId, application=self)
+        uiExt = self.pluginManager.loadPlugin(pluginId, graph=self)
         if not uiExt:
             return
         uiExt.initUI(dock=dock)
@@ -120,3 +122,4 @@ class UIApplication(QtCore.QObject):
     def saveGraph(self, objectModel):
         print("test")
         return {}
+

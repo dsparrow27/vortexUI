@@ -28,6 +28,22 @@ AttributeModel
     Attribute level object
 
 ##### Dependencies #####
-zoocore
-slither #temp
-PySide2
+zootoolspro
+
+
+#todo
+1. create node from ui.
+2. delete node should delete the connections
+3. logging
+4. fix array cross hair not drawing
+5. uiPlugins no longer work
+6. Node Attribute container doesn't expand with header text.
+7. array element connections on expand/collapse need to reconnect to
+   array.
+8. Graph deserialization.
+
+
+
+
+
+

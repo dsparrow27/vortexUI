@@ -19,9 +19,9 @@ from vortex import api as vortexApi
 logger = logging.getLogger(__name__)
 
 
-class Application(vortexApi.UIApplication):
+class Graph(vortexApi.GraphModel):
     def __init__(self, uiConfig):
-        super(Application, self).__init__(uiConfig)
+        super(Graph, self).__init__(uiConfig)
 
     def registeredNodes(self):
         return {"comment": "organization",
@@ -237,10 +237,10 @@ class AttributeModel(vortexApi.AttributeModel):
         return self.internalAttr.get("isOutput", False)
 
     def setValue(self, value):
-        pass
+        self.internalAttr["value"] = value
 
     def value(self):
-        return
+        return self.internalAttr.get("value")
 
     def isArray(self):
         return self.internalAttr.get("isArray", False)
@@ -250,6 +250,42 @@ class AttributeModel(vortexApi.AttributeModel):
 
     def isElement(self):
         return self.internalAttr.get("isElement", False)
+
+    def type(self):
+        return self.internalAttr.get("type", "string")
+
+    def default(self):
+        return self.internalAttr.get("default", "")
+
+    def min(self):
+        return self.internalAttr.get("min", 0)
+
+    def max(self):
+        return self.internalAttr.get("max", 9999)
+
+    def setType(self, value):
+        self.internalAttr["type"] = value
+
+    def setAsInput(self, value):
+        self.internalAttr["isInput"] = value
+
+    def setAsOutput(self, value):
+        self.internalAttr["isOutput"] = value
+
+    def setDefault(self, value):
+        self.internalAttr["default"] = value
+
+    def setMin(self, value):
+        self.internalAttr["min"] = value
+
+    def setMax(self, value):
+        self.internalAttr["max"] = value
+
+    def setIsCompound(self, value):
+        self.internalAttr["isCompound"] = value
+
+    def setIsArray(self, value):
+        self.internalAttr["isArray"] = value
 
     def elements(self):
         items = []
@@ -328,12 +364,26 @@ def data():
                   "description": ""},
          "attributes": [{"label": "value",
                          "isInput": True,
+                         "isOutput": False,
                          "type": "float",
-                         "isOutput": False},
+                         "isArray": False,
+                         "isCompound": False,
+                         "default": 0.0,
+                         "value": 0.0,
+                         "min": 0.0,
+                         "max": 99999999,
+                         },
                         {"label": "output",
                          "isInput": False,
                          "type": "float",
-                         "isOutput": True},
+                         "isOutput": True,
+                         "isArray": False,
+                         "isCompound": False,
+                         "default": 0.0,
+                         "value": 0.0,
+                         "min": 0.0,
+                         "max": 99999999,
+                         },
 
                         ]
          },
@@ -389,9 +439,9 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
     uiConfig = vortexApi.VortexConfig()
-    vortexApp = Application(uiConfig)
+    vortexGraph = Graph(uiConfig)
 
-    ui = vortexApi.ApplicationWindow(vortexApp)
+    ui = vortexApi.ApplicationWindow(vortexGraph)
 
     root = SlitherUIObject(uiConfig, None)
     # add a tab te the notebook
@@ -399,7 +449,7 @@ if __name__ == "__main__":
     # add a bunch of nodes to the root
     for n in data():
         editor.addNode(SlitherUIObject(uiConfig, parent=root, **n))
-
+    editor.scene.createBackDrop()
     logger.debug("Completed boot process")
 
     sys.exit(app.exec_())

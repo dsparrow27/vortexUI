@@ -80,6 +80,7 @@ class Plug(QtWidgets.QGraphicsWidget):
 
 class CrossSquare(QtWidgets.QGraphicsWidget):
     leftMouseButtonClicked = QtCore.Signal()
+    hoverEventRequested = QtCore.Signal()
 
     def __init__(self, ioType, parent=None):
         super(CrossSquare, self).__init__(parent)
@@ -106,8 +107,12 @@ class CrossSquare(QtWidgets.QGraphicsWidget):
         if btn == QtCore.Qt.LeftButton and not self.isElement:
             event.accept()
 
+    def mouseHoverEvent(self, event):
+        super(CrossSquare, self).mouseHoverEvent(event)
+        self.hoverEventRequested.emit()
+
     def paint(self, painter, options, widget=None):
-        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 1.0), 5))
+        painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 1.0), 1))
         # draw the square
         if self.isElement:
             parentHeight = self.parentObject().size().height()

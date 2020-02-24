@@ -15,20 +15,20 @@ class AttributeEditorPlugin(api.UIPlugin):
         self._widget = None
 
     def show(self, parent):
-        return AttributeEditor(self.application, parent=parent)
+        return AttributeEditor(self.graph, parent=parent)
 
 
 class AttributeEditor(groupedtreewidget.GroupedTreeWidget):
-    def __init__(self, application, parent=None):
+    def __init__(self, graph, parent=None):
         super(AttributeEditor, self).__init__(parent)
-        self.application = application
+        self.graph = graph
         self.setObjectName("AttributeEditor")
         self.nodes = {}
         # self.application.events.onSelectionChanged.connect(self.onSceneSelection)
         # self.application.onSelectionChanged.connect(self.onSceneSelection)
         # self.application.events.onNodeDeleted.connect(self.removeNode)
         # self.application.onNodeDeleteRequested.connect(self.removeNode)
-        self.application.setShortcutForWidget(self, "AttributeEditor")
+        self.graph.setShortcutForWidget(self, "AttributeEditor")
 
     def onSceneSelection(self, *args):
         for i in self.application.notebook.currentPage().scene.selectedNodes():

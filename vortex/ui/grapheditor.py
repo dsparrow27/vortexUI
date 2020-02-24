@@ -19,13 +19,13 @@ class GraphEditor(QtWidgets.QWidget):
     """
     requestCompoundExpansion = QtCore.Signal(object)
 
-    def __init__(self, model, application, parent=None):
+    def __init__(self, model, graphModel, parent=None):
         super(GraphEditor, self).__init__(parent=parent)
         self.model = model
-        self.application = application
+        self.graph = graphModel
         self.init()
         self.connections()
-        self.nodeLibraryWidget = application.loadUIPlugin("NodeLibrary", dock=False)
+        self.nodeLibraryWidget = graphModel.loadUIPlugin("NodeLibrary", dock=False)
         # self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
         self.nodeLibraryWidget.hide()
 
@@ -45,12 +45,12 @@ class GraphEditor(QtWidgets.QWidget):
         self.toolbar = QtWidgets.QToolBar(parent=self)
         self.createAlignmentActions(self.toolbar)
         self.toolbar.addSeparator()
-        self.application.customToolbarActions(self.toolbar)
+        self.graph.customToolbarActions(self.toolbar)
         self.editorLayout.addWidget(self.toolbar)
         # constructor view and set scene
-        self.scene = graph.Scene(self.application, parent=self)
-        # self.scene.selectionChanged.connect(self.application.onSelectionChanged.emit)
-        self.view = graph.View(self.application, self.model, parent=self)
+        self.scene = graph.Scene(self.graph, parent=self)
+        # self.scene.selectionChanged.connect(self.graph.onSelectionChanged.emit)
+        self.view = graph.View(self.graph, self.model, parent=self)
         self.view.setScene(self.scene)
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
         self.view.requestCompoundExpansion.connect(self.requestCompoundExpansion.emit)
@@ -59,7 +59,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.editorLayout.addWidget(self.view)
 
     def displayNodeProperties(self, objectModel):
-        a = nodepropertiesdialog.NodePropertiesDialog(self.application, objectModel, parent=self)
+        a = nodepropertiesdialog.NodePropertiesDialog(self.graph, objectModel, parent=self)
         a.exec_()
 
     def createAlignmentActions(self, parent):
@@ -90,11 +90,11 @@ class GraphEditor(QtWidgets.QWidget):
                     model.contextMenu(menu)
             return
         edgeStyle = menu.addMenu("ConnectionStyle")
-        for i in self.application.config.connectionStyles.keys():
+        for i in self.graph.config.connectionStyles.keys():
             edgeStyle.addAction(i, self.scene.onSetConnectionStyle)
         alignment = menu.addMenu("Alignment")
         self.createAlignmentActions(alignment)
-        menu.addAction("Save Graph", partial(self.application.saveGraph, self.model))
+        menu.addAction("Save Graph", partial(self.graph.saveGraph, self.model))
 
     def alignSelectedNodes(self, direction):
         nodes = self.scene.selectedNodes()

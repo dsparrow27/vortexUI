@@ -3,8 +3,8 @@ import os
 import sys
 
 from zoo.libs.pyqt.extended import pythoneditor
-from zoo.libs.pyqt import utils as Qtutils
 from zoo.libs.pyqt.widgets import logoutput
+from zoo.libs.pyqt.widgets import elements
 from zoo.libs.pyqt.syntaxhighlighter import highlighter
 from vortex import api
 from Qt import QtCore, QtWidgets

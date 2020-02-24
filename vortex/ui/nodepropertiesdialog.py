@@ -49,7 +49,7 @@ class NodePropertiesDialog(dialog.Dialog):
         okCancelBtn.okBtn.clicked.connect(self.onCommit)
 
     def onCreate(self):
-        attr = Root(api.AttributeModel(self.objectModel))
+        attr = Root(self.application.attributeModelClass(self.objectModel))
         self.treeModel.root.addChild(attr)
         self.treeModel.reload()
 
@@ -107,9 +107,9 @@ class Root(datasources.BaseDataSource):
         elif index == 6:
             self.attribute.setMax(value)
         elif index == 7:
-            self.setIsCompound(value)
+            self.attribute.setIsCompound(value)
         elif index == 8:
-            self.setIsArray(value)
+            self.attribute.setIsArray(value)
 
     def rowCount(self):
         return len(self.children)

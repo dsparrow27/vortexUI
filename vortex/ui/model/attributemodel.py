@@ -57,7 +57,40 @@ class AttributeModel(QtCore.QObject):
     def isCompound(self):
         return False
 
-    def setIsCompound(self):
+    def type(self):
+        pass
+
+    def default(self):
+        pass
+
+    def min(self):
+        pass
+
+    def max(self):
+        pass
+
+    def setType(self, value):
+        pass
+
+    def setAsInput(self, value):
+        pass
+
+    def setAsOutput(self, value):
+        pass
+
+    def setDefault(self, value):
+        pass
+
+    def setMin(self, value):
+        pass
+
+    def setMax(self, value):
+        pass
+
+    def setIsCompound(self, value):
+        pass
+
+    def setIsArray(self, value):
         pass
 
     def elements(self):

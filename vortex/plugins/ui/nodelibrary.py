@@ -14,7 +14,7 @@ class NodeLibraryPlugin(api.UIPlugin):
     dockArea = QtCore.Qt.LeftDockWidgetArea
 
     def show(self, parent):
-        nb = NodesBox(self.application, parent=parent)
+        nb = NodesBox(self.graph, parent=parent)
         return nb
 
 
@@ -52,14 +52,15 @@ class NodesBox(frame.QFrame):
         self.verticalLayout.addWidget(self.lineEdit)
         self.nodeListWidget = NodeBoxWidget(parent=self)
         self.verticalLayout.addWidget(self.nodeListWidget)
+
+        self.resize(200, self.sizeHint().height())
+        self.connections()
+
+    def connections(self):
         self.lineEdit.textChanged.connect(self.searchTextChanged)
         self.nodeListWidget.itemChanged.connect(self.onSelectionChanged)
         self.nodeListWidget.itemDoubleClicked.connect(self.onDoubleClicked)
         self.nodeListWidget.enterPressed.connect(self.onEnterPressed)
-        self.resize(400, 250)
-
-    def sizeHint(self):
-        return QtCore.QSize(400, 250)
 
     def show(self, *args, **kwargs):
         self.lineEdit.setFocus()
@@ -71,7 +72,7 @@ class NodesBox(frame.QFrame):
     def searchTextChanged(self, text):
         if not self.lineEdit.text():
             self.lineEdit.setPlaceholderText("Enter node name..")
-        nodes = self.uiApplication.registeredNodes()
+        nodes = self.graph.registeredNodes()
         nodes["Group"] = "misc"
         self.reload(nodes, text)
 
@@ -86,7 +87,7 @@ class NodesBox(frame.QFrame):
 
     def onEnterPressed(self):
         currentText = self.nodeListWidget.currentItem().text()
-        if currentText in self.uiApplication.registeredNodes().keys():
+        if currentText in self.graph.registeredNodes().keys():
             # self.uiApplication.onNodeCreated(currentText)
             self.finished.emit()
         elif currentText == "Group":

@@ -15,16 +15,16 @@ class UIPlugin(plugin.Plugin):
     autoLoad=False
     tabify = True
 
-    def __init__(self, application, manager=None):
+    def __init__(self, graph, manager=None):
         """SubClasses that implement this method need to call super().
 
         :param application: The Vortex Application handler
-        :type application: ::class:`Vortex.application.UIApplication`
+        :type application: ::class:`Vortex.graph.ModehModel`
         :param manager: The manager object for plugins
         :type manager: ::class:`zoo.libs.plugin.pluginmanager.PluginManager`
         """
         super(UIPlugin, self).__init__(manager=manager)
-        self.application = application
+        self.graph = graph
         self._widget = None
 
     @property
@@ -45,7 +45,7 @@ class UIPlugin(plugin.Plugin):
         if self._widget:
             self._widget.show()
             return
-        window = self.application.mainWindow()
+        window = self.graph.mainWindow()
         widget = self.show(window)
         if dock and window:
             window.createDock(widget, self.dockArea, tabify=self.tabify)

@@ -82,8 +82,10 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
 
     def __init__(self, node, text, secondaryText="", icon=None, parent=None):
         super(NodeHeader, self).__init__(parent)
+        self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         self._node = node
         self.setMaximumHeight(35)
+        self.setMinimumHeight(35)
         layout = QtWidgets.QGraphicsLinearLayout(parent=self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -127,8 +129,8 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
 class GraphicsNode(QtWidgets.QGraphicsWidget):
     requestExpansion = QtCore.Signal()
 
-    def __init__(self, objectModel):
-        super(GraphicsNode, self).__init__()
+    def __init__(self, objectModel, parent=None):
+        super(GraphicsNode, self).__init__(parent=parent)
         self.setFlags(self.ItemIsSelectable | self.ItemIsMovable)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setMinimumWidth(objectModel.minimumWidth())
@@ -139,7 +141,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
 
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
-        self.setZValue(1)
+        self.setZValue(-1)
         self.setPos(QtCore.QPoint(*objectModel.position()))
 
     def init(self):
@@ -152,6 +154,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         self.attributeContainer.layout().setSpacing(0)
+        self.attributeContainer.layout().setContentsMargins(0,0,0,0)
         self.setToolTip(self.model.toolTip())
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
