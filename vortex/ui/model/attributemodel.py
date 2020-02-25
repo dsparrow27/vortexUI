@@ -135,7 +135,7 @@ class AttributeModel(QtCore.QObject):
         return QtGui.QColor(255, 255, 255)
 
     def itemEdgeColor(self):
-        return QtGui.QColor(0, 180, 0)
+        return QtGui.QColor(25,25,25)
 
     def itemColour(self):
         return QtGui.QColor(0, 180, 0)

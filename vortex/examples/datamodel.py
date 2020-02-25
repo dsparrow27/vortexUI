@@ -142,15 +142,6 @@ class SlitherUIObject(vortexApi.ObjectModel):
         """
         return self._data.get("toolTip", "")
 
-    def minimumHeight(self):
-        return 80
-
-    def minimumWidth(self):
-        return 150
-
-    def cornerRounding(self):
-        return 10
-
     def position(self):
         return self._data.get("position", (0.0, 0.0))
 
@@ -175,9 +166,6 @@ class SlitherUIObject(vortexApi.ObjectModel):
 
     def edgeColour(self):
         return QtGui.QColor(0.0, 0.0, 0.0, 255)
-
-    def edgeThickness(self):
-        return 3
 
     def deleteChild(self, child):
 
@@ -217,8 +205,8 @@ class SlitherUIObject(vortexApi.ObjectModel):
 
 
 class AttributeModel(vortexApi.AttributeModel):
-    def __init__(self, data, objectModel):
-        super(AttributeModel, self).__init__(objectModel)
+    def __init__(self, data, objectModel, parent=None):
+        super(AttributeModel, self).__init__(objectModel, parent=parent)
         self.internalAttr = data
 
     def fullPathName(self):
@@ -250,6 +238,9 @@ class AttributeModel(vortexApi.AttributeModel):
 
     def isElement(self):
         return self.internalAttr.get("isElement", False)
+
+    def isChild(self):
+        return self.internalAttr.get("isChild", False)
 
     def type(self):
         return self.internalAttr.get("type", "string")
@@ -289,17 +280,25 @@ class AttributeModel(vortexApi.AttributeModel):
 
     def elements(self):
         items = []
+        name = self.text()
         for a in range(10):
-            item = AttributeModel({"label": "value{}".format(a),
+            item = AttributeModel({"label": "{}[{}]".format(name, a),
                                    "isInput": True,
-                                   "type": "multi",
+                                   "type": "compound",
                                    "isElement": True,
-                                   "isOutput": False}, self.objectModel)
+                                   "isOutput": False,
+                                   "children": self.internalAttr.get("children", [])
+                                   }, objectModel=self.objectModel, parent=self)
             items.append(item)
         return items
 
     def children(self):
-        return []
+        children = []
+        for child in self.internalAttr.get("children", []):
+            child["isChild"] = True
+            item = AttributeModel(child, objectModel=self.objectModel, parent=self)
+            children.append(item)
+        return children
 
     def canAcceptConnection(self, plug):
         if self.isInput() and plug.isInput():
@@ -318,12 +317,12 @@ class AttributeModel(vortexApi.AttributeModel):
     def createConnection(self, attribute):
         if self.canAcceptConnection(attribute):
             self.internalAttr.setdefault("connections", {})[
-                attribute.fullPathName() + "|" + self.fullPathName()] = attribute
+                hasH(attribute) + "|" + hash(self)] = attribute
             return True
         return False
 
     def deleteConnection(self, attribute):
-        key = attribute.fullPathName() + "|" + self.fullPathName()
+        key = hash(attribute) + "|" + hash(self)
         connection = self.internalAttr.get("connections", {}).get(key)
         if connection:
             del self.internalAttr["connections"][key]
@@ -338,12 +337,6 @@ class AttributeModel(vortexApi.AttributeModel):
 
     def textColour(self):
         return QtGui.QColor(200, 200, 200)
-
-    def highlightColor(self):
-        return QtGui.QColor(255, 255, 255)
-
-    def itemEdgeColor(self):
-        return QtGui.QColor(0, 180, 0)
 
     def itemColour(self):
         typeMap = self.objectModel.config.attributeMapping.get(self.internalAttr["type"])
@@ -428,7 +421,90 @@ def data():
          "attributes": [{"label": "search", "isInput": True, "type": "string", "isOutput": False},
                         {"label": "toReplace", "isInput": True, "type": "string", "isOutput": False},
                         {"label": "replace", "isInput": True, "type": "string", "isOutput": False},
-                        {"label": "result", "isInput": False, "type": "string", "isOutput": True}]},
+                        {"label": "result", "isInput": False, "type": "string", "isOutput": True}]
+         },
+        {"data": {"label": "transform",
+                  "category": "dag",
+                  "secondaryLabel": "bob",
+                  "script": "", "commands": [],
+                  "description": ""},
+         "attributes": [{"label": "boundingBox",
+                         "isInput": True,
+                         "isCompound": True,
+                         "type": "multi",
+                         "isOutput": False,
+                         "children": [
+                             {"label": "boundingMin",
+                              "isInput": True,
+                              "isArray": False,
+                              "isCompound": True,
+                              "type": "float3",
+                              "isOutput": False,
+                              "children": [{"label": "minX",
+                                            "isInput": True,
+                                            "isArray": False,
+                                            "type": "float",
+                                            "isOutput": False},
+                                           {"label": "minY",
+                                            "isInput": True,
+                                            "isArray": False,
+                                            "type": "float",
+                                            "isOutput": False}
+                                  , {"label": "minZ",
+                                     "isInput": True,
+                                     "isArray": False,
+                                     "type": "float",
+                                     "isOutput": False}]},
+                             {"label": "boundingMax",
+                              "isInput": True,
+                              "isArray": False,
+                              "isCompound": True,
+                              "type": "float3",
+                              "isOutput": False,
+                              "children": [{"label": "maxY",
+                                            "isInput": True,
+                                            "isArray": False,
+                                            "type": "float",
+                                            "isOutput": False},
+                                           {"label": "maxY",
+                                            "isInput": True,
+                                            "isArray": False,
+                                            "type": "float",
+                                            "isOutput": False},
+                                           {"label": "maxZ",
+                                            "isInput": True,
+                                            "isArray": False,
+                                            "type": "float",
+                                            "isOutput": False}]}
+                         ]},
+                        {"label": "compoundArray",
+                         "isInput": False,
+                         "isArray": True,
+                         "isCompound": True,
+                         "type": "multi",
+                         "isOutput": True,
+                         "children": [
+                             {"label": "x",
+                              "isInput": False,
+                              "isArray": False,
+                              "isCompound": False,
+                              "type": "float",
+                              "isOutput": True},
+                             {"label": "y",
+                              "isInput": False,
+                              "isArray": False,
+                              "isCompound": False,
+                              "type": "float",
+                              "isOutput": True},
+                             {"label": "z",
+                              "isInput": False,
+                              "isArray": False,
+                              "isCompound": False,
+                              "type": "float",
+                              "isOutput": True}
+                         ]}
+                        ]
+         },
 
     ]
     return nodes

@@ -1,4 +1,5 @@
 from zoo.libs.pyqt.widgets.graphics import graphicitems
+from zoo.libs.pyqt.widgets import elements
 from vortex.ui.graphics import plugwidget
 from Qt import QtWidgets, QtCore, QtGui
 
@@ -80,17 +81,16 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
     headerButtonStateChanged = QtCore.Signal(int)
     headerTextChanged = QtCore.Signal(str)
 
-    def __init__(self, node, text, secondaryText="", icon=None, parent=None):
+    def __init__(self, node, text, secondaryText="",icon=None, parent=None):
         super(NodeHeader, self).__init__(parent)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
+        self.titleFont = QtGui.QFont("Roboto-Bold.ttf", 8)
         self._node = node
-        self.setMaximumHeight(35)
-        self.setMinimumHeight(35)
-        layout = QtWidgets.QGraphicsLinearLayout(parent=self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.setOrientation(QtCore.Qt.Horizontal)
-        # self.setLayout()
+        fontmetrics = QtGui.QFontMetrics(self.titleFont)
+        height = fontmetrics.height() * 2
+        self.setMaximumHeight(height)
+        self.setMinimumHeight(height)
+        layout = elements.hGraphicsLinearLayout(parent=self)
         self.headerIcon = HeaderPixmap(pixmap=icon or "", parent=self)
         layout.addItem(self.headerIcon)
         if not icon:
@@ -107,18 +107,14 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
 
     def _createLabels(self, primary, secondary, parentLayout):
         container = graphicitems.ItemContainer(QtCore.Qt.Vertical, parent=self)
-        container.layout().setSpacing(0)
-        container.layout().setContentsMargins(0, 0, 0, 0)
         self._titleWidget = graphicitems.GraphicsText(primary, self)
         self._titleWidget.textChanged.connect(self.headerTextChanged)
-        self._titleWidget.font = QtGui.QFont("Roboto-Bold.ttf", 12)
+        self._titleWidget.font = self.titleFont
         self._secondarytitle = graphicitems.GraphicsText(secondary, self)
-        self._secondarytitle.setTextFlags(
-            QtWidgets.QGraphicsItem.ItemIsSelectable & QtWidgets.QGraphicsItem.ItemIsFocusable &
-            QtWidgets.QGraphicsItem.ItemIsMovable)
+        self._secondarytitle.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable)
         self._secondarytitle.font = QtGui.QFont("Roboto-Bold.ttf", 8)
-        container.addItem(self._titleWidget, QtCore.Qt.AlignCenter | QtCore.Qt.AlignTop)
-        container.addItem(self._secondarytitle, QtCore.Qt.AlignCenter | QtCore.Qt.AlignTop)
+        container.addItem(self._titleWidget, QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
+        container.addItem(self._secondarytitle, QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
         self._secondarytitle.hide()
         parentLayout.addItem(container)
 
@@ -145,16 +141,14 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         self.setPos(QtCore.QPoint(*objectModel.position()))
 
     def init(self):
-        layout = QtWidgets.QGraphicsLinearLayout(parent=self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.setOrientation(QtCore.Qt.Vertical)
-        self.header = NodeHeader(self, self.model.text(), self.model.secondaryText(), parent=self)
+        layout = elements.vGraphicsLinearLayout(parent=self)
+        self.header = NodeHeader(self,
+                                 self.model.text(),
+                                 self.model.secondaryText(),
+                                 parent=self)
         self.header.headerTextChanged.connect(self.onHeaderTextChanged)
         self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
-        self.attributeContainer.layout().setSpacing(0)
-        self.attributeContainer.layout().setContentsMargins(0,0,0,0)
         self.setToolTip(self.model.toolTip())
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
@@ -240,10 +234,10 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness + 1)
         else:
             standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
-        rect = self.childrenBoundingRect()
-        rect.setWidth(rect.width() + 2)
+        rect = self.boundingRect()
+        rect.setWidth(rect.width())
         rounded_rect = QtGui.QPainterPath()
-        roundingY = int(150.0 * self.cornerRounding / rect.height())
+        roundingY = self.cornerRounding##int(self.cornerRounding / rect.height())
         rounded_rect.addRoundRect(rect,
                                   0.0, roundingY
                                   )
