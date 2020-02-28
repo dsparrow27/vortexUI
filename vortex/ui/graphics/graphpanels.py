@@ -1,5 +1,6 @@
 from Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets.graphics import graphicitems
+from zoo.libs.pyqt.widgets import elements
 from vortex.ui.graphics import plugwidget
 
 
@@ -14,10 +15,7 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
         self.rightPanel = Panel(model, ioType="Output", acceptsContextMenu=acceptsContextMenu, parent=self)
         self.leftPanel.setMaximumWidth(model.config.panelWidth)
         self.rightPanel.setMaximumWidth(model.config.panelWidth)
-        layout = QtWidgets.QGraphicsLinearLayout(parent=self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.setOrientation(QtCore.Qt.Horizontal)
+        layout = elements.vGraphicsLinearLayout(parent=self)
         layout.addItem(self.leftPanel)
         layout.addStretch(1)
         layout.addItem(self.rightPanel)
@@ -31,10 +29,7 @@ class Panel(QtWidgets.QGraphicsWidget):
         super(Panel, self).__init__(parent=parent)
         self.model = objectModel
         self.ioType = ioType
-        layout = QtWidgets.QGraphicsLinearLayout(parent=self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(1)
-        layout.setOrientation(QtCore.Qt.Vertical)
+        layout = elements.vGraphicsLinearLayout(parent=self)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         layout.addItem(self.attributeContainer)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))

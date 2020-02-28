@@ -134,6 +134,12 @@ class SlitherUIObject(vortexApi.ObjectModel):
     def deleteAttribute(self, attribute):
         pass
 
+    def minimumHeight(self):
+        return 250
+
+    def minimumWidth(self):
+        return 130
+
     def toolTip(self):
         """The Tooltip to display.
 
@@ -317,7 +323,7 @@ class AttributeModel(vortexApi.AttributeModel):
     def createConnection(self, attribute):
         if self.canAcceptConnection(attribute):
             self.internalAttr.setdefault("connections", {})[
-                hasH(attribute) + "|" + hash(self)] = attribute
+                hash(attribute) + "|" + hash(self)] = attribute
             return True
         return False
 
@@ -332,12 +338,6 @@ class AttributeModel(vortexApi.AttributeModel):
     def toolTip(self):
         return self.internalAttr.get("description")
 
-    def size(self):
-        return QtCore.QSize(150, 30)
-
-    def textColour(self):
-        return QtGui.QColor(200, 200, 200)
-
     def itemColour(self):
         typeMap = self.objectModel.config.attributeMapping.get(self.internalAttr["type"])
         if typeMap:
@@ -349,6 +349,15 @@ class AttributeModel(vortexApi.AttributeModel):
 
 
 def data():
+    rootData = {
+        "data": {"label": "myCompound",
+                 "category": "compounds",
+                 "script": "", "description": ""},
+        "attributes": [],
+        "children": [
+
+        ]
+    }
     nodes = [
         {"data": {"label": "float1",
                   "category": "math",
@@ -519,7 +528,7 @@ if __name__ == "__main__":
 
     ui = vortexApi.ApplicationWindow(vortexGraph)
 
-    root = SlitherUIObject(uiConfig, None)
+    root = SlitherUIObject(uiConfig, None, **rootData)
     # add a tab te the notebook
     editor = ui.noteBook.addPage(root)
     # add a bunch of nodes to the root

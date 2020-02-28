@@ -175,7 +175,7 @@ class PlugContainer(graphicitems.ItemContainer):
         self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.addItem(self.label, attributeModel.textAlignment())
-        self.addItem(self.outCrossItem, QtCore.Qt.AlignVCenter)
+        self.addItem(self.outCrossItem, QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
         self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
     def setLabel(self, label):
