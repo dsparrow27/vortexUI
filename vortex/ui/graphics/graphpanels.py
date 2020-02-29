@@ -15,7 +15,7 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
         self.rightPanel = Panel(model, ioType="Output", acceptsContextMenu=acceptsContextMenu, parent=self)
         self.leftPanel.setMaximumWidth(model.config.panelWidth)
         self.rightPanel.setMaximumWidth(model.config.panelWidth)
-        layout = elements.vGraphicsLinearLayout(parent=self)
+        layout = elements.hGraphicsLinearLayout(parent=self)
         layout.addItem(self.leftPanel)
         layout.addStretch(1)
         layout.addItem(self.rightPanel)

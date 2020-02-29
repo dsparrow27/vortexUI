@@ -3,6 +3,10 @@ Qt model for the vortex ui which bind slithers core engine and vortex GUI.
 
 FYI: Currently this is being prototyped so it pulls and pushes directly to the core without an undo.
 
+graph
+    |-node
+        |- attribute
+            |- connections
 """
 
 from vortex import startup
@@ -20,6 +24,10 @@ logger = logging.getLogger(__name__)
 
 
 class Graph(vortexApi.GraphModel):
+    graphSaved = QtCore.Signal(str)
+    graphLoaded = QtCore.Signal(object)
+    nodeCreated = QtCore.Signal(object)
+
     def __init__(self, uiConfig):
         super(Graph, self).__init__(uiConfig)
 
@@ -32,16 +40,42 @@ class Graph(vortexApi.GraphModel):
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         pprint.pprint(model.serialize())
         print(model)
+        self.graphSaved.emit()
         # print ("saving", filePath)
 
-    def loadGraph(self, filePath):
+    def loadGraph(self, filePath, parent=None):
         print("loading", filePath)
+        root = NodeModel(self.config, {}, parent=parent)
+        self.graphLoaded.emit(root)
+
+    def loadFromDict(self, data):
+        root = NodeModel.deserialize(self.config, data, parent=None)
+        print(root.children())
+        self.graphLoaded.emit(root)
+        return root
+
+    def createNode(self, nodeType, parent=None):
+        registeredNodes = self.registeredNodes()
+        if nodeType in registeredNodes:
+            nodeInfo = {"data": {"label": nodeType,
+                                 "category": "misc",
+                                 "secondaryLabel": "bob",
+                                 "script": "", "commands": [],
+                                 "description": ""}
+                        }
+            self.nodeCreated.emit(NodeModel.deserialize(self.config, nodeInfo, parent=parent))
 
 
-class SlitherUIObject(vortexApi.ObjectModel):
+class NodeModel(vortexApi.ObjectModel):
+    @classmethod
+    def deserialize(cls, config, data, parent=None):
+        newObject = cls(config, parent=parent, **data)
+        for child in data.get("children", []):
+            NodeModel.deserialize(config, child, parent=newObject)
+        return newObject
 
     def __init__(self, config, parent=None, **kwargs):
-        super(SlitherUIObject, self).__init__(config, parent)
+        super(NodeModel, self).__init__(config, parent)
         self._icon = kwargs.get("icon", "")
         self._data = kwargs.get("data", {})
         self._attributeData = kwargs.get("attributes", [])
@@ -323,12 +357,12 @@ class AttributeModel(vortexApi.AttributeModel):
     def createConnection(self, attribute):
         if self.canAcceptConnection(attribute):
             self.internalAttr.setdefault("connections", {})[
-                hash(attribute) + "|" + hash(self)] = attribute
+                str(hash(attribute)) + "|" + str(hash(self))] = attribute
             return True
         return False
 
     def deleteConnection(self, attribute):
-        key = hash(attribute) + "|" + hash(self)
+        key = str(hash(attribute)) + "|" + str(hash(self))
         connection = self.internalAttr.get("connections", {}).get(key)
         if connection:
             del self.internalAttr["connections"][key]
@@ -349,174 +383,180 @@ class AttributeModel(vortexApi.AttributeModel):
 
 
 def data():
-    rootData = {
+    return {
         "data": {"label": "myCompound",
                  "category": "compounds",
                  "script": "", "description": ""},
-        "attributes": [],
+        "attributes": [{"label": "value",
+                        "isInput": True,
+                        "isOutput": False,
+                        "type": "float",
+                        "isArray": False,
+                        "isCompound": False,
+                        "default": 0.0,
+                        "value": 0.0,
+                        "min": 0.0,
+                        "max": 99999999,
+                        }],
         "children": [
+            {"data": {"label": "float1",
+                      "category": "math",
+                      "secondaryLabel": "bob",
+                      "script": "", "commands": [],
+                      "description": ""},
+             "attributes": [{"label": "value",
+                             "isInput": True,
+                             "isOutput": False,
+                             "type": "float",
+                             "isArray": False,
+                             "isCompound": False,
+                             "default": 0.0,
+                             "value": 0.0,
+                             "min": 0.0,
+                             "max": 99999999,
+                             },
+                            {"label": "output",
+                             "isInput": False,
+                             "type": "float",
+                             "isOutput": True,
+                             "isArray": False,
+                             "isCompound": False,
+                             "default": 0.0,
+                             "value": 0.0,
+                             "min": 0.0,
+                             "max": 99999999,
+                             },
+
+                            ]
+             },
+            {"data": {"label": "float2",
+                      "category": "math",
+                      "secondaryLabel": "bob",
+                      "script": "", "commands": [],
+                      "description": ""},
+             "attributes": [
+                 {"label": "value",
+                  "isInput": True,
+                  "type": "float",
+                  "isOutput": False},
+                 {"label": "output",
+                  "isInput": False,
+                  "type": "float",
+                  "isOutput": True}]
+             },
+            {"data": {"label": "sum",
+                      "category": "math",
+                      "secondaryLabel": "bob",
+                      "script": "", "commands": [],
+                      "description": ""},
+             "attributes": [{"label": "values",
+                             "isInput": True,
+                             "isArray": True,
+                             "type": "multi",
+                             "isOutput": False},
+                            {"label": "output",
+                             "isInput": False,
+                             "isArray": False,
+                             "type": "multi",
+                             "isOutput": True}
+                            ]
+             },
+            {"data": {"label": "search",
+                      "category": "strings",
+                      "secondaryLabel": "bob",
+                      "script": "",
+                      "commands": [],
+                      "description": ""},
+             "attributes": [{"label": "search", "isInput": True, "type": "string", "isOutput": False},
+                            {"label": "toReplace", "isInput": True, "type": "string", "isOutput": False},
+                            {"label": "replace", "isInput": True, "type": "string", "isOutput": False},
+                            {"label": "result", "isInput": False, "type": "string", "isOutput": True}]
+             },
+            {"data": {"label": "transform",
+                      "category": "dag",
+                      "secondaryLabel": "bob",
+                      "script": "", "commands": [],
+                      "description": ""},
+             "attributes": [{"label": "boundingBox",
+                             "isInput": True,
+                             "isCompound": True,
+                             "type": "multi",
+                             "isOutput": False,
+                             "children": [
+                                 {"label": "boundingMin",
+                                  "isInput": True,
+                                  "isArray": False,
+                                  "isCompound": True,
+                                  "type": "float3",
+                                  "isOutput": False,
+                                  "children": [{"label": "minX",
+                                                "isInput": True,
+                                                "isArray": False,
+                                                "type": "float",
+                                                "isOutput": False},
+                                               {"label": "minY",
+                                                "isInput": True,
+                                                "isArray": False,
+                                                "type": "float",
+                                                "isOutput": False}
+                                      , {"label": "minZ",
+                                         "isInput": True,
+                                         "isArray": False,
+                                         "type": "float",
+                                         "isOutput": False}]},
+                                 {"label": "boundingMax",
+                                  "isInput": True,
+                                  "isArray": False,
+                                  "isCompound": True,
+                                  "type": "float3",
+                                  "isOutput": False,
+                                  "children": [{"label": "maxY",
+                                                "isInput": True,
+                                                "isArray": False,
+                                                "type": "float",
+                                                "isOutput": False},
+                                               {"label": "maxY",
+                                                "isInput": True,
+                                                "isArray": False,
+                                                "type": "float",
+                                                "isOutput": False},
+                                               {"label": "maxZ",
+                                                "isInput": True,
+                                                "isArray": False,
+                                                "type": "float",
+                                                "isOutput": False}]}
+                             ]},
+                            {"label": "compoundArray",
+                             "isInput": False,
+                             "isArray": True,
+                             "isCompound": True,
+                             "type": "multi",
+                             "isOutput": True,
+                             "children": [
+                                 {"label": "x",
+                                  "isInput": False,
+                                  "isArray": False,
+                                  "isCompound": False,
+                                  "type": "float",
+                                  "isOutput": True},
+                                 {"label": "y",
+                                  "isInput": False,
+                                  "isArray": False,
+                                  "isCompound": False,
+                                  "type": "float",
+                                  "isOutput": True},
+                                 {"label": "z",
+                                  "isInput": False,
+                                  "isArray": False,
+                                  "isCompound": False,
+                                  "type": "float",
+                                  "isOutput": True}
+                             ]}
+                            ]
+             },
 
         ]
     }
-    nodes = [
-        {"data": {"label": "float1",
-                  "category": "math",
-                  "secondaryLabel": "bob",
-                  "script": "", "commands": [],
-                  "description": ""},
-         "attributes": [{"label": "value",
-                         "isInput": True,
-                         "isOutput": False,
-                         "type": "float",
-                         "isArray": False,
-                         "isCompound": False,
-                         "default": 0.0,
-                         "value": 0.0,
-                         "min": 0.0,
-                         "max": 99999999,
-                         },
-                        {"label": "output",
-                         "isInput": False,
-                         "type": "float",
-                         "isOutput": True,
-                         "isArray": False,
-                         "isCompound": False,
-                         "default": 0.0,
-                         "value": 0.0,
-                         "min": 0.0,
-                         "max": 99999999,
-                         },
-
-                        ]
-         },
-        {"data": {"label": "float2",
-                  "category": "math",
-                  "secondaryLabel": "bob",
-                  "script": "", "commands": [],
-                  "description": ""},
-         "attributes": [
-             {"label": "value",
-              "isInput": True,
-              "type": "float",
-              "isOutput": False},
-             {"label": "output",
-              "isInput": False,
-              "type": "float",
-              "isOutput": True}]
-         },
-        {"data": {"label": "sum",
-                  "category": "math",
-                  "secondaryLabel": "bob",
-                  "script": "", "commands": [],
-                  "description": ""},
-         "attributes": [{"label": "values",
-                         "isInput": True,
-                         "isArray": True,
-                         "type": "multi",
-                         "isOutput": False},
-                        {"label": "output",
-                         "isInput": False,
-                         "isArray": False,
-                         "type": "multi",
-                         "isOutput": True}
-                        ]
-         },
-        {"data": {"label": "search",
-                  "category": "strings",
-                  "secondaryLabel": "bob",
-                  "script": "",
-                  "commands": [],
-                  "description": ""},
-         "attributes": [{"label": "search", "isInput": True, "type": "string", "isOutput": False},
-                        {"label": "toReplace", "isInput": True, "type": "string", "isOutput": False},
-                        {"label": "replace", "isInput": True, "type": "string", "isOutput": False},
-                        {"label": "result", "isInput": False, "type": "string", "isOutput": True}]
-         },
-        {"data": {"label": "transform",
-                  "category": "dag",
-                  "secondaryLabel": "bob",
-                  "script": "", "commands": [],
-                  "description": ""},
-         "attributes": [{"label": "boundingBox",
-                         "isInput": True,
-                         "isCompound": True,
-                         "type": "multi",
-                         "isOutput": False,
-                         "children": [
-                             {"label": "boundingMin",
-                              "isInput": True,
-                              "isArray": False,
-                              "isCompound": True,
-                              "type": "float3",
-                              "isOutput": False,
-                              "children": [{"label": "minX",
-                                            "isInput": True,
-                                            "isArray": False,
-                                            "type": "float",
-                                            "isOutput": False},
-                                           {"label": "minY",
-                                            "isInput": True,
-                                            "isArray": False,
-                                            "type": "float",
-                                            "isOutput": False}
-                                  , {"label": "minZ",
-                                     "isInput": True,
-                                     "isArray": False,
-                                     "type": "float",
-                                     "isOutput": False}]},
-                             {"label": "boundingMax",
-                              "isInput": True,
-                              "isArray": False,
-                              "isCompound": True,
-                              "type": "float3",
-                              "isOutput": False,
-                              "children": [{"label": "maxY",
-                                            "isInput": True,
-                                            "isArray": False,
-                                            "type": "float",
-                                            "isOutput": False},
-                                           {"label": "maxY",
-                                            "isInput": True,
-                                            "isArray": False,
-                                            "type": "float",
-                                            "isOutput": False},
-                                           {"label": "maxZ",
-                                            "isInput": True,
-                                            "isArray": False,
-                                            "type": "float",
-                                            "isOutput": False}]}
-                         ]},
-                        {"label": "compoundArray",
-                         "isInput": False,
-                         "isArray": True,
-                         "isCompound": True,
-                         "type": "multi",
-                         "isOutput": True,
-                         "children": [
-                             {"label": "x",
-                              "isInput": False,
-                              "isArray": False,
-                              "isCompound": False,
-                              "type": "float",
-                              "isOutput": True},
-                             {"label": "y",
-                              "isInput": False,
-                              "isArray": False,
-                              "isCompound": False,
-                              "type": "float",
-                              "isOutput": True},
-                             {"label": "z",
-                              "isInput": False,
-                              "isArray": False,
-                              "isCompound": False,
-                              "type": "float",
-                              "isOutput": True}
-                         ]}
-                        ]
-         },
-
-    ]
-    return nodes
 
 
 if __name__ == "__main__":
@@ -527,14 +567,17 @@ if __name__ == "__main__":
     vortexGraph = Graph(uiConfig)
 
     ui = vortexApi.ApplicationWindow(vortexGraph)
+    data = data()
 
-    root = SlitherUIObject(uiConfig, None, **rootData)
+    # root = NodeModel(uiConfig, None, **data)
     # add a tab te the notebook
-    editor = ui.noteBook.addPage(root)
+
+    root = vortexGraph.loadFromDict(data)
+
     # add a bunch of nodes to the root
-    for n in data():
-        editor.addNode(SlitherUIObject(uiConfig, parent=root, **n))
-    editor.scene.createBackDrop()
+    # for n in data():
+    #     editor.addNode(NodeModel(uiConfig, parent=root, **n))
+    # editor.scene.createBackDrop()
     logger.debug("Completed boot process")
 
     sys.exit(app.exec_())

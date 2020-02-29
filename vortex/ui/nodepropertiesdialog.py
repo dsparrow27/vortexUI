@@ -8,8 +8,9 @@ from vortex import api
 
 class NodePropertiesDialog(dialog.Dialog):
     def __init__(self, application, objectModel, parent=None):
+        title = "Graph Node Properties - {}".format(objectModel.text())
         super(NodePropertiesDialog, self).__init__(width=600, height=300,
-                                                   title="Node property Editor",
+                                                   title=title,
                                                    showOnInitialize=False,
                                                    parent=parent)
         self.application = application

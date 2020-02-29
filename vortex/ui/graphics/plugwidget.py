@@ -244,8 +244,6 @@ class PlugContainer(graphicitems.ItemContainer):
         parentContainer = self.parentObject()
         if self.outCrossItem.expanded:
             removeChildContainers(self, parentContainer)
-            self._removeChildContainers(parentContainer)
-            return
         else:
             self.expand()
         self.outCrossItem.expanded = not self.outCrossItem.expanded

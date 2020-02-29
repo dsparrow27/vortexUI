@@ -1,3 +1,7 @@
+"""GraphNoteBook is a contains the management for a tabwidget of all graphs.
+Each Tab contains it's own graphicsView and qscene but references the same datamodel backend.
+
+"""
 from Qt import QtWidgets, QtCore, QtGui
 from vortex.ui import grapheditor
 from zoo.libs.pyqt.extended import tabwidget
@@ -15,6 +19,12 @@ class GraphNotebook(QtWidgets.QWidget):
         self.initLayout()
         self.graph = vortexGraph
         vortexGraph.notebook = self
+        vortexGraph.nodeCreated.connect(self._onNodeCreated)
+        vortexGraph.graphLoaded.connect(self._onGraphLoad)
+        # graphSaved
+        # graphLoaded
+        #
+        # editor = ui.noteBook.addPage(root)
 
     def initLayout(self):
         layout = elements.vBoxLayout(parent=self)
@@ -25,13 +35,14 @@ class GraphNotebook(QtWidgets.QWidget):
         self.addPage(compound.text())
         self.graph.models[compound.text()] = compound
 
-    def addPage(self, model):
-        editor = grapheditor.GraphEditor(model, self.graph, parent=self)
-        # model.addConnectionSig.connect(editor.scene.createConnection)
+    def addPage(self, objectModel):
+        editor = grapheditor.GraphEditor(objectModel, self.graph, parent=self)
         editor.requestCompoundExpansion.connect(self.onRequestExpandCompoundAsTab)
         editor.showPanels(True)
         self.pages.append(editor)
-        self.notebook.insertTab(0, editor, model.text())
+        self.notebook.insertTab(0, editor, objectModel.text())
+        for child in objectModel.children():
+            editor.addNode(child)
         return editor
 
     def setCurrentPageLabel(self, label):
@@ -47,8 +58,21 @@ class GraphNotebook(QtWidgets.QWidget):
             self.graph.onAfterRemoveTab.emit(self.pages[index])
 
     def clear(self):
+        for i in range(len(self.pages)):
+            self.deletePage(i)
         self.notebook.clear()
 
     def currentPage(self):
         if self.notebook.currentIndex() in range(len(self.pages)):
             return self.pages[self.notebook.currentIndex()]
+
+    def _onNodeCreated(self, objectModel):
+        page = self.currentPage()
+        if page is None:
+            self.addPage(objectModel)
+
+    def _onGraphLoad(self, objectModel, clear=True):
+        if clear:
+            self.clear()
+
+        self.addPage(objectModel)

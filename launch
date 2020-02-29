@@ -5,4 +5,4 @@ export PATH=${PATH}:$DIR:${ZOOTOOLS_ROOT}/install/core/python
 export VORTEX_ICONS="$DIR/icons"
 export PYTHONPATH=${PYTHONPATH}:$DIR:${ZOOTOOLS_ROOT}/install/core/python
 export VORTEX_UI_PLUGINS="$DIR/vortex/plugins/ui"
-python3 ./vortex/examples/datamodel.py
+${PYTHON_INTERPRETER} ./vortex/examples/datamodel.py

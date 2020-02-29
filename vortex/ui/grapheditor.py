@@ -19,14 +19,14 @@ class GraphEditor(QtWidgets.QWidget):
     """
     requestCompoundExpansion = QtCore.Signal(object)
 
-    def __init__(self, model, graphModel, parent=None):
+    def __init__(self, objectModel, graphModel, parent=None):
         super(GraphEditor, self).__init__(parent=parent)
-        self.model = model
+        self.model = objectModel
         self.graph = graphModel
         self.init()
         self.connections()
         self.nodeLibraryWidget = graphModel.loadUIPlugin("NodeLibrary", dock=False)
-        # self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
+        self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
         self.nodeLibraryWidget.hide()
 
     def connections(self):

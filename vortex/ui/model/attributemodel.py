@@ -2,6 +2,19 @@ from Qt import QtGui, QtCore
 
 
 class AttributeModel(QtCore.QObject):
+    defaultFields = {"label": "value",
+                     "description": "",
+                     "isInput": True,
+                     "isOutput": True,
+                     "type": "multi",
+                     "isArray": False,
+                     "isCompound": False,
+                     "default": 0.0,
+                     "value": 0.0,
+                     "min": 0.0,
+                     "max": 99999999,
+                     }
+
     def __init__(self, objectModel, parent=None):
         """
         :param objectModel: The Node ObjectModel
@@ -135,7 +148,7 @@ class AttributeModel(QtCore.QObject):
         return QtGui.QColor(255, 255, 255)
 
     def itemEdgeColor(self):
-        return QtGui.QColor(25,25,25)
+        return QtGui.QColor(25, 25, 25)
 
     def itemColour(self):
         return QtGui.QColor(0, 180, 0)

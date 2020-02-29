@@ -142,15 +142,21 @@ class View(graphicsview.GraphicsView):
         self.rescaleGraphWidget()
 
     def mouseDoubleClickEvent(self, event):
-        item = self.itemAt(event.pos())
+        # ignore any graphicsitems we don't care about, ie. containers
+        items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
+                                                                          graphpanels.PanelWidget,
+                                                                          graphicsnode.NodeHeader))]
+        if not items:
+            super(View, self).mouseDoubleClickEvent(event)
+            return
+        item = items[0]
         modifiers = event.modifiers()
         button = event.buttons()
-        if isinstance(item, graphicsnode.GraphicsNode) and item.model.isCompound() and \
-                modifiers == QtCore.Qt.ShiftModifier:
-            self.requestCompoundExpansion.emit(item)
 
-        elif button == QtCore.Qt.LeftButton and modifiers == QtCore.Qt.ControlModifier:
-            if isinstance(item, plugwidget.PlugContainer):
+        if button == QtCore.Qt.LeftButton and modifiers == QtCore.Qt.ControlModifier:
+            if isinstance(item, (graphicsnode.GraphicsNode, graphpanels.Panel)):
+                self.nodeDoubleClicked.emit(item.model)
+            elif isinstance(item, plugwidget.PlugContainer):
                 self.nodeDoubleClicked.emit(item.model.objectModel)
             elif isinstance(item.parentObject(), graphicsnode.GraphicsNode):
                 item = item.parentObject()
@@ -210,9 +216,14 @@ class View(graphicsview.GraphicsView):
             if self._interactiveEdge is not None:
                 self.scene().removeItem(self._interactiveEdge)
             self._interactiveEdge = None
-            item = self.itemAt(event.pos())
-            if isinstance(item, plugwidget.Plug):
-                self.onConnectionRequested(self._plugSelected, item)
+            # ignore any graphicsitems we don't care about, ie. containers
+            items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
+                                                                              graphpanels.PanelWidget,
+                                                                              graphicsnode.NodeHeader))]
+            if items:
+                item = items[0]
+                if isinstance(item, plugwidget.Plug):
+                    self.onConnectionRequested(self._plugSelected, item)
             self._plugSelected = None
             return super(View, self).mouseReleaseEvent(event)
 

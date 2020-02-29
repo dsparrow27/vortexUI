@@ -40,9 +40,9 @@ class NodesBox(frame.QFrame):
     """doc string for NodesBox"""
     finished = QtCore.Signal()
 
-    def __init__(self, uiApplication, parent):
+    def __init__(self, graph, parent):
         super(NodesBox, self).__init__(parent)
-        self.uiApplication = uiApplication
+        self.graph = graph
         self.setObjectName("NodeLibrary")
         self.verticalLayout = elements.vBoxLayout(self)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -55,6 +55,7 @@ class NodesBox(frame.QFrame):
 
         self.resize(200, self.sizeHint().height())
         self.connections()
+        self.reload(self.graph.registeredNodes(), "")
 
     def connections(self):
         self.lineEdit.textChanged.connect(self.searchTextChanged)
@@ -65,7 +66,7 @@ class NodesBox(frame.QFrame):
     def show(self, *args, **kwargs):
         self.lineEdit.setFocus()
         self.nodeListWidget.clear()
-        for item, category in self.uiApplication.registeredNodes().items():
+        for item, category in self.graph.registeredNodes().items():
             self.nodeListWidget.addItem(item)
         super(NodesBox, self).show(*args, **kwargs)
 
@@ -88,14 +89,11 @@ class NodesBox(frame.QFrame):
     def onEnterPressed(self):
         currentText = self.nodeListWidget.currentItem().text()
         if currentText in self.graph.registeredNodes().keys():
-            # self.uiApplication.onNodeCreated(currentText)
-            self.finished.emit()
-        elif currentText == "Group":
-            self.parent().scene.createBackDrop()
+            self.graph.createNode(currentText)
             self.finished.emit()
 
     def onDoubleClicked(self, item):
-        # self.uiApplication.onNodeCreated(item.text())
+        self.graph.createNode(item.text())
         self.finished.emit()
 
     def onSelectionChanged(self, current):
