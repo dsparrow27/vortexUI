@@ -1,4 +1,4 @@
-from vortex.ui import graphnotebook
+from vortex.ui.views import graphnotebook
 from Qt import QtWidgets
 from zoo.libs.pyqt.widgets import mainwindow
 from zoo.preferences.core import preference

@@ -24,9 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 class Graph(vortexApi.GraphModel):
-    graphSaved = QtCore.Signal(str)
-    graphLoaded = QtCore.Signal(object)
-    nodeCreated = QtCore.Signal(object)
 
     def __init__(self, uiConfig):
         super(Graph, self).__init__(uiConfig)
@@ -327,6 +324,8 @@ class AttributeModel(vortexApi.AttributeModel):
                                    "type": "compound",
                                    "isElement": True,
                                    "isOutput": False,
+                                   "isArray": False,
+                                   "isCompound": False,
                                    "children": self.internalAttr.get("children", [])
                                    }, objectModel=self.objectModel, parent=self)
             items.append(item)
@@ -382,7 +381,7 @@ class AttributeModel(vortexApi.AttributeModel):
         return self.internalAttr
 
 
-def data():
+def graphOne():
     return {
         "data": {"label": "myCompound",
                  "category": "compounds",
@@ -559,6 +558,57 @@ def data():
     }
 
 
+def graphTwo():
+    return {
+        "data": {"label": "TestCompound",
+                 "category": "compounds",
+                 "script": "", "description": ""},
+        "attributes": [{"label": "value",
+                        "isInput": True,
+                        "isOutput": False,
+                        "type": "float",
+                        "isArray": False,
+                        "isCompound": False,
+                        "default": 0.0,
+                        "value": 0.0,
+                        "min": 0.0,
+                        "max": 99999999,
+                        }],
+        "children": [
+            {"data": {"label": "float1",
+                      "category": "math",
+                      "secondaryLabel": "bob",
+                      "script": "", "commands": [],
+                      "description": ""},
+             "attributes": [{"label": "value",
+                             "isInput": True,
+                             "isOutput": False,
+                             "type": "float",
+                             "isArray": False,
+                             "isCompound": False,
+                             "default": 0.0,
+                             "value": 0.0,
+                             "min": 0.0,
+                             "max": 99999999,
+                             },
+                            {"label": "output",
+                             "isInput": False,
+                             "type": "float",
+                             "isOutput": True,
+                             "isArray": False,
+                             "isCompound": False,
+                             "default": 0.0,
+                             "value": 0.0,
+                             "min": 0.0,
+                             "max": 99999999,
+                             },
+
+                            ]
+             },
+        ]
+    }
+
+
 if __name__ == "__main__":
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
@@ -567,17 +617,13 @@ if __name__ == "__main__":
     vortexGraph = Graph(uiConfig)
 
     ui = vortexApi.ApplicationWindow(vortexGraph)
-    data = data()
+    graphOneData = graphOne()
+    graphTwoData = graphTwo()
 
-    # root = NodeModel(uiConfig, None, **data)
-    # add a tab te the notebook
+    # Lets add Two graphs, both in isolation
+    vortexGraph.loadFromDict(graphOneData)
+    vortexGraph.loadFromDict(graphTwoData)
 
-    root = vortexGraph.loadFromDict(data)
-
-    # add a bunch of nodes to the root
-    # for n in data():
-    #     editor.addNode(NodeModel(uiConfig, parent=root, **n))
-    # editor.scene.createBackDrop()
     logger.debug("Completed boot process")
 
     sys.exit(app.exec_())

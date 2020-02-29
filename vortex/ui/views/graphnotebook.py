@@ -3,7 +3,7 @@ Each Tab contains it's own graphicsView and qscene but references the same datam
 
 """
 from Qt import QtWidgets, QtCore, QtGui
-from vortex.ui import grapheditor
+from vortex.ui.views import grapheditor
 from zoo.libs.pyqt.extended import tabwidget
 from zoo.libs.pyqt.widgets import elements
 import logging
@@ -21,10 +21,6 @@ class GraphNotebook(QtWidgets.QWidget):
         vortexGraph.notebook = self
         vortexGraph.nodeCreated.connect(self._onNodeCreated)
         vortexGraph.graphLoaded.connect(self._onGraphLoad)
-        # graphSaved
-        # graphLoaded
-        #
-        # editor = ui.noteBook.addPage(root)
 
     def initLayout(self):
         layout = elements.vBoxLayout(parent=self)
@@ -37,7 +33,6 @@ class GraphNotebook(QtWidgets.QWidget):
 
     def addPage(self, objectModel):
         editor = grapheditor.GraphEditor(objectModel, self.graph, parent=self)
-        editor.requestCompoundExpansion.connect(self.onRequestExpandCompoundAsTab)
         editor.showPanels(True)
         self.pages.append(editor)
         self.notebook.insertTab(0, editor, objectModel.text())
@@ -71,7 +66,7 @@ class GraphNotebook(QtWidgets.QWidget):
         if page is None:
             self.addPage(objectModel)
 
-    def _onGraphLoad(self, objectModel, clear=True):
+    def _onGraphLoad(self, objectModel, clear=False):
         if clear:
             self.clear()
 

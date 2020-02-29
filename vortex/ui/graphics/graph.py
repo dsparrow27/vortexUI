@@ -115,7 +115,6 @@ class Scene(graphicsscene.GraphicsScene):
 class View(graphicsview.GraphicsView):
     requestCopy = QtCore.Signal()
     requestPaste = QtCore.Signal(object)
-    requestCompoundExpansion = QtCore.Signal(object)
     nodeDoubleClicked = QtCore.Signal(object)
 
     def __init__(self, graph, model, parent=None, setAntialiasing=True):

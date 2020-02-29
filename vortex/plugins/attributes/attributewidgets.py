@@ -2,6 +2,8 @@ import os
 import weakref
 
 from Qt import QtWidgets, QtCore
+from zoo.libs.pyqt import constants as uiconstants
+from zoo.libs.pyqt.widgets import elements
 
 
 class AttributeItemWidget(QtWidgets.QFrame):
@@ -20,7 +22,7 @@ class AttributeItemWidget(QtWidgets.QFrame):
         self.setLayout(layout)
 
 
-class StringWidget(QtWidgets.QLineEdit):
+class StringWidget(elements.LineEdit):
     def __init__(self, model, parent=None):
         super(StringWidget, self).__init__(parent=parent)
         self.model = model
@@ -30,11 +32,15 @@ class PathWidget(QtWidgets.QFrame):
     def __init__(self, model, parent=None):
         super(PathWidget, self).__init__(parent=parent)
         self.directory = False
-        self.model = model
+        self.model = weakref.ref(model)
         self.layout = elements.hBoxLayout(parent=self)
         self.edit = elements.LineEdit(parent=self)
         self.layout.addWidget(self.edit)
-        self.browserBtn = elements.regularButton(label="...", parent=self)
+        self.browserBtn = elements.styledButton("",
+                                                "browse",
+                                                toolTip="Browse",
+                                                parent=self,
+                                                minWidth=uiconstants.BTN_W_ICN_MED)
         self.layout.addWidget(self.browserBtn)
         self.browserBtn.clicked.connect(self.onBrowserClicked)
         self.edit.editingFinished.connect(self.onEditChanged)
@@ -77,7 +83,6 @@ class NumericAttributeWidget(QtWidgets.QFrame):
         self.valueSpinBox.setSingleStep(1)
         self.valueSpinBox.valueChanged.connect(self.setValue)
         self.slider.valueChanged.connect(self.setValue)
-        # self.valueSpinBox.valueChanged.connect(self.valueChanged.emit)
         layout.addWidget(self.slider)
         layout.addWidget(self.valueSpinBox)
         self.setStyleSheet("""

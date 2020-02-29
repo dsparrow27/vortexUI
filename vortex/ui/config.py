@@ -16,7 +16,7 @@ class VortexConfig(graphviewconfig.Config):
         super(VortexConfig, self).__init__()
         self.connectionStyles = connectionStyle
         self.panelWidth = 150
-        self.drawMainGridAxis = True
+        self.drawMainGridAxis = False
         self.connectionLineWidth = 2
         self.graphBackgroundColor = QtGui.QColor(45, 45, 45)
         self.gridColor = QtGui.QColor(0.0, 0.0, 0.0)

@@ -9,7 +9,7 @@ from Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets import elements
 from vortex.ui import utils
 from vortex.ui.graphics import graphpanels, graphicsnode, graph
-from vortex.ui import nodepropertiesdialog
+from vortex.ui.views import nodepropertiesdialog
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,6 @@ class GraphEditor(QtWidgets.QWidget):
         self.view = graph.View(self.graph, self.model, parent=self)
         self.view.setScene(self.scene)
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
-        self.view.requestCompoundExpansion.connect(self.requestCompoundExpansion.emit)
         self.view.nodeDoubleClicked.connect(self.displayNodeProperties)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)

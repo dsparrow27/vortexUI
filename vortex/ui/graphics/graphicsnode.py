@@ -83,7 +83,7 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
     headerButtonStateChanged = QtCore.Signal(int)
     headerTextChanged = QtCore.Signal(str)
 
-    def __init__(self, node, text, secondaryText="",icon=None, parent=None):
+    def __init__(self, node, text, secondaryText="", icon=None, parent=None):
         super(NodeHeader, self).__init__(parent)
         self.setWindowFrameMargins(0, 0, 0, 0)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
@@ -240,7 +240,7 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
         rect = self.childrenBoundingRect()
         rounded_rect = QtGui.QPainterPath()
-        roundingY = self.cornerRounding##int(self.cornerRounding / rect.height())
+        roundingY = self.cornerRounding  ##int(self.cornerRounding / rect.height())
         rounded_rect.addRoundRect(rect,
                                   0.0, roundingY
                                   )

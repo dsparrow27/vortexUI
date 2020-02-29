@@ -6,12 +6,15 @@ from zoo.libs.plugin import pluginmanager
 from vortex.ui import plugin
 
 
-
 class GraphModel(QtCore.QObject):
     """High Level Application object, handles node plugins, UI Plugins, global events
 
 
     """
+    graphSaved = QtCore.Signal(str)
+    graphLoaded = QtCore.Signal(object)
+    nodeCreated = QtCore.Signal(object)
+    requestRefresh = QtCore.Signal()
 
     def __init__(self, uiConfig):
         """
@@ -23,14 +26,6 @@ class GraphModel(QtCore.QObject):
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
         self.config = uiConfig
         self._keyBoardMapping = {}
-        self.attributeModelClass = None
-        self.objectModelClass = None
-
-    def registerObjectModelType(self, objectModel):
-        self.objectModelClass = objectModel
-
-    def registerAttributeModel(self, attributeModel):
-        self.attributeModelClass = attributeModel
 
     def loadUIPlugin(self, pluginId, dock=True):
         # pass
@@ -76,9 +71,6 @@ class GraphModel(QtCore.QObject):
             if command:
                 QtWidgets.QShortcut(QtGui.QKeySequence(k), widget, partial(self.executeCommand, widget, command))
 
-    def executeCommand(self, widget, command):
-        print("executingCommand", widget, command)
-
     def saveGraph(self, objectModel):
         print("test")
         return {}
@@ -93,4 +85,7 @@ class GraphModel(QtCore.QObject):
         return root
 
     def createNode(self, nodeType):
+        pass
+
+    def deleteNode(self, uiObject):
         pass

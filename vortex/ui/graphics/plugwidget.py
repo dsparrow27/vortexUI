@@ -223,10 +223,10 @@ class PlugContainer(graphicitems.ItemContainer):
             self.childContainers.append(elementContainer)
             if element.isInput():
                 index = elementContainer.layout().count() - 2
-                if element.isArray() or element.isCompound() or element.isElement() or element.isChild():
+                if element.isArray() or element.isCompound():
                     elementContainer.inCrossItem.show()
             else:
-                if element.isArray() or element.isCompound() or element.isElement() or element.isChild():
+                if element.isArray() or element.isCompound():
                     elementContainer.outCrossItem.show()
                 index = 2
             elementContainer.layout().insertStretch(index, 1)
