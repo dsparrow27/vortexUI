@@ -224,12 +224,15 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             pos = i.pos() + i.mapToParent(event.pos()) - i.mapToParent(event.lastPos())
             i.setPos(pos)
         pos = event.pos()
-        self.model.setPosition((pos.x(), pos.y))
+        self.model.setPosition((pos.x(), pos.y()))
         self.scene().updateAllConnections()
 
     def doubleClickEvent(self, event):
         if self.model.isCompound():
             self.requestExpansion.emit()
+
+    def boundingRect(self, *args, **kwargs):
+        return self.childrenBoundingRect(*args, **kwargs)
 
     def paint(self, painter, option, widget):
         # main rounded rect

@@ -8,6 +8,7 @@ graph
         |- attribute
             |- connections
 """
+import os
 
 from vortex import startup
 
@@ -19,6 +20,8 @@ import pprint
 
 from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
+from zoo.libs.utils import filesystem
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +40,10 @@ class Graph(vortexApi.GraphModel):
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         pprint.pprint(model.serialize())
         print(model)
-        self.graphSaved.emit()
+        filePath =os.path.expanduser("~/vortexGraph/example.vgrh")
+        filesystem.ensureFolderExists(os.path.dirname(filePath))
+        filesystem.saveJson(model.serialize(), filePath)
+        self.graphSaved.emit(filePath)
         # print ("saving", filePath)
 
     def loadGraph(self, filePath, parent=None):
@@ -237,7 +243,8 @@ class NodeModel(vortexApi.ObjectModel):
     def serialize(self):
         return {"data": self._data,
                 "attributes": [attr.serialize() for attr in self._attributes],
-                "children": [child.serialize() for child in self._children]
+                "children": [child.serialize() for child in self._children],
+                "connections": [attr.internalAttr.setdefault("connections", {}) for attr in self._attributes]
                 },
 
 
@@ -385,6 +392,7 @@ def graphOne():
     return {
         "data": {"label": "myCompound",
                  "category": "compounds",
+                 "isCompound": True,
                  "script": "", "description": ""},
         "attributes": [{"label": "value",
                         "isInput": True,
@@ -534,18 +542,21 @@ def graphOne():
                              "children": [
                                  {"label": "x",
                                   "isInput": False,
+                                  "isOutput": True,
                                   "isArray": False,
                                   "isCompound": False,
                                   "type": "float",
                                   "isOutput": True},
                                  {"label": "y",
                                   "isInput": False,
+                                  "isOutput": True,
                                   "isArray": False,
                                   "isCompound": False,
                                   "type": "float",
                                   "isOutput": True},
                                  {"label": "z",
                                   "isInput": False,
+                                  "isOutput": True,
                                   "isArray": False,
                                   "isCompound": False,
                                   "type": "float",
@@ -562,6 +573,7 @@ def graphTwo():
     return {
         "data": {"label": "TestCompound",
                  "category": "compounds",
+                 "isCompound": True,
                  "script": "", "description": ""},
         "attributes": [{"label": "value",
                         "isInput": True,
@@ -575,6 +587,20 @@ def graphTwo():
                         "max": 99999999,
                         }],
         "children": [
+            {"data": {"label": "parent",
+                      "category": "math",
+                      "isCompound": True,
+                      "secondaryLabel": "bob",
+                      "script": "", "commands": [],
+                      "description": ""},
+             "children": [
+                 {"data": {"label": "child",
+                           "category": "math",
+                           "secondaryLabel": "bob",
+                           "script": "", "commands": [],
+                           "description": ""}}
+             ]
+             },
             {"data": {"label": "float1",
                       "category": "math",
                       "secondaryLabel": "bob",
