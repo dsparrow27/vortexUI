@@ -24,18 +24,17 @@ class ObjectModel(QtCore.QObject):
     ATTRIBUTE_VIS_LEVEL_TWO = 2
 
     # subclass should emit these signals to update the GUI from the core
+    sigAddAttribute = QtCore.Signal(object)  # attributeModel
+    sigRemoveAttribute = QtCore.Signal(object)  # attributeModel
+    sigSelectionChanged = QtCore.Signal(bool)  # bool
 
     # # signals connected by the graphics scene
     # addConnectionSig = QtCore.Signal(object, object)  # sourceAttrModel, destAttrModel
     # removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
     #
     # # connected by the GraphicsNode
-    # addAttributeSig = QtCore.Signal(object)  # attributeModel
     # nodeNameChangedSig = QtCore.Signal(object)  # objectModel
-    # removeAttributeSig = QtCore.Signal(object)  # attributeModel
     # attributeNameChangedSig = QtCore.Signal(object)  # attributeModel
-    # valueChangedSig = QtCore.Signal(object)  # attributeModel
-    # selectionChangedSig = QtCore.Signal(bool)  # selectionState
     # parentChangedSig = QtCore.Signal(object, object)  # childObjectModel, parentObjectModel
     # progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
     # requestRefresh = QtCore.Signal()

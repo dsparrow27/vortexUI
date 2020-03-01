@@ -141,8 +141,9 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
 
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
-        self.setZValue(-1)
+        self.setZValue(1)
         self.setPos(QtCore.QPoint(*objectModel.position()))
+        self.init()
 
     def init(self):
         layout = elements.vGraphicsLinearLayout(parent=self)
@@ -161,14 +162,15 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         # now bind the attributes from the model if it has any
         for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=ATTRIBUTE_VIS_LEVEL_ONE):
             self.addAttribute(attr)
+        self._connections()
 
     def _connections(self):
         # bind the objectModel signals to this qNode
-        self.model.addAttributeSig.connect(self.addAttribute)
-        self.model.attributeNameChangedSig.connect(self.setAttributeName)
-        self.model.nodeNameChangedSig.connect(self.header.setText)
-        self.model.removeAttributeSig.connect(self.removeAttribute)
-        self.model.selectionChangedSig.connect(self.setSelected)
+        self.model.sigAddAttribute.connect(self.addAttribute)
+        # self.model.attributeNameChangedSig.connect(self.setAttributeName)
+        # self.model.nodeNameChangedSig.connect(self.header.setText)
+        self.model.sigRemoveAttribute.connect(self.removeAttribute)
+        self.model.sigSelectionChanged.connect(self.setSelected)
 
     def onHeaderTextChanged(self, text):
         self.model.setText(text)
@@ -232,7 +234,11 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             self.requestExpansion.emit()
 
     def boundingRect(self, *args, **kwargs):
-        return self.childrenBoundingRect(*args, **kwargs)
+        childBoundingRect = self.childrenBoundingRect(*args, **kwargs)
+        return QtCore.QRectF(0, 0,
+                             childBoundingRect.width() - 20,
+                             childBoundingRect.height())
+        # return result
 
     def paint(self, painter, option, widget):
         # main rounded rect
@@ -241,9 +247,9 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness + 1)
         else:
             standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
-        rect = self.childrenBoundingRect()
+        rect = self.boundingRect()
         rounded_rect = QtGui.QPainterPath()
-        roundingY = self.cornerRounding  ##int(self.cornerRounding / rect.height())
+        roundingY = self.cornerRounding
         rounded_rect.addRoundRect(rect,
                                   0.0, roundingY
                                   )

@@ -112,6 +112,9 @@ class AttributeModel(QtCore.QObject):
     def children(self):
         return []
 
+    def hasChildren(self):
+        return False
+
     def canAcceptConnection(self, plug):
         return True
 

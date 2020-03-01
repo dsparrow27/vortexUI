@@ -22,7 +22,6 @@ from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
 from zoo.libs.utils import filesystem
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,20 +39,18 @@ class Graph(vortexApi.GraphModel):
         print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         pprint.pprint(model.serialize())
         print(model)
-        filePath =os.path.expanduser("~/vortexGraph/example.vgrh")
+        filePath = os.path.expanduser("~/vortexGraph/example.vgrh")
         filesystem.ensureFolderExists(os.path.dirname(filePath))
         filesystem.saveJson(model.serialize(), filePath)
         self.graphSaved.emit(filePath)
         # print ("saving", filePath)
 
     def loadGraph(self, filePath, parent=None):
-        print("loading", filePath)
-        root = NodeModel(self.config, {}, parent=parent)
-        self.graphLoaded.emit(root)
+        graphData = filesystem.loadJson(filePath)
+        self.loadFromDict(graphData)
 
     def loadFromDict(self, data):
         root = NodeModel.deserialize(self.config, data, parent=None)
-        print(root.children())
         self.graphLoaded.emit(root)
         return root
 
@@ -241,10 +238,15 @@ class NodeModel(vortexApi.ObjectModel):
         return self.text()
 
     def serialize(self):
+        connections = []
+        for attr in self._attributes:
+            conns = attr.internalAttr.get("connections", [])
+            for currentNodeAttr, source in conns:
+                connections.append((source.fullPathName(), currentNodeAttr.fullPathName()))
         return {"data": self._data,
                 "attributes": [attr.serialize() for attr in self._attributes],
                 "children": [child.serialize() for child in self._children],
-                "connections": [attr.internalAttr.setdefault("connections", {}) for attr in self._attributes]
+                "connections": connections
                 },
 
 
@@ -285,6 +287,9 @@ class AttributeModel(vortexApi.AttributeModel):
 
     def isChild(self):
         return self.internalAttr.get("isChild", False)
+
+    def hasChildren(self):
+        return len(self.internalAttr.get("children", [])) > 0
 
     def type(self):
         return self.internalAttr.get("type", "string")
@@ -327,12 +332,12 @@ class AttributeModel(vortexApi.AttributeModel):
         name = self.text()
         for a in range(10):
             item = AttributeModel({"label": "{}[{}]".format(name, a),
-                                   "isInput": True,
+                                   "isInput": self.isInput(),
                                    "type": "compound",
                                    "isElement": True,
-                                   "isOutput": False,
+                                   "isOutput": self.isOutput(),
                                    "isArray": False,
-                                   "isCompound": False,
+                                   "isCompound": len(self.internalAttr.get("children", [])) > 0,
                                    "children": self.internalAttr.get("children", [])
                                    }, objectModel=self.objectModel, parent=self)
             items.append(item)
@@ -362,18 +367,20 @@ class AttributeModel(vortexApi.AttributeModel):
 
     def createConnection(self, attribute):
         if self.canAcceptConnection(attribute):
-            self.internalAttr.setdefault("connections", {})[
-                str(hash(attribute)) + "|" + str(hash(self))] = attribute
+            self.internalAttr.setdefault("connections", []).append((self, attribute))
             return True
         return False
 
     def deleteConnection(self, attribute):
-        key = str(hash(attribute)) + "|" + str(hash(self))
-        connection = self.internalAttr.get("connections", {}).get(key)
-        if connection:
-            del self.internalAttr["connections"][key]
-            return True
-        return False
+        connections = self.internalAttr.get("connections", [])
+        newConnections = []
+        changed = False
+        for s_, source in connections:
+            if source != attribute:
+                newConnections.append((self, source))
+                changed = True
+        self.internalAttr["connections"] = newConnections
+        return changed
 
     def toolTip(self):
         return self.internalAttr.get("description")
@@ -385,7 +392,21 @@ class AttributeModel(vortexApi.AttributeModel):
         return QtGui.QColor(0, 0, 0)
 
     def serialize(self):
-        return self.internalAttr
+        return {
+            "label": self.text(),
+            "isInput": self.isInput(),
+            "type": self.type(),
+            "isElement": self.isElement(),
+            "isChild": self.isChild(),
+            "isOutput": self.isOutput(),
+            "isArray": self.isArray(),
+            "isCompound": self.isCompound(),
+            "children": [child.serialize() for child in self.children()],
+            "min": self.min(),
+            "max": self.max(),
+            "value": self.value(),
+            "default": self.default()
+        }
 
 
 def graphOne():
@@ -542,22 +563,22 @@ def graphOne():
                              "children": [
                                  {"label": "x",
                                   "isInput": False,
-                                  "isOutput": True,
                                   "isArray": False,
                                   "isCompound": False,
+                                  "isChild": True,
                                   "type": "float",
                                   "isOutput": True},
                                  {"label": "y",
                                   "isInput": False,
-                                  "isOutput": True,
                                   "isArray": False,
+                                  "isChild": True,
                                   "isCompound": False,
                                   "type": "float",
                                   "isOutput": True},
                                  {"label": "z",
                                   "isInput": False,
-                                  "isOutput": True,
                                   "isArray": False,
+                                  "isChild": True,
                                   "isCompound": False,
                                   "type": "float",
                                   "isOutput": True}

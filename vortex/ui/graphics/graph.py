@@ -34,7 +34,6 @@ class Scene(graphicsscene.GraphicsScene):
     def createNode(self, model):
         graphNode = graphicsnode.GraphicsNode(model)
         self.addItem(graphNode)
-        graphNode.init()
         self.nodes[hash(model)] = {"qitem": graphNode,
                                    "model": model}
 
@@ -293,6 +292,7 @@ class View(graphicsview.GraphicsView):
                                                     color=source.color)
         newConnection.setLineStyle(self.config.defaultConnectionStyle)
         newConnection.setWidth(self.config.connectionLineWidth)
+        newConnection.setZValue(-1)
         scene = self.scene()
         scene.addItem(newConnection)
         scene.connections.add(newConnection)

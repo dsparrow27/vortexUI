@@ -26,9 +26,9 @@ class ApplicationWindow(mainwindow.MainWindow):
     def onSave(self):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent=self, caption="Select Graph")
         if fname:
-            self.noteBook.graph.save(fname)
+            self.noteBook.graph.saveGraph(fname)
 
     def onLoad(self):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(parent=self, caption="Select Graph")
         if fname:
-            self.noteBook.graph.load(fname)
+            self.noteBook.graph.loadGraph(fname)

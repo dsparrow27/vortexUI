@@ -19,6 +19,7 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
         layout.addItem(self.leftPanel)
         layout.addStretch(1)
         layout.addItem(self.rightPanel)
+        self.setZValue(100)
         self.setLayout(layout)
 
 
@@ -27,17 +28,16 @@ class Panel(QtWidgets.QGraphicsWidget):
 
     def __init__(self, objectModel, ioType, acceptsContextMenu=False, parent=None):
         super(Panel, self).__init__(parent=parent)
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
+        self.acceptsContextMenu = acceptsContextMenu
+        self.setZValue(100)
         self.model = objectModel
         self.ioType = ioType
         layout = elements.vGraphicsLinearLayout(parent=self)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         layout.addItem(self.attributeContainer)
-        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
-        self.acceptsContextMenu = acceptsContextMenu
 
         self.setLayout(layout)
-        self.setFlags(self.flags() & QtCore.Qt.ItemIsSelectable)
-        self.setZValue(100)
         self.refresh()
 
     def refresh(self):

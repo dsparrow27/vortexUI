@@ -91,6 +91,7 @@ class CrossSquare(QtWidgets.QGraphicsWidget):
         self.expanded = False
         self.isElement = False
         self.isChild = False
+        self.hasChildren = False
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
         self.setWindowFrameMargins(0, 0, 0, 0)
@@ -117,7 +118,7 @@ class CrossSquare(QtWidgets.QGraphicsWidget):
     def paint(self, painter, options, widget=None):
         painter.setPen(QtGui.QPen(QtGui.QColor(255, 255, 255, 255), 0.3))
         # draw the square
-        if self.isElement or self.isChild:
+        if (self.isElement or self.isChild) and not self.hasChildren:
             parentHeight = self.parentObject().size().height()
             lines = [QtCore.QLineF(QtCore.QPoint(Plug._diameter * 0.5, Plug._diameter * 0.5),
                                    QtCore.QPoint(Plug._diameter * 0.5, -parentHeight)),
@@ -175,7 +176,7 @@ class PlugContainer(graphicitems.ItemContainer):
         self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.addItem(self.label, attributeModel.textAlignment())
-        self.addItem(self.outCrossItem, QtCore.Qt.AlignRight|QtCore.Qt.AlignVCenter)
+        self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
     def setLabel(self, label):
@@ -210,15 +211,16 @@ class PlugContainer(graphicitems.ItemContainer):
             children = reversed(self.model.children())
         if not children:
             return
+
         selfIndex = parentContainer.indexOf(self) + 1
-        isElement = self.model.isElement()
-        isChild = self.model.isChild()
         for element in children:
             elementContainer = PlugContainer(attributeModel=element, parent=self)
-            elementContainer.inCrossItem.isElement = isElement
-            elementContainer.inCrossItem.isChild = isChild
-            elementContainer.outCrossItem.isElement = isElement
-            elementContainer.outCrossItem.isChild = isChild
+            elementContainer.inCrossItem.isElement = element.isElement()
+            elementContainer.inCrossItem.isChild = element.isChild()
+            elementContainer.inCrossItem.hasChildren = element.hasChildren()
+            elementContainer.outCrossItem.isElement = element.isElement()
+            elementContainer.outCrossItem.isChild = element.isChild()
+            elementContainer.outCrossItem.hasChildren = element.hasChildren()
             parentContainer.insertItem(selfIndex, elementContainer)
             self.childContainers.append(elementContainer)
             if element.isInput():
@@ -249,6 +251,12 @@ class PlugContainer(graphicitems.ItemContainer):
         self.outCrossItem.expanded = not self.outCrossItem.expanded
         self.update()
 
+    def boundingRect(self):
+        result = super(PlugContainer, self).boundingRect()
+        nodeThickness = 3 * 0.5
+        return QtCore.QRectF(nodeThickness,
+                             0.0,
+                             result.width() - 1, result.height())
 
 def removeChildContainers(plugContainer, parentContainer):
     for container in plugContainer.childContainers:
