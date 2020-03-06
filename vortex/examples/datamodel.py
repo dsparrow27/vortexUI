@@ -27,23 +27,19 @@ logger = logging.getLogger(__name__)
 
 class Graph(vortexApi.GraphModel):
 
-    def __init__(self, uiConfig):
-        super(Graph, self).__init__(uiConfig)
+    def __init__(self, application):
+        super(Graph, self).__init__(application)
 
-    def registeredNodes(self):
-        return {"comment": "organization",
-                "sum": "math",
-                "float": "math"}
+    def rootNode(self):
+        return self._rootNode
 
     def saveGraph(self, model):
-        print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         pprint.pprint(model.serialize())
-        print(model)
         filePath = os.path.expanduser("~/vortexGraph/example.vgrh")
         filesystem.ensureFolderExists(os.path.dirname(filePath))
         filesystem.saveJson(model.serialize(), filePath)
         self.graphSaved.emit(filePath)
-        # print ("saving", filePath)
+        print ("saving ->", filePath)
 
     def loadGraph(self, filePath, parent=None):
         graphData = filesystem.loadJson(filePath)
@@ -51,11 +47,12 @@ class Graph(vortexApi.GraphModel):
 
     def loadFromDict(self, data):
         root = NodeModel.deserialize(self.config, data, parent=None)
+        self._rootNode = root
         self.graphLoaded.emit(root)
         return root
 
     def createNode(self, nodeType, parent=None):
-        registeredNodes = self.registeredNodes()
+        registeredNodes = self.config.registeredNodes()
         if nodeType in registeredNodes:
             nodeInfo = {"data": {"label": nodeType,
                                  "category": "misc",
@@ -63,7 +60,9 @@ class Graph(vortexApi.GraphModel):
                                  "script": "", "commands": [],
                                  "description": ""}
                         }
-            self.nodeCreated.emit(NodeModel.deserialize(self.config, nodeInfo, parent=parent))
+            newNode = NodeModel.deserialize(self.config, nodeInfo, parent=parent)
+            self.nodeCreated.emit(newNode)
+            print(newNode)
 
 
 class NodeModel(vortexApi.ObjectModel):
@@ -76,7 +75,7 @@ class NodeModel(vortexApi.ObjectModel):
 
     def __init__(self, config, parent=None, **kwargs):
         super(NodeModel, self).__init__(config, parent)
-        self._icon = kwargs.get("icon", "")
+        self._icon = kwargs.get("data", {}).get("icon")
         self._data = kwargs.get("data", {})
         self._attributeData = kwargs.get("attributes", [])
         for attr in self._attributeData:
@@ -112,6 +111,15 @@ class NodeModel(vortexApi.ObjectModel):
         :rtype: bool
         """
         return self._data.get("isCompound", False)
+
+    def isPin(self):
+        return self._data.get("isPin", False)
+
+    def isComment(self):
+        return self._data.get("isComment", False)
+
+    def isBackdrop(self):
+        return self._data.get("isBackdrop", False)
 
     def category(self):
         """This method returns the node category, each node should be associated with one category the default is
@@ -160,19 +168,21 @@ class NodeModel(vortexApi.ObjectModel):
 
         :rtype: bool
         """
-        return self._data.get("canCreateAttributes", False)
+        return self._data.get("canCreateAttributes", True)
 
-    def createAttribute(self, **kwargs):
-        pass
+    def createAttribute(self, kwargs):
+        attr = AttributeModel(kwargs, self)
+        self._attributes.append(attr)
+        self.sigAddAttribute.emit(attr)
 
     def deleteAttribute(self, attribute):
         pass
 
     def minimumHeight(self):
-        return 250
+        return 50
 
     def minimumWidth(self):
-        return 130
+        return 150
 
     def toolTip(self):
         """The Tooltip to display.
@@ -190,7 +200,7 @@ class NodeModel(vortexApi.ObjectModel):
 
     # colors
     def backgroundColour(self):
-        return QtGui.QColor(50, 50, 50, 225)
+        return QtGui.QColor(*self._data.get("backgroundColor", (40, 40, 40, 255)))
 
     def headerColor(self):
         return QtGui.QColor("#4A71AB")
@@ -199,7 +209,7 @@ class NodeModel(vortexApi.ObjectModel):
         return QtGui.QColor(255, 255, 255)
 
     def selectedNodeColour(self):
-        return QtGui.QColor(180, 255, 180, 200)
+        return QtGui.QColor(180, 255, 180, 255)
 
     def unSelectedNodeColour(self):
         return self.backgroundColour()
@@ -410,11 +420,13 @@ class AttributeModel(vortexApi.AttributeModel):
 
 
 def graphOne():
+    from zoo.libs.iconlib import icon
     return {
         "data": {"label": "myCompound",
                  "category": "compounds",
                  "isCompound": True,
-                 "script": "", "description": ""},
+                 "script": "", "description": "",
+                 "backgroundColor": (50, 50, 50, 255)},
         "attributes": [{"label": "value",
                         "isInput": True,
                         "isOutput": False,
@@ -427,11 +439,28 @@ def graphOne():
                         "max": 99999999,
                         }],
         "children": [
+
+            {"data": {"category": "organization",
+                      "isPin": True},
+             "backgroundColor": (1, 166, 239, 255),
+             },
+            {"data": {"category": "organization",
+                      "isComment": True,
+                      "label": "commentMe",
+                      "secondaryText": ""},
+             "backgroundColor": (1, 166, 239, 255),
+             },
+            {"data": {"category": "organization",
+                      "isBackdrop": True,
+                      "label": "testGroup"},
+             "backgroundColor": (141, 25, 25, 225),
+             },
             {"data": {"label": "float1",
                       "category": "math",
                       "secondaryLabel": "bob",
                       "script": "", "commands": [],
-                      "description": ""},
+                      "description": "",
+                      "backgroundColor": (50, 50, 50, 255)},
              "attributes": [{"label": "value",
                              "isInput": True,
                              "isOutput": False,
@@ -453,7 +482,7 @@ def graphOne():
                              "value": 0.0,
                              "min": 0.0,
                              "max": 99999999,
-                             },
+                             }
 
                             ]
              },
@@ -504,7 +533,8 @@ def graphOne():
                       "category": "dag",
                       "secondaryLabel": "bob",
                       "script": "", "commands": [],
-                      "description": ""},
+                      "description": "",
+                      "backgroundColor": (75, 75, 100, 255)},
              "attributes": [{"label": "boundingBox",
                              "isInput": True,
                              "isCompound": True,
@@ -656,20 +686,38 @@ def graphTwo():
     }
 
 
+class Config(vortexApi.VortexConfig):
+    def registeredNodes(self):
+        return {"comment": "organization",
+                "sum": "math",
+                "float": "math"}
+
+
 if __name__ == "__main__":
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
-
-    uiConfig = vortexApi.VortexConfig()
-    vortexGraph = Graph(uiConfig)
-
-    ui = vortexApi.ApplicationWindow(vortexGraph)
     graphOneData = graphOne()
     graphTwoData = graphTwo()
 
-    # Lets add Two graphs, both in isolation
-    vortexGraph.loadFromDict(graphOneData)
-    vortexGraph.loadFromDict(graphTwoData)
+    uiConfig = Config()
+    vortexApp = vortexApi.UIApplication(uiConfig)
+    ui = vortexApi.ApplicationWindow(vortexApp)
+    # add the graph to the noteBook, we can create multiple isolated graphs
+    graphA = Graph(vortexApp)
+    graphA.loadFromDict(graphOneData)
+    vortexApp.graphNoteBook.addPage(graphA, graphA.rootNode())
+
+    # uiApplication.createGraph(vortexGraph)
+    # uiApplication.createGraph(vortexGraph)
+
+    # sum = uiApplication.currentGraph.createNode("Sum", parent=uiApplication.currentGraph.rootNode)
+    # uiApplication.currentGraph.createNode("USD", parent=sum)
+    # uiApplication.currentGraph.createNode()
+    # uiApplication.currentGraph.createNode()
+    # uiApplication.currentGraph.createNode()
+    # # Lets add Two graphs, both in isolation
+    # vortexGraph.loadFromDict(graphOneData)
+    # vortexGraph.loadFromDict(graphTwoData)
 
     logger.debug("Completed boot process")
 

@@ -1,5 +1,6 @@
 from Qt import QtCore, QtGui
 from zoo.libs.pyqt.widgets.graphics import graphviewconfig
+
 # from vortex.vortexmodel import attributewidgets
 
 connectionStyle = {"SolidLine": QtCore.Qt.SolidLine,
@@ -45,4 +46,7 @@ class VortexConfig(graphviewconfig.Config):
             "list": {"color": QtGui.QColor(56.000040000000006, 47.99992500000001, 45.00010500000001)},
             "string": {"color": QtGui.QColor(244.9999965, 214.999935, 59.99997),
                        "widget": None}
-            }
+        }
+
+    def registeredNodes(self):
+        return {}

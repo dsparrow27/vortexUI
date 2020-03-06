@@ -166,7 +166,7 @@ class PlugContainer(graphicitems.ItemContainer):
 
         self.label = graphicitems.GraphicsText(self.model.text(), parent=self)
         self.label.text.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
-        self.label.color = attributeModel.textColour() or QtGui.QColor(200, 200, 200)
+        self.label.color = attributeModel.textColour()
         self.label.allowHoverHighlight = True
 
         if not attributeModel.isOutput():
@@ -251,12 +251,6 @@ class PlugContainer(graphicitems.ItemContainer):
         self.outCrossItem.expanded = not self.outCrossItem.expanded
         self.update()
 
-    def boundingRect(self):
-        result = super(PlugContainer, self).boundingRect()
-        nodeThickness = 3 * 0.5
-        return QtCore.QRectF(nodeThickness,
-                             0.0,
-                             result.width() - 1, result.height())
 
 def removeChildContainers(plugContainer, parentContainer):
     for container in plugContainer.childContainers:

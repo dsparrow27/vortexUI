@@ -5,6 +5,9 @@ from vortex.ui.graphics import plugwidget
 
 
 class PanelWidget(QtWidgets.QGraphicsWidget):
+    leftPanelDoubleClicked = QtCore.Signal(str)
+    rightPanelDoubleClicked = QtCore.Signal(str)
+
     def __init__(self, model, acceptsContextMenu=True, parent=None):
         super(PanelWidget, self).__init__(parent=parent)
         self.setFlags(self.ItemIgnoresTransformations)
@@ -22,8 +25,13 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
         self.setZValue(100)
         self.setLayout(layout)
 
+        self.leftPanel.doubleClicked.connect(self.leftPanelDoubleClicked)
+        self.rightPanel.doubleClicked.connect(self.rightPanelDoubleClicked)
+
 
 class Panel(QtWidgets.QGraphicsWidget):
+    doubleClicked = QtCore.Signal(str)
+
     color = QtGui.QColor(0.0, 0.0, 0.0, 125)
 
     def __init__(self, objectModel, ioType, acceptsContextMenu=False, parent=None):
@@ -48,6 +56,9 @@ class Panel(QtWidgets.QGraphicsWidget):
         for attr in currentModel.attributes(self.ioType == "Input", self.ioType == "Output",
                                             3):
             self.addAttribute(attr)
+
+    def mouseDoubleClickEvent(self, event):
+        self.doubleClicked.emit(self.ioType)
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.RightButton and self.acceptsContextMenu:

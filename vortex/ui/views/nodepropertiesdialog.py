@@ -1,4 +1,5 @@
 from Qt import QtWidgets
+from copy import deepcopy
 from zoo.libs.pyqt.widgets import elements
 from zoo.libs.pyqt.widgets import dialog
 from zoo.libs.pyqt.extended import treeviewplus
@@ -48,9 +49,12 @@ class NodePropertiesDialog(dialog.Dialog):
         addAttrBtn.clicked.connect(self.onCreate)
         removeAttrBtn.clicked.connect(self.onRemove)
         okCancelBtn.okBtn.clicked.connect(self.onCommit)
+        okCancelBtn.cancelBtn.clicked.connect(self.close)
+        if not self.objectModel.canCreateAttributes():
+            okCancelBtn.okBtn.setEnabled(False)
 
     def onCreate(self):
-        attr = Root(self.application.attributeModelClass(self.objectModel))
+        attr = Root(deepcopy(api.AttributeModel.defaultFields))
         self.treeModel.root.addChild(attr)
         self.treeModel.reload()
 
@@ -63,55 +67,23 @@ class NodePropertiesDialog(dialog.Dialog):
         self.treeModel.reload()
 
     def onCommit(self):
-        pass
+        for child in self.treeModel.root.children:
+            self.objectModel.createAttribute(child.attribute)
+        self.close()
 
 
 class Root(datasources.BaseDataSource):
     def __init__(self, attribute, *args, **kwargs):
         super(Root, self).__init__(*args, **kwargs)
-        self.headers = ["Name", "Type", "Input", "Output", "Default", "Min", "Max", "isCompound", "isArray"]
+        self.headers = list(api.AttributeModel.defaultFields.keys())
         self.attribute = attribute
 
     def data(self, index):
-        if index == 0:
-            return self.attribute.text()
-        if index == 1:
-            return self.attribute.type()
-        elif index == 2:
-            return self.attribute.isInput()
-        elif index == 3:
-            return self.attribute.isOutput()
-        elif index == 4:
-            return self.attribute.default()
-        elif index == 5:
-            return self.attribute.min()
-        elif index == 6:
-            return self.attribute.max()
-        elif index == 7:
-            return self.attribute.isCompound()
-        elif index == 8:
-            return self.attribute.isArray()
+        return self.attribute[self.headers[index]]
 
     def setData(self, index, value):
-        if index == 0:
-            self.attribute.setText(str(value))
-        elif index == 1:
-            self.attribute.setType(str(value))
-        elif index == 2:
-            self.attribute.setAsInput(bool(value))
-        elif index == 3:
-            self.attribute.setAsOutput(bool(value))
-        elif index == 4:
-            self.attribute.setDefault(bool(value))
-        elif index == 5:
-            self.attribute.setMin(value)
-        elif index == 6:
-            self.attribute.setMax(value)
-        elif index == 7:
-            self.attribute.setIsCompound(value)
-        elif index == 8:
-            self.attribute.setIsArray(value)
-
+        self.attribute[self.headers[index]] = value
+        return
     def rowCount(self):
         return len(self.children)
 

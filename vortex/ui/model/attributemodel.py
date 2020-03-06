@@ -5,7 +5,7 @@ class AttributeModel(QtCore.QObject):
     defaultFields = {"label": "value",
                      "description": "",
                      "isInput": True,
-                     "isOutput": True,
+                     "isOutput": False,
                      "type": "multi",
                      "isArray": False,
                      "isCompound": False,

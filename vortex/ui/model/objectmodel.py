@@ -49,6 +49,8 @@ class ObjectModel(QtCore.QObject):
         if parent is not None and self not in parent.children():
             parent._children.append(self)
 
+        # self.sigAddAttribute.connect(self.createAttribute)
+
     def __repr__(self):
         return "<{}-{}>".format(self.__class__.__name__, self.text())
 
@@ -180,7 +182,7 @@ class ObjectModel(QtCore.QObject):
         """
         return False
 
-    def createAttribute(self, **kwargs):
+    def createAttribute(self, attributeDefinition):
         pass
 
     def deleteAttribute(self, attribute):

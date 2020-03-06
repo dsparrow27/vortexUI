@@ -25,6 +25,9 @@ class NodeHeaderButton(QtWidgets.QGraphicsWidget):
         self.state = 0
         self._defaultPen = QtGui.QPen(QtGui.QColor(0.0, 0.0, 0.0))
 
+    def boundingRect(self, *args, **kwargs):
+        return QtCore.QRectF(0, 0, self._size, self._size)
+
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
             if self.state >= ATTRIBUTE_VIS_LEVEL_TWO:
@@ -70,8 +73,10 @@ class HeaderPixmap(QtWidgets.QGraphicsWidget):
     def __init__(self, pixmap, parent):
         super(HeaderPixmap, self).__init__(parent)
         self.setWindowFrameMargins(0, 0, 0, 0)
-        self.setPixmap(pixmap)
         self.pixmap = QtGui.QPixmap()
+        if pixmap:
+            self.setPixmap(pixmap.pixmap(32, 32))
+
         self.pixItem = QtWidgets.QGraphicsPixmapItem(parent=self)
 
     def setPixmap(self, path):
@@ -104,57 +109,179 @@ class NodeHeader(QtWidgets.QGraphicsWidget):
         headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
         layout.addItem(headerButton)
         layout.setAlignment(headerButton, QtCore.Qt.AlignCenter)
+        layout.setAlignment(self.titleContainer, QtCore.Qt.AlignCenter)
 
     def setIcon(self, path):
         self.headerIcon.setPixmap(path)
 
     def _createLabels(self, primary, secondary, parentLayout):
-        container = graphicitems.ItemContainer(QtCore.Qt.Vertical, parent=self)
+        self.titleContainer = graphicitems.ItemContainer(QtCore.Qt.Vertical, parent=self)
         self._titleWidget = graphicitems.GraphicsText(primary, parent=self)
         self._titleWidget.textChanged.connect(self.headerTextChanged)
         self._titleWidget.font = self.titleFont
         self._secondarytitle = graphicitems.GraphicsText(secondary, parent=self)
         self._secondarytitle.setTextFlags(QtWidgets.QGraphicsItem.ItemIsSelectable)
         self._secondarytitle.font = QtGui.QFont("Roboto-Bold.ttf", 8)
-        container.addItem(self._titleWidget, QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
-        container.addItem(self._secondarytitle, QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
+        self.titleContainer.addItem(self._titleWidget, QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
+        self.titleContainer.addItem(self._secondarytitle, QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
         self._secondarytitle.hide()
-        parentLayout.addItem(container)
+        parentLayout.addItem(self.titleContainer)
 
     def setText(self, text):
         self._titleWidget.setText(text)
 
 
-class GraphicsNode(QtWidgets.QGraphicsWidget):
-    requestExpansion = QtCore.Signal()
-
+class QBaseNode(QtWidgets.QGraphicsWidget):
     def __init__(self, objectModel, parent=None):
-        super(GraphicsNode, self).__init__(parent=parent)
+        super(QBaseNode, self).__init__(parent=parent)
+        self.model = objectModel
+        self.setZValue(1)
+        self.setPos(QtCore.QPoint(*objectModel.position()))
         self.setFlags(self.ItemIsSelectable | self.ItemIsMovable)
-        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
+        self.setWindowFrameMargins(0, 0, 0, 0)
         self.setMinimumWidth(objectModel.minimumWidth())
         self.setMinimumHeight(objectModel.minimumHeight())
-        self.setWindowFrameMargins(0, 0, 0, 0)
-        self.model = objectModel
+        self.setToolTip(self.model.toolTip())
+
+    def init(self):
+        pass
+
+    def mousePressEvent(self, event):
+        self.model.setSelected(True)
+        super(QBaseNode, self).mousePressEvent(event)
+
+    def setSelected(self, selected):
+        self.model.setSelected(True)
+        super(QBaseNode, self).setSelected(selected)
+
+    def mouseMoveEvent(self, event):
+        scene = self.scene()
+        items = scene.selectedNodes()
+        for i in items:
+            pos = i.pos() + i.mapToParent(event.pos()) - i.mapToParent(event.lastPos())
+            i.setPos(pos)
+        pos = event.pos()
+        self.model.setPosition((pos.x(), pos.y()))
+        self.scene().updateAllConnections()
+
+
+class Pin(QBaseNode):
+
+    def __init__(self, objectModel, parent=None):
+        super(Pin, self).__init__(objectModel, parent)
+
+    def boundingRect(self):
+        return QtCore.QRect(0, 0, 25, 25)
+
+    def paint(self, painter, option, widget):
+        rect = self.boundingRect()
+
+        thickness = self.model.edgeThickness()
+        if self.isSelected():
+            standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness + 1)
+        else:
+            standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
+        painter.setBrush(self.model.backgroundColour())
+        painter.setPen(standardPen)
+        painter.drawEllipse(rect)
+
+        super(Pin, self).paint(painter, option, widget)
+
+
+class Comment(QBaseNode):
+
+    def __init__(self, objectModel, parent=None):
+        super(Comment, self).__init__(objectModel, parent)
+        self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
+        self.cornerRounding = self.model.cornerRounding()
+        self.init()
+
+    def init(self):
+        layout = elements.vGraphicsLinearLayout(parent=self)
+        # print(self.model.icon().pixmap(16,16))
+        self.header = NodeHeader(self,
+                                 self.model.text(),
+                                 self.model.secondaryText(),
+                                 icon=self.model.icon(),
+                                 parent=self)
+        # self.header.headerTextChanged.connect(self.onHeaderTextChanged)
+        # self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
+
+        layout.addItem(self.header)
+
+        self.setLayout(layout)
+
+    def paint(self, painter, option, widget):
+        # main rounded rect
+        thickness = self.model.edgeThickness()
+        if self.isSelected():
+            standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness + 1)
+        else:
+            standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
+        rect = self.boundingRect()
+        rounded_rect = QtGui.QPainterPath()
+        roundingY = self.cornerRounding
+        rounded_rect.addRoundRect(rect,
+                                  0.0, roundingY
+                                  )
+        painter.setBrush(self.backgroundColour)
+        painter.fillPath(rounded_rect, painter.brush())
+        # Title BG
+        painter.setPen(QtGui.QPen(self.model.headerColor()))
+        titleHeight = self.header.size().height()
+        #
+        painter.setBrush(self.model.headerColor())
+        painter.drawRect(rect.x(), rect.y(), rect.width(), titleHeight)
+        # outer node edge
+        painter.strokePath(rounded_rect, standardPen)
+
+        super(Comment, self).paint(painter, option, widget)
+
+
+class Backdrop(QBaseNode):
+
+    def __init__(self, objectModel, parent=None):
+        super(Backdrop, self).__init__(objectModel, parent)
+
+    def paint(self, painter, option, widget):
+        super(Backdrop, self).paint(painter, option, widget)
+
+
+class GraphicsNode(QBaseNode):
+
+    def __init__(self, objectModel, parent=None):
+        super(GraphicsNode, self).__init__(objectModel, parent=parent)
+        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
+
         self.header = None
         self.attributeContainer = None
 
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
-        self.setZValue(1)
-        self.setPos(QtCore.QPoint(*objectModel.position()))
+        self.gradientStops = [(0.0, self.model.backgroundColour()),
+                              (0.001, self.model.backgroundColour().lighter(110)),
+                              (0.25, self.model.backgroundColour().lighter(110)),
+                              (0.2501, self.model.backgroundColour()),
+                              (0.5, self.model.backgroundColour()),
+                              (0.501, self.model.backgroundColour().lighter(110)),
+                              (0.75, self.model.backgroundColour().lighter(110)),
+                              (0.7501, self.model.backgroundColour()),
+                              (1.0, self.model.backgroundColour()),
+                              ]
         self.init()
 
     def init(self):
         layout = elements.vGraphicsLinearLayout(parent=self)
+        # print(self.model.icon().pixmap(16,16))
         self.header = NodeHeader(self,
                                  self.model.text(),
                                  self.model.secondaryText(),
+                                 icon=self.model.icon(),
                                  parent=self)
         self.header.headerTextChanged.connect(self.onHeaderTextChanged)
         self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
-        self.setToolTip(self.model.toolTip())
+
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
 
@@ -211,34 +338,11 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
             if attr.model == attributeModel:
                 return attr
 
-    def mousePressEvent(self, event):
-        self.model.setSelected(True)
-        super(GraphicsNode, self).mousePressEvent(event)
-
-    def setSelected(self, selected):
-        self.model.setSelected(True)
-        super(GraphicsNode, self).setSelected(selected)
-
-    def mouseMoveEvent(self, event):
-        scene = self.scene()
-        items = scene.selectedNodes()
-        for i in items:
-            pos = i.pos() + i.mapToParent(event.pos()) - i.mapToParent(event.lastPos())
-            i.setPos(pos)
-        pos = event.pos()
-        self.model.setPosition((pos.x(), pos.y()))
-        self.scene().updateAllConnections()
-
-    def doubleClickEvent(self, event):
-        if self.model.isCompound():
-            self.requestExpansion.emit()
-
     def boundingRect(self, *args, **kwargs):
         childBoundingRect = self.childrenBoundingRect(*args, **kwargs)
         return QtCore.QRectF(0, 0,
                              childBoundingRect.width() - 20,
                              childBoundingRect.height())
-        # return result
 
     def paint(self, painter, option, widget):
         # main rounded rect
@@ -253,7 +357,11 @@ class GraphicsNode(QtWidgets.QGraphicsWidget):
         rounded_rect.addRoundRect(rect,
                                   0.0, roundingY
                                   )
-        painter.setBrush(self.backgroundColour)
+        linearGradient = QtGui.QLinearGradient(rect.x(), rect.y(), rect.width() * 0.75, 100)
+        linearGradient.setSpread(QtGui.QLinearGradient.RepeatSpread)
+        linearGradient.setFinalStop(QtCore.QPoint(25, 50))
+        linearGradient.setStops(self.gradientStops)
+        painter.setBrush(QtGui.QBrush(linearGradient))
         painter.fillPath(rounded_rect, painter.brush())
         # Title BG
         painter.setPen(QtGui.QPen(self.model.headerColor()))

@@ -10,13 +10,13 @@ class OutlinerPlugin(api.UIPlugin):
     dockArea = QtCore.Qt.LeftDockWidgetArea
 
     def show(self, parent):
-        return Outliner(self.graph, parent=parent)
+        return Outliner(self.application, parent=parent)
 
 
 class Outliner(QtWidgets.QFrame):
-    def __init__(self, graph, parent=None):
+    def __init__(self, application, parent=None):
         super(Outliner, self).__init__(parent)
-        self.graph = graph
+        self.graph = application
         self.setObjectName("Outliner")
         layout = elements.vBoxLayout(self)
         self.tree = QtWidgets.QTreeWidget(parent=self)
@@ -26,7 +26,7 @@ class Outliner(QtWidgets.QFrame):
         # self.application.onNodeDeleteRequested.connect(self.removeNode)
         # self.application.onNewNodeRequested.connect(self.newNode)
         # self.newNode({"model": self.application.currentModel})
-        self.graph.setShortcutForWidget(self, "Outliner")
+        # self.graph.setShortcutForWidget(self, "Outliner")
 
     def onSceneSelection(self, selection, state):
 

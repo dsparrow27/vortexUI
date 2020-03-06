@@ -1,9 +1,6 @@
-import os
 from functools import partial
 
 from Qt import QtCore, QtWidgets, QtGui
-from zoo.libs.plugin import pluginmanager
-from vortex.ui import plugin
 
 
 class GraphModel(QtCore.QObject):
@@ -16,37 +13,16 @@ class GraphModel(QtCore.QObject):
     nodeCreated = QtCore.Signal(object)
     requestRefresh = QtCore.Signal()
 
-    def __init__(self, uiConfig):
+    def __init__(self, application):
         """
-        :param uiConfig:
-        :type uiConfig:
+        :param application:
+        :type application:
         """
         super(GraphModel, self).__init__()
-        self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin, variableName="id")
-        self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
-        self.config = uiConfig
+        self.config = application.config
+        self.application = application
         self._keyBoardMapping = {}
-
-    def loadUIPlugin(self, pluginId, dock=True):
-        # pass
-        uiExt = self.pluginManager.loadPlugin(pluginId, graph=self)
-        if not uiExt:
-            return
-        uiExt.initUI(dock=dock)
-        return uiExt
-
-    def uiPlugin(self, pluginId):
-        return self.pluginManager.getPlugin(pluginId)
-
-    def loadPlugins(self):
-        for uiPlugin in self.pluginManager.plugins.values():
-            if uiPlugin.autoLoad:
-                self.loadUIPlugin(uiPlugin.id)
-
-    def mainWindow(self):
-        for wid in QtWidgets.QApplication.topLevelWidgets():
-            if wid.objectName() == "Vortex":
-                return wid
+        self._rootNode = None
 
     def customToolbarActions(self, parent):
         pass
@@ -71,6 +47,9 @@ class GraphModel(QtCore.QObject):
             if command:
                 QtWidgets.QShortcut(QtGui.QKeySequence(k), widget, partial(self.executeCommand, widget, command))
 
+    def rootNode(self):
+        return self._rootNode
+
     def saveGraph(self, objectModel):
         print("test")
         return {}
@@ -79,13 +58,7 @@ class GraphModel(QtCore.QObject):
         print("loading", filePath)
 
     def loadFromDict(self, data):
-        root = SlitherUIObject.deserialize(self.config, data, parent=None)
-        print(root.children())
-
-        return root
-
-    def createNode(self, nodeType):
         pass
 
-    def deleteNode(self, uiObject):
+    def createNode(self, nodeType, parent=None):
         pass

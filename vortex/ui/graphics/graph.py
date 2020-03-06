@@ -32,7 +32,14 @@ class Scene(graphicsscene.GraphicsScene):
         return [i["qitem"] for i in self.connections if i["qitem"].isSelected()]
 
     def createNode(self, model):
-        graphNode = graphicsnode.GraphicsNode(model)
+        if model.isPin():
+            graphNode = graphicsnode.Pin(model)
+        elif model.isComment():
+            graphNode = graphicsnode.Comment(model)
+        elif model.isBackdrop():
+            graphNode = graphicsnode.Backdrop(model)
+        else:
+            graphNode = graphicsnode.GraphicsNode(model)
         self.addItem(graphNode)
         self.nodes[hash(model)] = {"qitem": graphNode,
                                    "model": model}
@@ -115,6 +122,7 @@ class View(graphicsview.GraphicsView):
     requestCopy = QtCore.Signal()
     requestPaste = QtCore.Signal(object)
     nodeDoubleClicked = QtCore.Signal(object)
+    panelWidgetDoubleClicked = QtCore.Signal(str)
 
     def __init__(self, graph, model, parent=None, setAntialiasing=True):
         super(View, self).__init__(graph.config, parent, setAntialiasing)
@@ -130,6 +138,8 @@ class View(graphicsview.GraphicsView):
     def showPanels(self, state):
         if state:
             self.panelWidget = graphpanels.PanelWidget(self.model, acceptsContextMenu=True)
+            self.panelWidget.leftPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
+            self.panelWidget.rightPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
             self.scene().panelWidget = self.panelWidget
             self.scene().addItem(self.panelWidget)
             size = self.size()
@@ -180,7 +190,6 @@ class View(graphicsview.GraphicsView):
         items=[i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
                                                                         graphpanels.PanelWidget,
                                                                         graphicsnode.NodeHeader))]
-
         if button == QtCore.Qt.LeftButton and items:
             item = items[0]
             if isinstance(item, plugwidget.Plug):
