@@ -11,6 +11,7 @@ class UIApplication(QtCore.QObject):
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
         self.graphNoteBook = None
         self.config = uiConfig
+        self.graphType = None
 
     def mainWindow(self):
         for wid in QtWidgets.QApplication.topLevelWidgets():
@@ -32,3 +33,17 @@ class UIApplication(QtCore.QObject):
         for uiPlugin in self.pluginManager.plugins.values():
             if uiPlugin.autoLoad:
                 self.loadUIPlugin(uiPlugin.id)
+
+    def registerGraphType(self, objectType):
+        self.graphType = objectType
+
+    def createGraphFromPath(self, filePath, parent=None):
+        print(self.graphNoteBook)
+        if self.graphNoteBook is None:
+            return
+        elif self.graphType is None:
+            return
+        newGraphInstance = self.graphType(self)
+        newGraphInstance.loadFromPath(filePath, parent=parent)
+        self.graphNoteBook.addPage(newGraphInstance, newGraphInstance.rootNode())
+        print(newGraphInstance, newGraphInstance.rootNode())

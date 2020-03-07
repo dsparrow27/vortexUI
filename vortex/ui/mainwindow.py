@@ -6,7 +6,7 @@ from zoo.preferences.core import preference
 
 
 class ApplicationWindow(mainwindow.MainWindow):
-    def __init__(self,application, title="Vortex", width=800, height=600, parent=None):
+    def __init__(self, application, title="Vortex", width=800, height=600, parent=None):
         super(ApplicationWindow, self).__init__(title=title, width=width, height=height, parent=parent)
         self.uiApplication = application
 
@@ -28,9 +28,13 @@ class ApplicationWindow(mainwindow.MainWindow):
     def onSave(self):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent=self, caption="Select Graph")
         if fname:
-            self.noteBook.graph.saveGraph(fname)
+            graphEditor = self.noteBook.currentPage()
+            if graphEditor is not None:
+                graphEditor.graph.saveGraph(fname)
 
     def onLoad(self):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(parent=self, caption="Select Graph")
         if fname:
-            self.noteBook.graph.loadGraph(fname)
+            graphEditor = self.noteBook.currentPage()
+            if graphEditor is not None:
+                graphEditor.graph.loadGraph(fname)

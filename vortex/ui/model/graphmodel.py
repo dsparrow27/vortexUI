@@ -57,6 +57,9 @@ class GraphModel(QtCore.QObject):
     def loadGraph(self, filePath):
         print("loading", filePath)
 
+    def delete(self):
+        pass
+
     def loadFromDict(self, data):
         pass
 

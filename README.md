@@ -33,13 +33,11 @@ PySide2
 
 
 #todo
-1. create node from ui.
-2. logging
-3. uiPlugins no longer work
-4. Node Attribute container doesn't expand with header text.
-5. array element connections on expand/collapse need to reconnect to
+1. logging
+2. uiPlugins no longer work
+3. array element connections on expand/collapse need to reconnect to
    array.
-6. Graph deserialization.
+4. Graph deserialization.
 
 
 

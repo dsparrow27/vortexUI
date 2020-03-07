@@ -14,7 +14,6 @@ class Scene(graphicsscene.GraphicsScene):
         self.uiApplication = application
         self.nodes = {}
         self.panelWidget = None
-        self.backdrops = set()
         self.connections = set()
 
     def _onSelectionChanged(self):
@@ -44,12 +43,6 @@ class Scene(graphicsscene.GraphicsScene):
         self.nodes[hash(model)] = {"qitem": graphNode,
                                    "model": model}
 
-    def createBackDrop(self):
-        drop = graphbackdrop.BackDrop()
-        self.backdrops.add(drop)
-        self.addItem(drop)
-        return drop
-
     def updateAllConnections(self):
         for connection in self.connections:
             connection.updatePosition()
@@ -73,13 +66,6 @@ class Scene(graphicsscene.GraphicsScene):
             return True
         return False
 
-    def deleteBackDrop(self, backDrop):
-        if backDrop in self.backdrops:
-            self.removeItem(backDrop)
-            self.backdrops.remove(backDrop)
-            return True
-        return False
-
     def deleteConnection(self, connection):
         if connection in self.connections:
             self.connections.remove(connection)
@@ -94,7 +80,7 @@ class Scene(graphicsscene.GraphicsScene):
                 if sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model):
                     self.deleteConnection(sel)
                 continue
-            elif isinstance(sel, graphicsnode.GraphicsNode):
+            elif isinstance(sel, graphicsnode.QBaseNode):
                 deleted = sel.model.delete()
                 del self.nodes[hash(sel.model)]
             elif isinstance(sel, graphbackdrop.BackDrop):
@@ -162,11 +148,11 @@ class View(graphicsview.GraphicsView):
         button = event.buttons()
 
         if button == QtCore.Qt.LeftButton and modifiers == QtCore.Qt.ControlModifier:
-            if isinstance(item, (graphicsnode.GraphicsNode, graphpanels.Panel)):
+            if isinstance(item, (graphicsnode.QBaseNode, graphpanels.Panel)):
                 self.nodeDoubleClicked.emit(item.model)
             elif isinstance(item, plugwidget.PlugContainer):
                 self.nodeDoubleClicked.emit(item.model.objectModel)
-            elif isinstance(item.parentObject(), graphicsnode.GraphicsNode):
+            elif isinstance(item.parentObject(), graphicsnode.QBaseNode):
                 item = item.parentObject()
                 self.nodeDoubleClicked.emit(item.model)
 
@@ -187,20 +173,21 @@ class View(graphicsview.GraphicsView):
         self._origin_pos = event.pos()
         self.previousMousePos = event.pos()
         # ignore any graphicsitems we don't care about, ie. containers
-        items=[i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                        graphpanels.PanelWidget,
-                                                                        graphicsnode.NodeHeader))]
-        if button == QtCore.Qt.LeftButton and items:
-            item = items[0]
-            if isinstance(item, plugwidget.Plug):
-                self._plugSelected = item
-            elif isinstance(item, plugwidget.CrossSquare):
-                plug = item.plug()
-                if item.ioType == "input":
-                    plug.onExpandInput()
-                else:
-                    plug.onExpandOutput()
-            elif not isinstance(item, graphicsnode.GraphicsNode) and not self.scene().selectedItems():
+        items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
+                                                                          graphpanels.PanelWidget,
+                                                                          graphicsnode.NodeHeader))]
+        if button == QtCore.Qt.LeftButton:
+            if items:
+                item = items[0]
+                if isinstance(item, plugwidget.Plug):
+                    self._plugSelected = item
+                elif isinstance(item, plugwidget.CrossSquare):
+                    plug = item.plug()
+                    if item.ioType == "input":
+                        plug.onExpandInput()
+                    else:
+                        plug.onExpandOutput()
+            else:
                 rect = QtCore.QRect(self.previousMousePos, QtCore.QSize())
                 rect = rect.normalized()
                 map_rect = self.mapToScene(rect).boundingRect()
@@ -212,7 +199,7 @@ class View(graphicsview.GraphicsView):
             self.pan_active = True
             self.setCursor(QtCore.Qt.OpenHandCursor)
 
-        elif button == QtCore.Qt.RightButton:
+        elif button == QtCore.Qt.RightButton and items:
             self._contextMenu(event.pos())
         self.parent().nodeLibraryWidget.hide()
         QtWidgets.QGraphicsView.mousePressEvent(self, event)
@@ -305,3 +292,8 @@ class View(graphicsview.GraphicsView):
         scene = self.scene()
         scene.addItem(newConnection)
         scene.connections.add(newConnection)
+
+    def itemsFromPos(self, pos):
+        return [i for i in self.items(pos) if not isinstance(i, (graphicitems.ItemContainer,
+                                                                 graphpanels.PanelWidget,
+                                                                 graphicsnode.NodeHeader))]

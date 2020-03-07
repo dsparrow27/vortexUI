@@ -30,7 +30,7 @@ class VortexConfig(graphviewconfig.Config):
             'color': {"color": QtGui.QColor(22.999980000000015, 255, 255)},
             'matrix4': {
                 "color": QtGui.QColor(174.99987000000002, 130.00001999999998, 114.99990000000001)},
-            'multi': {"color": QtGui.QColor(255, 255, 255)},
+            'multi': {"color": QtGui.QColor(25, 25, 25)},
             'vector2D': {"color": QtGui.QColor(147.000105, 102.0, 156.000075)},
             'vector3D': {"color": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998)},
             "file": {"color": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998),

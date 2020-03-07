@@ -54,6 +54,12 @@ class ObjectModel(QtCore.QObject):
     def __repr__(self):
         return "<{}-{}>".format(self.__class__.__name__, self.text())
 
+    def fullPathName(self):
+        path = self.text()
+        if self._parent is not None:
+            return "|".join([self._parent.fullPathName(), path])
+        return path
+
     def icon(self):
         """Icon path for the node
 
@@ -203,13 +209,13 @@ class ObjectModel(QtCore.QObject):
         return {}
 
     def minimumHeight(self):
-        return 80
+        return 50
 
     def minimumWidth(self):
         return 150
 
     def cornerRounding(self):
-        return 10
+        return 5
 
     def position(self):
         return (0, 0)
@@ -230,14 +236,17 @@ class ObjectModel(QtCore.QObject):
     def selectedNodeColour(self):
         return QtGui.QColor(180, 255, 180, 200)
 
-    def unSelectedNodeColour(self):
-        return self.backgroundColour()
-
     def edgeColour(self):
         return QtGui.QColor(0.0, 0.0, 0.0, 255)
 
+    def textColor(self):
+        return QtGui.QColor(225, 225, 225)
+
     def edgeThickness(self):
-        return 3
+        return 2
+
+    def resizerSize(self):
+        return 12
 
     def deleteChild(self, child):
         return False

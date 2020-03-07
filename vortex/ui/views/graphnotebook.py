@@ -19,17 +19,13 @@ class GraphNotebook(QtWidgets.QWidget):
         self.application = application
         application.graphNoteBook = self
         self.pages = []
-        self.notebook = None
+        self.notebook = tabwidget.TabWidget("NoteBook", parent=self)
         self.initLayout()
 
     def initLayout(self):
         layout = elements.vBoxLayout(parent=self)
-        self.notebook = tabwidget.TabWidget("NoteBook", parent=self)
         layout.addWidget(self.notebook)
-    #
-    # def onRequestExpandCompoundAsTab(self, compound):
-    #     self.addPage(compound.text())
-    #     self.graph.models[compound.text()] = compound
+        self.notebook.tabCloseRequested.connect(self.deletePage)
 
     def addPage(self, graph, objectModel):
         editor = grapheditor.GraphEditor(self.application,  graph, objectModel, parent=self)
@@ -52,8 +48,6 @@ class GraphNotebook(QtWidgets.QWidget):
             # show popup
             self.pages[index].close()
             self.notebook.removeTab(index)
-            # self.graph.onBeforeRemoveTab.emit(self.pages[index])
-            # self.graph.onAfterRemoveTab.emit(self.pages[index])
 
     def clear(self):
         for i in range(len(self.pages)):
@@ -64,8 +58,7 @@ class GraphNotebook(QtWidgets.QWidget):
         if self.notebook.currentIndex() in range(len(self.pages)):
             return self.pages[self.notebook.currentIndex()]
 
-    def _onGraphLoad(self, objectModel, clear=False):
+    def _onGraphLoad(self, graph,  clear=False):
         if clear:
             self.clear()
-
-        # self.addPage(editor.graph, objectModel)
+        self.addPage(graph, graph.rootNode())

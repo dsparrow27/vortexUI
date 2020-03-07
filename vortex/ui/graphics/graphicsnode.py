@@ -157,21 +157,21 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
     def mouseMoveEvent(self, event):
         scene = self.scene()
         items = scene.selectedNodes()
+
         for i in items:
             pos = i.pos() + i.mapToParent(event.pos()) - i.mapToParent(event.lastPos())
             i.setPos(pos)
-        pos = event.pos()
-        self.model.setPosition((pos.x(), pos.y()))
+            i.model.setPosition((pos.x(), pos.y()))
+
         self.scene().updateAllConnections()
 
 
 class Pin(QBaseNode):
-
     def __init__(self, objectModel, parent=None):
         super(Pin, self).__init__(objectModel, parent)
 
     def boundingRect(self):
-        return QtCore.QRect(0, 0, 25, 25)
+        return QtCore.QRect(0, 0, 15, 15)
 
     def paint(self, painter, option, widget):
         rect = self.boundingRect()
@@ -188,17 +188,85 @@ class Pin(QBaseNode):
         super(Pin, self).paint(painter, option, widget)
 
 
+class ResizerItem(QtWidgets.QGraphicsItem):
+    def __init__(self, objectModel, parent=None):
+        super(ResizerItem, self).__init__(parent)
+        self.setFlag(self.ItemIsSelectable, True)
+        self.setFlag(self.ItemIsMovable, True)
+        self.setFlag(self.ItemSendsGeometryChanges, True)
+        self.setCursor(QtGui.QCursor(QtCore.Qt.SizeFDiagCursor))
+        self.setToolTip('double-click auto resize')
+        self.objectModel = objectModel
+
+    def boundingRect(self):
+        size = self.objectModel.resizerSize()
+        parentItem = self.parentItem()
+        rect = parentItem.boundingRect()
+        width = rect.width()
+        height = rect.height()
+        thickness = self.objectModel.edgeThickness()
+        return QtCore.QRectF(width-size-thickness, height-size-thickness, size,size)
+
+    def itemChange(self, change, value):
+        if change == self.ItemPositionChange:
+            item = self.parentItem()
+            mx = self.objectModel.minimumHeight()
+            my = self.objectModel.minimumWidth()
+            # size = self.objectModel.minimumHeight()
+            # mx,my = size.width(), size.height()
+            totalx = mx+value.x()
+            totaly = mx+value.y()
+            valuex = value.x()
+            valuey = value.y()
+            if totalx > mx:
+                totalx = mx
+                valuex = 0
+            if totaly > my:
+                totaly = my
+                valuey = 0
+
+            # x = mx if value.x() < mx else value.x()
+            # y = my if value.y() < my else value.y()
+            value = QtCore.QPointF(valuex, valuey)
+            nodeSize = QtCore.QSizeF(totalx, totaly)
+            # item.setMinimumSize(nodeSize)
+            print(value, nodeSize)
+
+
+            # item.on_sizer_pos_changed(value)
+        return super(ResizerItem, self).itemChange(change, value)
+    # def mouseDoubleClickEvent(self, event):
+    #     item = self.parentItem()
+    #     item.on_sizer_double_clicked()
+
+    def paint(self, painter, option, widget):
+        rect = self.boundingRect()
+        if self.objectModel.isSelected():
+            color = self.objectModel.selectedNodeColour()
+        else:
+            color = self.objectModel.backgroundColour()
+            color = color.lighter(90)
+
+        path = QtGui.QPainterPath()
+        path.moveTo(rect.topRight())
+        path.lineTo(rect.bottomRight())
+        path.lineTo(rect.bottomLeft())
+        painter.setBrush(color)
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.fillPath(path, painter.brush())
+
+
 class Comment(QBaseNode):
 
     def __init__(self, objectModel, parent=None):
         super(Comment, self).__init__(objectModel, parent)
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
+        self._resizer = ResizerItem(objectModel, parent=self)
         self.init()
 
     def init(self):
         layout = elements.vGraphicsLinearLayout(parent=self)
-        # print(self.model.icon().pixmap(16,16))
         self.header = NodeHeader(self,
                                  self.model.text(),
                                  self.model.secondaryText(),
@@ -213,38 +281,49 @@ class Comment(QBaseNode):
 
     def paint(self, painter, option, widget):
         # main rounded rect
+        rect = self.boundingRect()
         thickness = self.model.edgeThickness()
+        backgroundColor = self.model.backgroundColour()
+
+        titleHeight = self.header.size().height()
+        rounding = self.cornerRounding
+        nodeWidth = int(rect.width())
+        nodeHeight = int(rect.height())
+        headerRect = QtCore.QRectF(rect.x(), rect.y(), nodeWidth, titleHeight)
+        bodyRect = QtCore.QRectF(rect.x(), rect.y(), nodeWidth, nodeHeight)
+
+        # body rectangle
+        roundedPath = QtGui.QPainterPath()
+
+        roundedPath.addRoundedRect(bodyRect,
+                                   rounding, rounding)
+
+        painter.setBrush(QtGui.QBrush(backgroundColor))
+        painter.fillPath(roundedPath, painter.brush())
+
+        # header rectangle
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setBrush(self.model.headerColor())
+
+        painter.drawRoundedRect(headerRect,
+                                rounding, rounding)
+        painter.drawRect(0, rounding, nodeWidth, titleHeight - rounding)
+        # outline
         if self.isSelected():
             standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness + 1)
         else:
             standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
-        rect = self.boundingRect()
-        rounded_rect = QtGui.QPainterPath()
-        roundingY = self.cornerRounding
-        rounded_rect.addRoundRect(rect,
-                                  0.0, roundingY
-                                  )
-        painter.setBrush(self.backgroundColour)
-        painter.fillPath(rounded_rect, painter.brush())
-        # Title BG
-        painter.setPen(QtGui.QPen(self.model.headerColor()))
-        titleHeight = self.header.size().height()
-        #
-        painter.setBrush(self.model.headerColor())
-        painter.drawRect(rect.x(), rect.y(), rect.width(), titleHeight)
-        # outer node edge
-        painter.strokePath(rounded_rect, standardPen)
+        # # outer node edge
+        painter.strokePath(roundedPath,
+                           standardPen)
 
         super(Comment, self).paint(painter, option, widget)
 
 
-class Backdrop(QBaseNode):
+class Backdrop(Comment):
 
     def __init__(self, objectModel, parent=None):
         super(Backdrop, self).__init__(objectModel, parent)
-
-    def paint(self, painter, option, widget):
-        super(Backdrop, self).paint(painter, option, widget)
 
 
 class GraphicsNode(QBaseNode):
@@ -253,37 +332,25 @@ class GraphicsNode(QBaseNode):
         super(GraphicsNode, self).__init__(objectModel, parent=parent)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
 
-        self.header = None
-        self.attributeContainer = None
-
-        self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
-        self.gradientStops = [(0.0, self.model.backgroundColour()),
-                              (0.001, self.model.backgroundColour().lighter(110)),
-                              (0.25, self.model.backgroundColour().lighter(110)),
-                              (0.2501, self.model.backgroundColour()),
-                              (0.5, self.model.backgroundColour()),
-                              (0.501, self.model.backgroundColour().lighter(110)),
-                              (0.75, self.model.backgroundColour().lighter(110)),
-                              (0.7501, self.model.backgroundColour()),
-                              (1.0, self.model.backgroundColour()),
-                              ]
-        self.init()
-
-    def init(self):
-        layout = elements.vGraphicsLinearLayout(parent=self)
-        # print(self.model.icon().pixmap(16,16))
         self.header = NodeHeader(self,
                                  self.model.text(),
                                  self.model.secondaryText(),
                                  icon=self.model.icon(),
                                  parent=self)
-        self.header.headerTextChanged.connect(self.onHeaderTextChanged)
-        self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
 
+        self.init()
+
+    def init(self):
+        layout = elements.vGraphicsLinearLayout(parent=self)
+
+        self.header.headerTextChanged.connect(self.onHeaderTextChanged)
+        self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
+        # self.attributeContainer.hide()
+        # self.header.hide()
 
         self.setLayout(layout)
         # now bind the attributes from the model if it has any
@@ -341,35 +408,60 @@ class GraphicsNode(QBaseNode):
     def boundingRect(self, *args, **kwargs):
         childBoundingRect = self.childrenBoundingRect(*args, **kwargs)
         return QtCore.QRectF(0, 0,
-                             childBoundingRect.width() - 20,
+                             childBoundingRect.width(),
                              childBoundingRect.height())
 
     def paint(self, painter, option, widget):
         # main rounded rect
+        rect = self.boundingRect()
         thickness = self.model.edgeThickness()
+        backgroundColor = self.model.backgroundColour()
+
+        titleHeight = self.header.size().height()
+        rounding = self.cornerRounding
+        nodeWidth = int(rect.width())
+        nodeHeight = int(rect.height())
+        headerRect = QtCore.QRectF(rect.x(), rect.y(), nodeWidth, titleHeight)
+        bodyRect = QtCore.QRectF(rect.x(), rect.y(), nodeWidth, nodeHeight)
+
+        # body rectangle
+        roundedPath = QtGui.QPainterPath()
+
+        roundedPath.addRoundedRect(bodyRect,
+                                   rounding, rounding)
+
+        linearGradient = QtGui.QLinearGradient(rect.x(), rect.y(), rect.width() * 0.75, 100)
+        linearGradient.setSpread(QtGui.QLinearGradient.RepeatSpread)
+        linearGradient.setFinalStop(QtCore.QPoint(25, 50))
+        linearGradient.setStops([(0.0, backgroundColor),
+                                 (0.001, backgroundColor.lighter(110)),
+                                 (0.25, backgroundColor.lighter(110)),
+                                 (0.2501, backgroundColor),
+                                 (0.5, backgroundColor),
+                                 (0.501, backgroundColor.lighter(110)),
+                                 (0.75, backgroundColor.lighter(110)),
+                                 (0.7501, backgroundColor),
+                                 (1.0, backgroundColor),
+                                 ])
+
+        painter.setBrush(QtGui.QBrush(linearGradient))
+        painter.fillPath(roundedPath, painter.brush())
+
+        # header rectangle
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setBrush(self.model.headerColor())
+
+        painter.drawRoundedRect(headerRect,
+                                rounding, rounding)
+        painter.drawRect(0, rounding, nodeWidth, titleHeight - rounding)
+
+        # outline
         if self.isSelected():
             standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness + 1)
         else:
             standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
-        rect = self.boundingRect()
-        rounded_rect = QtGui.QPainterPath()
-        roundingY = self.cornerRounding
-        rounded_rect.addRoundRect(rect,
-                                  0.0, roundingY
-                                  )
-        linearGradient = QtGui.QLinearGradient(rect.x(), rect.y(), rect.width() * 0.75, 100)
-        linearGradient.setSpread(QtGui.QLinearGradient.RepeatSpread)
-        linearGradient.setFinalStop(QtCore.QPoint(25, 50))
-        linearGradient.setStops(self.gradientStops)
-        painter.setBrush(QtGui.QBrush(linearGradient))
-        painter.fillPath(rounded_rect, painter.brush())
-        # Title BG
-        painter.setPen(QtGui.QPen(self.model.headerColor()))
-        titleHeight = self.header.size().height()
-        #
-        painter.setBrush(self.model.headerColor())
-        painter.drawRect(rect.x(), rect.y(), rect.width(), titleHeight)
-        # outer node edge
-        painter.strokePath(rounded_rect, standardPen)
+        # # outer node edge
+        painter.strokePath(roundedPath,
+                           standardPen)
 
         super(GraphicsNode, self).paint(painter, option, widget)

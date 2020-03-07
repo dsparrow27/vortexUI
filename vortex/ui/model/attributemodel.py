@@ -37,7 +37,7 @@ class AttributeModel(QtCore.QObject):
         return id(self)
 
     def fullPathName(self):
-        return ""
+        return self.objectModel.fullPathName() + "." + self.text()
 
     def text(self):
         return "attributeName"

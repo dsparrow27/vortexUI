@@ -84,6 +84,7 @@ class Root(datasources.BaseDataSource):
     def setData(self, index, value):
         self.attribute[self.headers[index]] = value
         return
+
     def rowCount(self):
         return len(self.children)
 

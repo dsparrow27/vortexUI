@@ -21,6 +21,7 @@ import pprint
 from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
 from zoo.libs.utils import filesystem
+from zoo.libs import iconlib
 
 logger = logging.getLogger(__name__)
 
@@ -33,22 +34,21 @@ class Graph(vortexApi.GraphModel):
     def rootNode(self):
         return self._rootNode
 
-    def saveGraph(self, model):
+    def saveGraph(self, model, filePath=None):
         pprint.pprint(model.serialize())
         filePath = os.path.expanduser("~/vortexGraph/example.vgrh")
         filesystem.ensureFolderExists(os.path.dirname(filePath))
         filesystem.saveJson(model.serialize(), filePath)
         self.graphSaved.emit(filePath)
-        print ("saving ->", filePath)
 
-    def loadGraph(self, filePath, parent=None):
+    def loadFromPath(self, filePath, parent=None):
         graphData = filesystem.loadJson(filePath)
-        self.loadFromDict(graphData)
+        self.loadFromDict(graphData, parent=parent)
 
-    def loadFromDict(self, data):
-        root = NodeModel.deserialize(self.config, data, parent=None)
+    def loadFromDict(self, data, parent=None):
+        root = NodeModel.deserialize(self.config, data, parent=parent)
         self._rootNode = root
-        self.graphLoaded.emit(root)
+        self.graphLoaded.emit(self)
         return root
 
     def createNode(self, nodeType, parent=None):
@@ -58,14 +58,20 @@ class Graph(vortexApi.GraphModel):
                                  "category": "misc",
                                  "secondaryLabel": "bob",
                                  "script": "", "commands": [],
+                                 "isPin": nodeType == "pin",
+                                 "isBackdrop": nodeType == "backdrop",
+                                 "isComment": nodeType == "comment",
                                  "description": ""}
                         }
             newNode = NodeModel.deserialize(self.config, nodeInfo, parent=parent)
             self.nodeCreated.emit(newNode)
-            print(newNode)
 
 
 class NodeModel(vortexApi.ObjectModel):
+    defaults = {
+        "text": "",
+    }
+
     @classmethod
     def deserialize(cls, config, data, parent=None):
         newObject = cls(config, parent=parent, **data)
@@ -75,8 +81,10 @@ class NodeModel(vortexApi.ObjectModel):
 
     def __init__(self, config, parent=None, **kwargs):
         super(NodeModel, self).__init__(config, parent)
-        self._icon = kwargs.get("data", {}).get("icon")
         self._data = kwargs.get("data", {})
+        self._icon = self._data.get("icon")
+        if self._icon is not None:
+            self._icon = iconlib.icon(self._icon)
         self._attributeData = kwargs.get("attributes", [])
         for attr in self._attributeData:
             self._attributes.append(AttributeModel(attr, self))
@@ -178,12 +186,6 @@ class NodeModel(vortexApi.ObjectModel):
     def deleteAttribute(self, attribute):
         pass
 
-    def minimumHeight(self):
-        return 50
-
-    def minimumWidth(self):
-        return 150
-
     def toolTip(self):
         """The Tooltip to display.
 
@@ -203,19 +205,10 @@ class NodeModel(vortexApi.ObjectModel):
         return QtGui.QColor(*self._data.get("backgroundColor", (40, 40, 40, 255)))
 
     def headerColor(self):
-        return QtGui.QColor("#4A71AB")
-
-    def headerButtonColor(self):
-        return QtGui.QColor(255, 255, 255)
-
-    def selectedNodeColour(self):
-        return QtGui.QColor(180, 255, 180, 255)
-
-    def unSelectedNodeColour(self):
-        return self.backgroundColour()
+        return QtGui.QColor(*self._data.get("headerColor", (71, 115, 149, 255)))
 
     def edgeColour(self):
-        return QtGui.QColor(0.0, 0.0, 0.0, 255)
+        return QtGui.QColor(*self._data.get("edgeColor", (0.0, 0.0, 0.0, 255)))
 
     def deleteChild(self, child):
 
@@ -230,23 +223,6 @@ class NodeModel(vortexApi.ObjectModel):
     def supportsContextMenu(self):
         return True
 
-    def contextMenu(self, menu):
-        menu.addAction("Edit Node", triggered=self._onEdit)
-
-    def attributeWidget(self, parent):
-        pass
-
-    def _onEdit(self, *args, **kwargs):
-        print(args, kwargs)
-        # script
-        # plugs
-        # plugs ui
-        # plug ui hook
-        # UI command
-
-    def fullPathName(self):
-        return self.text()
-
     def serialize(self):
         connections = []
         for attr in self._attributes:
@@ -257,16 +233,13 @@ class NodeModel(vortexApi.ObjectModel):
                 "attributes": [attr.serialize() for attr in self._attributes],
                 "children": [child.serialize() for child in self._children],
                 "connections": connections
-                },
+                }
 
 
 class AttributeModel(vortexApi.AttributeModel):
     def __init__(self, data, objectModel, parent=None):
         super(AttributeModel, self).__init__(objectModel, parent=parent)
         self.internalAttr = data
-
-    def fullPathName(self):
-        return self.objectModel.fullPathName() + "." + self.text()
 
     def text(self):
         return self.internalAttr.get("label", "unknown")
@@ -340,17 +313,21 @@ class AttributeModel(vortexApi.AttributeModel):
     def elements(self):
         items = []
         name = self.text()
-        for a in range(10):
-            item = AttributeModel({"label": "{}[{}]".format(name, a),
-                                   "isInput": self.isInput(),
-                                   "type": "compound",
-                                   "isElement": True,
-                                   "isOutput": self.isOutput(),
-                                   "isArray": False,
-                                   "isCompound": len(self.internalAttr.get("children", [])) > 0,
-                                   "children": self.internalAttr.get("children", [])
-                                   }, objectModel=self.objectModel, parent=self)
-            items.append(item)
+        value = self.value()
+        if isinstance(value, (list, tuple)):
+            isCompound = len(self.internalAttr.get("children", [])) > 0
+            for index, elementValue in enumerate(value):
+                item = AttributeModel({"label": "{}[{}]".format(name, index),
+                                       "isInput": self.isInput(),
+                                       "type": "compound",
+                                       "isElement": True,
+                                       "value": elementValue,
+                                       "isOutput": self.isOutput(),
+                                       "isArray": False,
+                                       "isCompound": isCompound,
+                                       "children": self.internalAttr.get("children", [])
+                                       }, objectModel=self.objectModel, parent=self)
+                items.append(item)
         return items
 
     def children(self):
@@ -419,305 +396,24 @@ class AttributeModel(vortexApi.AttributeModel):
         }
 
 
-def graphOne():
-    from zoo.libs.iconlib import icon
-    return {
-        "data": {"label": "myCompound",
-                 "category": "compounds",
-                 "isCompound": True,
-                 "script": "", "description": "",
-                 "backgroundColor": (50, 50, 50, 255)},
-        "attributes": [{"label": "value",
-                        "isInput": True,
-                        "isOutput": False,
-                        "type": "float",
-                        "isArray": False,
-                        "isCompound": False,
-                        "default": 0.0,
-                        "value": 0.0,
-                        "min": 0.0,
-                        "max": 99999999,
-                        }],
-        "children": [
-
-            {"data": {"category": "organization",
-                      "isPin": True},
-             "backgroundColor": (1, 166, 239, 255),
-             },
-            {"data": {"category": "organization",
-                      "isComment": True,
-                      "label": "commentMe",
-                      "secondaryText": ""},
-             "backgroundColor": (1, 166, 239, 255),
-             },
-            {"data": {"category": "organization",
-                      "isBackdrop": True,
-                      "label": "testGroup"},
-             "backgroundColor": (141, 25, 25, 225),
-             },
-            {"data": {"label": "float1",
-                      "category": "math",
-                      "secondaryLabel": "bob",
-                      "script": "", "commands": [],
-                      "description": "",
-                      "backgroundColor": (50, 50, 50, 255)},
-             "attributes": [{"label": "value",
-                             "isInput": True,
-                             "isOutput": False,
-                             "type": "float",
-                             "isArray": False,
-                             "isCompound": False,
-                             "default": 0.0,
-                             "value": 0.0,
-                             "min": 0.0,
-                             "max": 99999999,
-                             },
-                            {"label": "output",
-                             "isInput": False,
-                             "type": "float",
-                             "isOutput": True,
-                             "isArray": False,
-                             "isCompound": False,
-                             "default": 0.0,
-                             "value": 0.0,
-                             "min": 0.0,
-                             "max": 99999999,
-                             }
-
-                            ]
-             },
-            {"data": {"label": "float2",
-                      "category": "math",
-                      "secondaryLabel": "bob",
-                      "script": "", "commands": [],
-                      "description": ""},
-             "attributes": [
-                 {"label": "value",
-                  "isInput": True,
-                  "type": "float",
-                  "isOutput": False},
-                 {"label": "output",
-                  "isInput": False,
-                  "type": "float",
-                  "isOutput": True}]
-             },
-            {"data": {"label": "sum",
-                      "category": "math",
-                      "secondaryLabel": "bob",
-                      "script": "", "commands": [],
-                      "description": ""},
-             "attributes": [{"label": "values",
-                             "isInput": True,
-                             "isArray": True,
-                             "type": "multi",
-                             "isOutput": False},
-                            {"label": "output",
-                             "isInput": False,
-                             "isArray": False,
-                             "type": "multi",
-                             "isOutput": True}
-                            ]
-             },
-            {"data": {"label": "search",
-                      "category": "strings",
-                      "secondaryLabel": "bob",
-                      "script": "",
-                      "commands": [],
-                      "description": ""},
-             "attributes": [{"label": "search", "isInput": True, "type": "string", "isOutput": False},
-                            {"label": "toReplace", "isInput": True, "type": "string", "isOutput": False},
-                            {"label": "replace", "isInput": True, "type": "string", "isOutput": False},
-                            {"label": "result", "isInput": False, "type": "string", "isOutput": True}]
-             },
-            {"data": {"label": "transform",
-                      "category": "dag",
-                      "secondaryLabel": "bob",
-                      "script": "", "commands": [],
-                      "description": "",
-                      "backgroundColor": (75, 75, 100, 255)},
-             "attributes": [{"label": "boundingBox",
-                             "isInput": True,
-                             "isCompound": True,
-                             "type": "multi",
-                             "isOutput": False,
-                             "children": [
-                                 {"label": "boundingMin",
-                                  "isInput": True,
-                                  "isArray": False,
-                                  "isCompound": True,
-                                  "type": "float3",
-                                  "isOutput": False,
-                                  "children": [{"label": "minX",
-                                                "isInput": True,
-                                                "isArray": False,
-                                                "type": "float",
-                                                "isOutput": False},
-                                               {"label": "minY",
-                                                "isInput": True,
-                                                "isArray": False,
-                                                "type": "float",
-                                                "isOutput": False}
-                                      , {"label": "minZ",
-                                         "isInput": True,
-                                         "isArray": False,
-                                         "type": "float",
-                                         "isOutput": False}]},
-                                 {"label": "boundingMax",
-                                  "isInput": True,
-                                  "isArray": False,
-                                  "isCompound": True,
-                                  "type": "float3",
-                                  "isOutput": False,
-                                  "children": [{"label": "maxY",
-                                                "isInput": True,
-                                                "isArray": False,
-                                                "type": "float",
-                                                "isOutput": False},
-                                               {"label": "maxY",
-                                                "isInput": True,
-                                                "isArray": False,
-                                                "type": "float",
-                                                "isOutput": False},
-                                               {"label": "maxZ",
-                                                "isInput": True,
-                                                "isArray": False,
-                                                "type": "float",
-                                                "isOutput": False}]}
-                             ]},
-                            {"label": "compoundArray",
-                             "isInput": False,
-                             "isArray": True,
-                             "isCompound": True,
-                             "type": "multi",
-                             "isOutput": True,
-                             "children": [
-                                 {"label": "x",
-                                  "isInput": False,
-                                  "isArray": False,
-                                  "isCompound": False,
-                                  "isChild": True,
-                                  "type": "float",
-                                  "isOutput": True},
-                                 {"label": "y",
-                                  "isInput": False,
-                                  "isArray": False,
-                                  "isChild": True,
-                                  "isCompound": False,
-                                  "type": "float",
-                                  "isOutput": True},
-                                 {"label": "z",
-                                  "isInput": False,
-                                  "isArray": False,
-                                  "isChild": True,
-                                  "isCompound": False,
-                                  "type": "float",
-                                  "isOutput": True}
-                             ]}
-                            ]
-             },
-
-        ]
-    }
-
-
-def graphTwo():
-    return {
-        "data": {"label": "TestCompound",
-                 "category": "compounds",
-                 "isCompound": True,
-                 "script": "", "description": ""},
-        "attributes": [{"label": "value",
-                        "isInput": True,
-                        "isOutput": False,
-                        "type": "float",
-                        "isArray": False,
-                        "isCompound": False,
-                        "default": 0.0,
-                        "value": 0.0,
-                        "min": 0.0,
-                        "max": 99999999,
-                        }],
-        "children": [
-            {"data": {"label": "parent",
-                      "category": "math",
-                      "isCompound": True,
-                      "secondaryLabel": "bob",
-                      "script": "", "commands": [],
-                      "description": ""},
-             "children": [
-                 {"data": {"label": "child",
-                           "category": "math",
-                           "secondaryLabel": "bob",
-                           "script": "", "commands": [],
-                           "description": ""}}
-             ]
-             },
-            {"data": {"label": "float1",
-                      "category": "math",
-                      "secondaryLabel": "bob",
-                      "script": "", "commands": [],
-                      "description": ""},
-             "attributes": [{"label": "value",
-                             "isInput": True,
-                             "isOutput": False,
-                             "type": "float",
-                             "isArray": False,
-                             "isCompound": False,
-                             "default": 0.0,
-                             "value": 0.0,
-                             "min": 0.0,
-                             "max": 99999999,
-                             },
-                            {"label": "output",
-                             "isInput": False,
-                             "type": "float",
-                             "isOutput": True,
-                             "isArray": False,
-                             "isCompound": False,
-                             "default": 0.0,
-                             "value": 0.0,
-                             "min": 0.0,
-                             "max": 99999999,
-                             },
-
-                            ]
-             },
-        ]
-    }
-
-
 class Config(vortexApi.VortexConfig):
     def registeredNodes(self):
         return {"comment": "organization",
                 "sum": "math",
-                "float": "math"}
+                "float": "math",
+                "command": "applications",
+                "pin": "organization",
+                "backdrop": "organization"}
 
 
 if __name__ == "__main__":
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
-    graphOneData = graphOne()
-    graphTwoData = graphTwo()
-
     uiConfig = Config()
     vortexApp = vortexApi.UIApplication(uiConfig)
     ui = vortexApi.ApplicationWindow(vortexApp)
-    # add the graph to the noteBook, we can create multiple isolated graphs
-    graphA = Graph(vortexApp)
-    graphA.loadFromDict(graphOneData)
-    vortexApp.graphNoteBook.addPage(graphA, graphA.rootNode())
-
-    # uiApplication.createGraph(vortexGraph)
-    # uiApplication.createGraph(vortexGraph)
-
-    # sum = uiApplication.currentGraph.createNode("Sum", parent=uiApplication.currentGraph.rootNode)
-    # uiApplication.currentGraph.createNode("USD", parent=sum)
-    # uiApplication.currentGraph.createNode()
-    # uiApplication.currentGraph.createNode()
-    # uiApplication.currentGraph.createNode()
-    # # Lets add Two graphs, both in isolation
-    # vortexGraph.loadFromDict(graphOneData)
-    # vortexGraph.loadFromDict(graphTwoData)
+    vortexApp.registerGraphType(Graph)
+    vortexApp.createGraphFromPath(os.path.join(os.environ["VORTEX"], "vortex/examples/example.vgrh"))
 
     logger.debug("Completed boot process")
 

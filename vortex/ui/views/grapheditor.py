@@ -19,7 +19,7 @@ class GraphEditor(QtWidgets.QWidget):
     """
     requestCompoundExpansion = QtCore.Signal(object)
 
-    def __init__(self, application,  graphModel, objectModel, parent=None):
+    def __init__(self, application, graphModel, objectModel, parent=None):
         super(GraphEditor, self).__init__(parent=parent)
         self.application = application
         self.model = objectModel
@@ -79,16 +79,17 @@ class GraphEditor(QtWidgets.QWidget):
             act.triggered.connect(partial(self.alignSelectedNodes, tip[1]))
             parent.addAction(act)
 
-    def _onViewContextMenu(self, menu, item):
-        if item and not isinstance(item, graphpanels.PanelWidget):
-
-            if isinstance(item, (graphicsnode.GraphicsNode, graphpanels.Panel)) and item.model.supportsContextMenu():
+    def _onViewContextMenu(self, menu, item, pos):
+        items = self.view.itemsFromPos(pos)
+        if items:
+            item = items[0]
+            if isinstance(item, (graphicsnode.QBaseNode, graphpanels.Panel)) and item.model.supportsContextMenu():
                 item.model.contextMenu(menu)
-            elif isinstance(item.parentObject(), (graphicsnode.GraphicsNode, graphpanels.Panel)):
+            elif isinstance(item.parentObject(), (graphicsnode.QBaseNode, graphpanels.Panel)):
                 model = item.parentObject().model
                 if model.supportsContextMenu():
                     model.contextMenu(menu)
-            return
+                return
         edgeStyle = menu.addMenu("ConnectionStyle")
         for i in self.graph.config.connectionStyles.keys():
             edgeStyle.addAction(i, self.scene.onSetConnectionStyle)
@@ -117,3 +118,7 @@ class GraphEditor(QtWidgets.QWidget):
 
     def createNode(self, objectModel):
         return self.scene.createNode(objectModel)
+
+    def close(self):
+        self.graph.delete()
+        super(GraphEditor, self).close()
