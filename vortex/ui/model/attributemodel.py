@@ -147,13 +147,13 @@ class AttributeModel(QtCore.QObject):
     def isOutput(self):
         return True
 
-    def highlightColor(self):
+    def highlightColour(self):
         return QtGui.QColor(255, 255, 255)
 
-    def itemEdgeColor(self):
+    def edgeColour(self):
         return QtGui.QColor(25, 25, 25)
 
-    def itemColour(self):
+    def backgroundColour(self):
         return QtGui.QColor(0, 180, 0)
 
     def serialize(self):

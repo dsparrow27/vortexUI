@@ -33,7 +33,7 @@ class ObjectModel(QtCore.QObject):
     # removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
     #
     # # connected by the GraphicsNode
-    # nodeNameChangedSig = QtCore.Signal(object)  # objectModel
+    sigNodeNameChanged = QtCore.Signal(str)  # objectModel
     # attributeNameChangedSig = QtCore.Signal(object)  # attributeModel
     # parentChangedSig = QtCore.Signal(object, object)  # childObjectModel, parentObjectModel
     # progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
@@ -223,18 +223,18 @@ class ObjectModel(QtCore.QObject):
     def setPosition(self, position):
         pass
 
-    # colors
+    # colours
     def backgroundColour(self):
         return QtGui.QColor(50, 50, 50, 225)
 
-    def headerColor(self):
+    def headerColour(self):
         return QtGui.QColor("#4A71AB")
 
-    def headerButtonColor(self):
+    def headerButtonColour(self):
         return QtGui.QColor(255, 255, 255)
 
     def selectedNodeColour(self):
-        return QtGui.QColor(180, 255, 180, 200)
+        return QtGui.QColor(180, 255, 180, 255)
 
     def edgeColour(self):
         return QtGui.QColor(0.0, 0.0, 0.0, 255)

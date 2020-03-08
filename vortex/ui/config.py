@@ -25,27 +25,33 @@ class VortexConfig(graphviewconfig.Config):
         self.defaultConnectionShape = connectionStyle["cubic"]
 
         self.attributeMapping = {
-            'quaternion': {"color": QtGui.QColor(126.999945, 24.999944999999997, 24.999944999999997),
+            'quaternion': {"colour": QtGui.QColor(126.999945, 24.999944999999997, 24.999944999999997),
                            "widget": None},
-            'color': {"color": QtGui.QColor(22.999980000000015, 255, 255)},
+            'colour': {"colour": QtGui.QColor(22.999980000000015, 255, 255)},
             'matrix4': {
                 "color": QtGui.QColor(174.99987000000002, 130.00001999999998, 114.99990000000001)},
-            'multi': {"color": QtGui.QColor(25, 25, 25)},
-            'vector2D': {"color": QtGui.QColor(147.000105, 102.0, 156.000075)},
-            'vector3D': {"color": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998)},
-            "file": {"color": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998),
+            'multi': {"colour": QtGui.QColor(25, 25, 25)},
+            'vector2D': {"colour": QtGui.QColor(147.000105, 102.0, 156.000075)},
+            'vector3D': {"colour": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998)},
+            "file": {"colour": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998),
                      "widget": None},
-            "directory": {"color": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998),
+            "directory": {"colour": QtGui.QColor(184.99994999999998, 126.999945, 184.99994999999998),
                           "widget": None},
-            "boolean": {"color": QtGui.QColor(38.00010000000001, 73.99998000000001, 114.000045)},
-            "dict": {"color": QtGui.QColor(204.0, 127.5, 163.20000000000002)},
-            "float": {"color": QtGui.QColor(133.000095, 102.0, 147.99996000000002),
+            "boolean": {"colour": QtGui.QColor(38.00010000000001, 73.99998000000001, 114.000045)},
+            "dict": {"colour": QtGui.QColor(204.0, 127.5, 163.20000000000002)},
+            "float": {"colour": QtGui.QColor(133.000095, 102.0, 147.99996000000002),
                       "widget": None},
-            "integer": {"color": QtGui.QColor(133.000095, 102.0, 147.99996000000002),
+            "integer": {"colour": QtGui.QColor(133.000095, 102.0, 147.99996000000002),
                         "widget": None},
-            "list": {"color": QtGui.QColor(56.000040000000006, 47.99992500000001, 45.00010500000001)},
-            "string": {"color": QtGui.QColor(244.9999965, 214.999935, 59.99997),
+            "list": {"colour": QtGui.QColor(56.000040000000006, 47.99992500000001, 45.00010500000001)},
+            "string": {"colour": QtGui.QColor(244.9999965, 214.999935, 59.99997),
                        "widget": None}
+        }
+        self.nodeDefaultsByType = {
+            "comment": {},
+            "backdrop": {},
+            "pin": {}
+
         }
 
     def registeredNodes(self):

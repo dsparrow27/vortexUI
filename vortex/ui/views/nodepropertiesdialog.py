@@ -2,7 +2,9 @@ from Qt import QtWidgets
 from copy import deepcopy
 from zoo.libs.pyqt.widgets import elements
 from zoo.libs.pyqt.widgets import dialog
+from zoo.libs.pyqt.extended import tabwidget
 from zoo.libs.pyqt.extended import treeviewplus
+from zoo.libs.pyqt.extended import pythoneditor
 from zoo.libs.pyqt.models import treemodel, datasources
 from vortex import api
 
@@ -18,6 +20,80 @@ class NodePropertiesDialog(dialog.Dialog):
         self.objectModel = objectModel
         self.initUI()
         self.state = {}
+
+    def initUI(self):
+        self.attributeEditorWidget = AttributeEditorWidget(objectModel=self.objectModel, parent=self)
+        self.nodeProperties = NodePropertiesWidget(objectModel=self.objectModel, parent=self)
+        self.scriptEditor = ScriptEditor(objectModel=self.objectModel, parent=self)
+        self.tab = tabwidget.TabWidget("NoteBook", parent=self)
+        self.tab.newTabBtn.hide()
+        self.tab.addTab(self.nodeProperties, "General")
+        self.tab.addTab(self.attributeEditorWidget, "Attributes")
+        self.tab.addTab(self.scriptEditor, "Script")
+        self.mainLayout = elements.vBoxLayout(parent=self, spacing=0)
+        self.mainLayout.addWidget(self.tab)
+
+        okCancelLayout = elements.hBoxLayout()
+        okCancelLayout.addItem(
+            QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
+        okCancelBtn = elements.OkCancelButtons(parent=self)
+        okCancelLayout.addWidget(okCancelBtn)
+        self.mainLayout.addLayout(okCancelLayout)
+
+        okCancelBtn.okBtn.clicked.connect(self.onCommit)
+        okCancelBtn.cancelBtn.clicked.connect(self.close)
+        if not self.objectModel.canCreateAttributes():
+            okCancelBtn.okBtn.setEnabled(False)
+
+    def onCommit(self):
+        for k, v in self.nodeProperties.newData.items():
+            if v:
+                getattr(self.objectModel, "set" + k)(v)
+
+        for child in self.attributeEditorWidget.treeModel.root.children:
+            self.objectModel.createAttribute(child.attribute)
+        self.close()
+
+
+class NodePropertiesWidget(QtWidgets.QWidget):
+    def __init__(self, objectModel, parent=None):
+        super(NodePropertiesWidget, self).__init__(parent=parent)
+        self.objectModel = objectModel
+        self.newData = {"Text": "",
+                        "Description": "",
+                        "BackgroundColour": None}
+        self.initUI()
+
+    def initUI(self):
+        self.mainLayout = elements.vBoxLayout(parent=self, spacing=1)
+        self.nameEdit = elements.StringEdit(label="Name:",
+                                            editText=self.objectModel.text(),
+                                            editPlaceholder="Please Enter Node Name",
+                                            enableMenu=False,
+                                            parent=self)
+        color = self.objectModel.backgroundColour()
+        self.colorBtn = elements.LabelColorBtn(label="Colour:",
+                                               initialRgbColor=(color.red(), color.green(), color.blue()),
+                                               parent=self)
+
+        self.description = elements.TextEdit(text=self.objectModel.toolTip(),
+                                             parent=self)
+        self.mainLayout.addWidget(self.nameEdit)
+        self.mainLayout.addWidget(self.colorBtn)
+        self.mainLayout.addWidget(elements.Label(text="Description:",
+                                                 parent=self, enableMenu=False))
+        self.mainLayout.addWidget(self.description)
+        self.nameEdit.textChanged.connect(self.onSetName)
+
+    def onSetName(self, name):
+        if name:
+            self.newData["Text"] = name
+
+
+class AttributeEditorWidget(QtWidgets.QWidget):
+    def __init__(self, objectModel, parent=None):
+        super(AttributeEditorWidget, self).__init__(parent=parent)
+        self.initUI()
 
     def initUI(self):
         self.treeModel = treemodel.TreeModel(Root({}))
@@ -38,20 +114,8 @@ class NodePropertiesDialog(dialog.Dialog):
         opLayout.addWidget(addAttrBtn)
         opLayout.addWidget(removeAttrBtn)
         opLayout.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
-
-        okCancelLayout = elements.hBoxLayout()
-        okCancelLayout.addItem(
-            QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
-        okCancelBtn = elements.OkCancelButtons(parent=self)
-        okCancelLayout.addWidget(okCancelBtn)
-        self.mainLayout.addLayout(okCancelLayout)
-
         addAttrBtn.clicked.connect(self.onCreate)
         removeAttrBtn.clicked.connect(self.onRemove)
-        okCancelBtn.okBtn.clicked.connect(self.onCommit)
-        okCancelBtn.cancelBtn.clicked.connect(self.close)
-        if not self.objectModel.canCreateAttributes():
-            okCancelBtn.okBtn.setEnabled(False)
 
     def onCreate(self):
         attr = Root(deepcopy(api.AttributeModel.defaultFields))
@@ -66,10 +130,19 @@ class NodePropertiesDialog(dialog.Dialog):
             itemParent.removeRowDataSource(item.row())
         self.treeModel.reload()
 
-    def onCommit(self):
-        for child in self.treeModel.root.children:
-            self.objectModel.createAttribute(child.attribute)
-        self.close()
+
+class ScriptEditor(QtWidgets.QWidget):
+    def __init__(self, objectModel, parent=None):
+        super(ScriptEditor, self).__init__(parent=parent)
+        self.objectModel = objectModel
+        self.initUI()
+
+    def initUI(self):
+        self.mainLayout = elements.vBoxLayout(parent=self, spacing=1)
+        self.mainLayout.addWidget(elements.Label(text="Command",
+                                                 parent=self))
+        self.editor = pythoneditor.TextEditor(parent=self)
+        self.mainLayout.addWidget(self.editor)
 
 
 class Root(datasources.BaseDataSource):

@@ -5,7 +5,7 @@
         "isCompound": true,
         "script": "",
         "description": "",
-        "backgroundColor": [
+        "backgroundColour": [
             50,
             50,
             50,
@@ -39,8 +39,8 @@
                     179.08544772094916,
                     9.263040399359426
                 ],
-                "backgroundColor": [62,143,206],
-                "edgeColor": [62,143,206]
+                "backgroundColour": [62,143,206, 255],
+                "edgeColour": [62,143,206, 255]
             },
             "attributes": [],
             "children": [],
@@ -53,8 +53,8 @@
                 "label": "commentMe",
                 "secondaryText": "",
                 "selected": false,
-                "backgroundColor": [255,251,129],
-                "headerColor": [209,207,103],
+                "backgroundColour": [255,251,129],
+                "headerColour": [209,207,103],
                 "position": [
                     -251.64593084926472,
                     -13.894560599039199
@@ -70,8 +70,8 @@
                 "isBackdrop": true,
                 "label": "testGroup",
                 "selected": false,
-                "backgroundColor": [69,96,109],
-                "headerColor": [55,77,89],
+                "backgroundColour": [69,96,109, 200],
+                "headerColour": [55,77,89],
                 "position": [
                     140.48944605695158,
                     12.350720532479265
@@ -89,7 +89,7 @@
                 "script": "",
                 "commands": [],
                 "description": "",
-                "backgroundColor": [
+                "backgroundColour": [
                     50,
                     50,
                     50,
@@ -336,7 +336,7 @@
                 "script": "",
                 "commands": [],
                 "description": "",
-                "backgroundColor": [
+                "backgroundColour": [
                     75,
                     75,
                     100,

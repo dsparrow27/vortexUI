@@ -148,7 +148,8 @@ class NodeModel(vortexApi.ObjectModel):
         return self._data.get("label", "")
 
     def setText(self, value):
-        self._data["secondaryLabel"] = str(value)
+        self._data["label"] = str(value)
+        self.sigNodeNameChanged.emit(str(value))
 
     def secondaryText(self):
         """The Secondary text to display just under the primary text (self.text()).
@@ -202,13 +203,13 @@ class NodeModel(vortexApi.ObjectModel):
 
     # colors
     def backgroundColour(self):
-        return QtGui.QColor(*self._data.get("backgroundColor", (40, 40, 40, 255)))
+        return QtGui.QColor(*self._data.get("backgroundColour", (40, 40, 40, 255)))
 
-    def headerColor(self):
-        return QtGui.QColor(*self._data.get("headerColor", (71, 115, 149, 255)))
+    def headerColour(self):
+        return QtGui.QColor(*self._data.get("headerColour", (71, 115, 149, 255)))
 
     def edgeColour(self):
-        return QtGui.QColor(*self._data.get("edgeColor", (0.0, 0.0, 0.0, 255)))
+        return QtGui.QColor(*self._data.get("edgeColour", (0.0, 0.0, 0.0, 255)))
 
     def deleteChild(self, child):
 
@@ -372,10 +373,10 @@ class AttributeModel(vortexApi.AttributeModel):
     def toolTip(self):
         return self.internalAttr.get("description")
 
-    def itemColour(self):
+    def backgroundColour(self):
         typeMap = self.objectModel.config.attributeMapping.get(self.internalAttr["type"])
         if typeMap:
-            return typeMap["color"]
+            return typeMap["colour"]
         return QtGui.QColor(0, 0, 0)
 
     def serialize(self):
@@ -409,6 +410,10 @@ class Config(vortexApi.VortexConfig):
 if __name__ == "__main__":
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
+    from zoo.libs.pyqt import stylesheet
+    stylesheet.loadDefaultFonts()
+    stylesheet.loadDefaultFonts()
+
     uiConfig = Config()
     vortexApp = vortexApi.UIApplication(uiConfig)
     ui = vortexApi.ApplicationWindow(vortexApp)

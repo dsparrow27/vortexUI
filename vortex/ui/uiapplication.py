@@ -38,7 +38,6 @@ class UIApplication(QtCore.QObject):
         self.graphType = objectType
 
     def createGraphFromPath(self, filePath, parent=None):
-        print(self.graphNoteBook)
         if self.graphNoteBook is None:
             return
         elif self.graphType is None:
@@ -46,4 +45,3 @@ class UIApplication(QtCore.QObject):
         newGraphInstance = self.graphType(self)
         newGraphInstance.loadFromPath(filePath, parent=parent)
         self.graphNoteBook.addPage(newGraphInstance, newGraphInstance.rootNode())
-        print(newGraphInstance, newGraphInstance.rootNode())

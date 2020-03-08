@@ -51,11 +51,10 @@ class GraphModel(QtCore.QObject):
         return self._rootNode
 
     def saveGraph(self, objectModel):
-        print("test")
         return {}
 
     def loadGraph(self, filePath):
-        print("loading", filePath)
+        pass
 
     def delete(self):
         pass

@@ -11,17 +11,17 @@ class Plug(QtWidgets.QGraphicsWidget):
     INPUT_TYPE = 0
     OUTPUT_TYPE = 1
 
-    def __init__(self, color, edgeColor, highlightColor, ioType, parent=None):
+    def __init__(self, colour, edgeColour, highlightColour, ioType, parent=None):
         super(Plug, self).__init__(parent=parent)
         size = QtCore.QSizeF(self._diameter, self._diameter)
         self.ioType = ioType
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
         self.setWindowFrameMargins(0, 0, 0, 0)
-        self._defaultPen = QtGui.QPen(edgeColor, 2.5)
-        self._hoverPen = QtGui.QPen(highlightColor, 3.0)
-        self._defaultBrush = QtGui.QBrush(color)
-        self._currentBrush = QtGui.QBrush(color)
+        self._defaultPen = QtGui.QPen(edgeColour, 2.5)
+        self._hoverPen = QtGui.QPen(highlightColour, 3.0)
+        self._defaultBrush = QtGui.QBrush(colour)
+        self._currentBrush = QtGui.QBrush(colour)
         self.xPos = -5.0 if self.ioType == "Input" else +5.0
         self.setAcceptHoverEvents(True)
 
@@ -29,16 +29,16 @@ class Plug(QtWidgets.QGraphicsWidget):
         return self.parentObject()
 
     @property
-    def color(self):
+    def colour(self):
         return self._currentBrush.color()
 
-    @color.setter
-    def color(self, color):
-        self._currentBrush = QtGui.QBrush(color)
+    @colour.setter
+    def colour(self, colour):
+        self._currentBrush = QtGui.QBrush(colour)
         self.update()
 
     def highlight(self):
-        self._currentBrush = QtGui.QBrush(self.color.lighter())
+        self._currentBrush = QtGui.QBrush(self.colour.lighter())
 
     def unhighlight(self):
         self._currentBrush = QtGui.QBrush(self._defaultBrush)
@@ -153,20 +153,20 @@ class PlugContainer(graphicitems.ItemContainer):
         self.outCrossItem = CrossSquare(ioType="output", parent=self)
         self.inCrossItem.hoverEventRequested.connect(self.onExpandInput)
         self.outCrossItem.hoverEventRequested.connect(self.onExpandOutput)
-        self.inCircle = Plug(self.model.itemColour(),
-                             self.model.itemEdgeColor(),
-                             self.model.highlightColor(), "Input",
+        self.inCircle = Plug(self.model.backgroundColour(),
+                             self.model.edgeColour(),
+                             self.model.highlightColour(), "Input",
                              parent=self)
-        self.outCircle = Plug(self.model.itemColour(),
-                              self.model.itemEdgeColor(),
-                              self.model.highlightColor(), "Output",
+        self.outCircle = Plug(self.model.backgroundColour(),
+                              self.model.edgeColour(),
+                              self.model.highlightColour(), "Output",
                               parent=self)
         self.inCircle.setToolTip(attributeModel.toolTip())
         self.outCircle.setToolTip(attributeModel.toolTip())
 
         self.label = graphicitems.GraphicsText(self.model.text(), parent=self)
         self.label.text.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
-        self.label.color = attributeModel.textColour()
+        self.label.colour = attributeModel.textColour()
         self.label.allowHoverHighlight = True
 
         if not attributeModel.isOutput():

@@ -57,6 +57,17 @@ class Scene(graphicsscene.GraphicsScene):
         for conn in self.connectionsForPlug(plug):
             conn.updatePosition()
 
+    def createConnection(self, source, destination):
+        newConnection = graphicitems.ConnectionEdge(source, destination,
+                                                    curveType=self.uiApplication.config.defaultConnectionShape,
+                                                    colour=source.colour)
+        newConnection.setLineStyle(self.config.defaultConnectionStyle)
+        newConnection.setWidth(self.config.connectionLineWidth)
+        newConnection.setZValue(-1)
+        self.scene.addItem(newConnection)
+        self.scene.connections.add(newConnection)
+        return newConnection
+
     def deleteNode(self, node):
         key = hash(node)
         if key in self.nodes:
@@ -102,6 +113,7 @@ class Scene(graphicsscene.GraphicsScene):
                 conn.setAsCubicPath()
         for conn in self.connections:
             conn.setLineStyle(style)
+
 
 
 class View(graphicsview.GraphicsView):
@@ -265,10 +277,10 @@ class View(graphicsview.GraphicsView):
         :return:
         :rtype:
         """
-        plug.color = plug.parentObject().model.itemColour()
+        plug.colour = plug.parentObject().model.backgroundColour()
         self._interactiveEdge = graphicitems.InteractiveEdge(plug,
                                                              curveType=self.config.defaultConnectionShape,
-                                                             color=plug.color)
+                                                             colour=plug.colour)
         self._interactiveEdge.setLineStyle(self.config.defaultConnectionStyle)
         self._interactiveEdge.setWidth(self.config.connectionLineWidth)
         self._interactiveEdge.destinationPoint = plug.center()
@@ -283,15 +295,7 @@ class View(graphicsview.GraphicsView):
 
         if not source.container().model.createConnection(destination.container().model):
             return
-        newConnection = graphicitems.ConnectionEdge(source, destination,
-                                                    curveType=self.config.defaultConnectionShape,
-                                                    color=source.color)
-        newConnection.setLineStyle(self.config.defaultConnectionStyle)
-        newConnection.setWidth(self.config.connectionLineWidth)
-        newConnection.setZValue(-1)
-        scene = self.scene()
-        scene.addItem(newConnection)
-        scene.connections.add(newConnection)
+        self.scene().createConnection(source, destination)
 
     def itemsFromPos(self, pos):
         return [i for i in self.items(pos) if not isinstance(i, (graphicitems.ItemContainer,
