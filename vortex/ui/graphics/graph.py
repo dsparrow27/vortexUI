@@ -61,11 +61,11 @@ class Scene(graphicsscene.GraphicsScene):
         newConnection = graphicitems.ConnectionEdge(source, destination,
                                                     curveType=self.uiApplication.config.defaultConnectionShape,
                                                     colour=source.colour)
-        newConnection.setLineStyle(self.config.defaultConnectionStyle)
-        newConnection.setWidth(self.config.connectionLineWidth)
+        newConnection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
+        newConnection.setWidth(self.uiApplication.config.connectionLineWidth)
         newConnection.setZValue(-1)
-        self.scene.addItem(newConnection)
-        self.scene.connections.add(newConnection)
+        self.addItem(newConnection)
+        self.connections.add(newConnection)
         return newConnection
 
     def deleteNode(self, node):
@@ -113,7 +113,6 @@ class Scene(graphicsscene.GraphicsScene):
                 conn.setAsCubicPath()
         for conn in self.connections:
             conn.setLineStyle(style)
-
 
 
 class View(graphicsview.GraphicsView):

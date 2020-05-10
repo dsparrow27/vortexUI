@@ -11,4 +11,4 @@ set VORTEX_ICONS=%ABS_PATH%\icons
 set PYTHONPATH=%PYTHONPATH%;%ABS_PATH%;%ZOOTOOLS_ROOT%\install\core\python
 set VORTEX_UI_PLUGINS=%ABS_PATH%\vortex\plugins\ui
 
-"%APPDATA%\..\Local\Programs\Python\Python37\python.exe" ./vortex/examples/datamodel.py
+%PYTHON_INTERPRETER% "./vortex/examples/boot.py"

@@ -10,9 +10,6 @@ graph
 """
 import os
 
-from vortex import startup
-
-startup.initialize()
 
 import logging
 import sys
@@ -407,19 +404,3 @@ class Config(vortexApi.VortexConfig):
                 "backdrop": "organization"}
 
 
-if __name__ == "__main__":
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
-    app = QtWidgets.QApplication(sys.argv)
-    from zoo.libs.pyqt import stylesheet
-    stylesheet.loadDefaultFonts()
-    stylesheet.loadDefaultFonts()
-
-    uiConfig = Config()
-    vortexApp = vortexApi.UIApplication(uiConfig)
-    ui = vortexApi.ApplicationWindow(vortexApp)
-    vortexApp.registerGraphType(Graph)
-    vortexApp.createGraphFromPath(os.path.join(os.environ["VORTEX"], "vortex/examples/example.vgrh"))
-
-    logger.debug("Completed boot process")
-
-    sys.exit(app.exec_())

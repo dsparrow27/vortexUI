@@ -91,12 +91,12 @@ class NodeHeader(graphicitems.ItemContainer):
     headerTextChanged = QtCore.Signal(str)
 
     def __init__(self, node, text, secondaryText="", icon=None, parent=None):
+        self._node = node
         super(NodeHeader, self).__init__(orientation=QtCore.Qt.Horizontal, parent=parent)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
         self.setWindowFrameMargins(0, 0, 0, 0)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         self.titleFont = QtGui.QFont("Roboto-Bold", 8)
-        self._node = node
         fontmetrics = QtGui.QFontMetrics(self.titleFont)
         height = fontmetrics.height() * 2
         self.setMinimumHeight(height)
@@ -106,10 +106,6 @@ class NodeHeader(graphicitems.ItemContainer):
         headerButton = NodeHeaderButton(size=12, colour=node.model.headerButtonColour(), parent=self)
         headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
         self.addItem(headerButton, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-
-
-    def setIcon(self, path):
-        self.headerIcon.setPixmap(path)
 
     def _createLabels(self, primary):
         self._titleWidget = graphicitems.GraphicsText(primary, parent=self)
@@ -132,15 +128,20 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
         self.setFlags(self.ItemIsSelectable | self.ItemIsMovable)
         self.setWindowFrameMargins(0, 0, 0, 0)
         self.setMinimumSize(objectModel.minimumWidth(), objectModel.minimumHeight())
+        self.setPreferredSize(objectModel.minimumWidth(), objectModel.minimumHeight())
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setToolTip(self.model.toolTip())
 
+        self._resizerRect = QtCore.QRectF()
+        self._resizerSelected = False
+
+    def init(self):
         rect = self.boundingRect()
         resizerSize = self.model.resizerSize()
         self._resizerRect = QtCore.QRectF(rect.right() - resizerSize, rect.bottom() - resizerSize, resizerSize,
                                           resizerSize)
-        self._resizerSelected = True
-        self.setPos(QtCore.QPoint(*objectModel.position()))
+        self._resizerSelected = False
+        self.setPos(QtCore.QPoint(*self.model.position()))
 
     def mousePressEvent(self, event):
 
@@ -198,6 +199,7 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
 class Pin(QBaseNode):
     def __init__(self, objectModel, parent=None):
         super(Pin, self).__init__(objectModel, parent)
+        self.init()
 
     def boundingRect(self):
         return QtCore.QRect(0, 0, 15, 15)
@@ -236,9 +238,10 @@ class Comment(QBaseNode):
         # self.header.headerTextChanged.connect(self.onHeaderTextChanged)
         # self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
 
-        # layout.addItem(self.header)
+        layout.addItem(self.header)
 
         self.setLayout(layout)
+        super(Comment, self).init()
 
     def paint(self, painter, option, widget):
         # main rounded rect
@@ -295,7 +298,6 @@ class GraphicsNode(QBaseNode):
     def __init__(self, objectModel, parent=None):
         super(GraphicsNode, self).__init__(objectModel, parent=parent)
 
-
         self.cornerRounding = self.model.cornerRounding()
         self.header = NodeHeader(self,
                                  self.model.text(),
@@ -313,11 +315,12 @@ class GraphicsNode(QBaseNode):
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
 
-        self.setLayout(layout)
+        # self.setLayout(layout)
         # now bind the attributes from the model if it has any
         for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=ATTRIBUTE_VIS_LEVEL_ONE):
             self.addAttribute(attr)
         self._connections()
+        super(GraphicsNode, self).init()
 
     def _connections(self):
         # bind the objectModel signals to this qNode
@@ -369,7 +372,7 @@ class GraphicsNode(QBaseNode):
     def boundingRect(self, *args, **kwargs):
         childBoundingRect = self.childrenBoundingRect(*args, **kwargs)
         return QtCore.QRectF(0, 0,
-                             childBoundingRect.width(),
+                             (childBoundingRect.width() - plugwidget.Plug._diameter * 2) + 1,
                              childBoundingRect.height())
 
     def paint(self, painter, option, widget):
