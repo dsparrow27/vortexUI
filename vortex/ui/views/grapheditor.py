@@ -30,9 +30,11 @@ class GraphEditor(QtWidgets.QWidget):
         self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
         self.nodeLibraryWidget.hide()
 
+
     def connections(self):
         self.view.deletePress.connect(self.scene.onDelete)
         self.view.tabPress.connect(self.showNodeLibrary)
+        self.graph.nodeCreated.connect(self.createNode)
 
     def showNodeLibrary(self, point):
         self.nodeLibraryWidget.initUI(dock=False)
@@ -54,7 +56,8 @@ class GraphEditor(QtWidgets.QWidget):
         self.view = graph.View(self.graph, self.model, parent=self)
         self.view.setScene(self.scene)
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
-        self.view.nodeDoubleClicked.connect(self.displayNodeProperties)
+        self.view.nodeDoubleClicked.connect(self.requestCompoundExpansion)
+        self.view.requestNodeProperties.connect(self.displayNodeProperties)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
 

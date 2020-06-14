@@ -8,10 +8,10 @@ from zoo.libs.pyqt.widgets.graphics import graphbackdrop, graphicitems
 
 
 class Scene(graphicsscene.GraphicsScene):
-    def __init__(self, application, *args, **kwargs):
+    def __init__(self, graph, *args, **kwargs):
         super(Scene, self).__init__(*args, **kwargs)
         self.selectionChanged.connect(self._onSelectionChanged)
-        self.uiApplication = application
+        self.uiApplication = graph
         self.nodes = {}
         self.panelWidget = None
         self.connections = set()
@@ -103,16 +103,17 @@ class Scene(graphicsscene.GraphicsScene):
 
     def onSetConnectionStyle(self):
         style = self.sender().text()
-        style = self.graph.config.connectionStyles.get(style)
-        self.graph.config.defaultConnectionStyle = style
-        if style == "Linear":
+        styleValue = self.uiApplication.config.connectionStyles.get(style)
+        self.uiApplication.config.defaultConnectionStyle = style
+        if styleValue == "linear":
             for conn in self.connections:
                 conn.setAsLinearPath()
-        elif style == "Cubic":
+        elif styleValue == "cubic":
             for conn in self.connections:
                 conn.setAsCubicPath()
-        for conn in self.connections:
-            conn.setLineStyle(style)
+        else:
+            for conn in self.connections:
+                conn.setLineStyle(styleValue)
 
 
 class View(graphicsview.GraphicsView):
@@ -120,6 +121,7 @@ class View(graphicsview.GraphicsView):
     requestPaste = QtCore.Signal(object)
     nodeDoubleClicked = QtCore.Signal(object)
     panelWidgetDoubleClicked = QtCore.Signal(str)
+    requestNodeProperties = QtCore.Signal(object)
 
     def __init__(self, graph, model, parent=None, setAntialiasing=True):
         super(View, self).__init__(graph.config, parent, setAntialiasing)
@@ -157,15 +159,20 @@ class View(graphicsview.GraphicsView):
         item = items[0]
         modifiers = event.modifiers()
         button = event.buttons()
-
-        if button == QtCore.Qt.LeftButton and modifiers == QtCore.Qt.ControlModifier:
-            if isinstance(item, (graphicsnode.QBaseNode, graphpanels.Panel)):
-                self.nodeDoubleClicked.emit(item.model)
-            elif isinstance(item, plugwidget.PlugContainer):
-                self.nodeDoubleClicked.emit(item.model.objectModel)
-            elif isinstance(item.parentObject(), graphicsnode.QBaseNode):
-                item = item.parentObject()
-                self.nodeDoubleClicked.emit(item.model)
+        model = None
+        if isinstance(item, (graphicsnode.QBaseNode, graphpanels.Panel)):
+            model = item.model
+        elif isinstance(item, plugwidget.PlugContainer):
+            model = item.model
+        elif isinstance(item.parentObject(), graphicsnode.QBaseNode):
+            item = item.parentObject()
+            model = item.model
+        if model:
+            if button == QtCore.Qt.LeftButton:
+                if modifiers == QtCore.Qt.ControlModifier:
+                    self.requestNodeProperties.emit(model)
+                elif model.isCompound():
+                    self.nodeDoubleClicked.emit(model)
 
         super(View, self).mouseDoubleClickEvent(event)
 
@@ -261,9 +268,6 @@ class View(graphicsview.GraphicsView):
                                      leftCorner.y(),
                                      rect.width(),
                                      rect.height())
-        # force the heights
-        self.panelWidget.rightPanel.setMinimumHeight(rect.height())
-        self.panelWidget.leftPanel.setMinimumHeight(rect.height())
 
     def onTempConnectionRequested(self, plug, event):
         """Trigger when either the inCircle or outCircle is clicked, this method will handle setup of the connection

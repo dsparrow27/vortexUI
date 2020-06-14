@@ -40,9 +40,9 @@ class NodesBox(frame.QFrame):
     """doc string for NodesBox"""
     finished = QtCore.Signal()
 
-    def __init__(self, application, parent):
+    def __init__(self, graph, parent):
         super(NodesBox, self).__init__(parent)
-        self.application = application
+        self.graph = graph
         self.setObjectName("NodeLibrary")
         self.verticalLayout = elements.vBoxLayout(self)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -55,7 +55,7 @@ class NodesBox(frame.QFrame):
 
         self.resize(200, self.sizeHint().height())
         self.connections()
-        self.reload(self.application.config.registeredNodes(), "")
+        self.reload(self.graph.config.registeredNodes(), "")
 
     def connections(self):
         self.lineEdit.textChanged.connect(self.searchTextChanged)
@@ -73,7 +73,7 @@ class NodesBox(frame.QFrame):
     def searchTextChanged(self, text):
         if not self.lineEdit.text():
             self.lineEdit.setPlaceholderText("Enter node name..")
-        nodes = self.application.config.registeredNodes()
+        nodes = self.graph.config.registeredNodes()
         nodes["Group"] = "misc"
         self.reload(nodes, text)
 
@@ -89,11 +89,11 @@ class NodesBox(frame.QFrame):
     def onEnterPressed(self):
         currentText = self.nodeListWidget.currentItem().text()
         if currentText in self.graph.registeredNodes().keys():
-            self.application.graphNoteBook.currentPage().createNode(currentText)
+            self.graph.graphNoteBook.currentPage().createNode(currentText)
             self.finished.emit()
 
     def onDoubleClicked(self, item):
-        graphEditor = self.application.graphNoteBook.currentPage()
+        graphEditor = self.graph.graphNoteBook.currentPage()
         graphEditor.graph.createNode(item.text(), parent=graphEditor.model)
         self.finished.emit()
 

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class GraphNotebook(QtWidgets.QWidget):
-    def __init__(self,application, parent=None):
+    def __init__(self, application, parent=None):
         super(GraphNotebook, self).__init__(parent=parent)
         self.application = application
         application.graphNoteBook = self
@@ -28,16 +28,20 @@ class GraphNotebook(QtWidgets.QWidget):
         self.notebook.tabCloseRequested.connect(self.deletePage)
 
     def addPage(self, graph, objectModel):
-        editor = grapheditor.GraphEditor(self.application,  graph, objectModel, parent=self)
+        editor = grapheditor.GraphEditor(self.application, graph, objectModel, parent=self)
         editor.showPanels(True)
-        graph.nodeCreated.connect(editor.createNode)
+
         graph.graphLoaded.connect(self._onGraphLoad)
+        editor.requestCompoundExpansion.connect(self._onRequestCompound)
 
         self.pages.append(editor)
-        self.notebook.insertTab(0, editor, objectModel.text())
+        self.notebook.onAddTab(editor, objectModel.text())
         for child in objectModel.children():
             editor.createNode(child)
         return editor
+
+    def _onRequestCompound(self, objectModel):
+        self.addPage(self.application.graphType(self.application), objectModel)
 
     def setCurrentPageLabel(self, label):
         page = self.notebook.currentIndex()
@@ -58,7 +62,7 @@ class GraphNotebook(QtWidgets.QWidget):
         if self.notebook.currentIndex() in range(len(self.pages)):
             return self.pages[self.notebook.currentIndex()]
 
-    def _onGraphLoad(self, graph,  clear=False):
+    def _onGraphLoad(self, graph, clear=False):
         if clear:
             self.clear()
         self.addPage(graph, graph.rootNode())

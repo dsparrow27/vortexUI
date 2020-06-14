@@ -103,9 +103,10 @@ class NodeHeader(graphicitems.ItemContainer):
         self.setMaximumHeight(height)
 
         self._createLabels(text)
-        headerButton = NodeHeaderButton(size=12, colour=node.model.headerButtonColour(), parent=self)
-        headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
-        self.addItem(headerButton, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.headerButton = NodeHeaderButton(size=12, colour=node.model.headerButtonColour(), parent=self)
+        self.headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
+        self.addItem(self.headerButton, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.layout().insertStretch(-2, 1)
 
     def _createLabels(self, primary):
         self._titleWidget = graphicitems.GraphicsText(primary, parent=self)
@@ -132,22 +133,10 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setToolTip(self.model.toolTip())
 
-        self._resizerRect = QtCore.QRectF()
-        self._resizerSelected = False
-
     def init(self):
-        rect = self.boundingRect()
-        resizerSize = self.model.resizerSize()
-        self._resizerRect = QtCore.QRectF(rect.right() - resizerSize, rect.bottom() - resizerSize, resizerSize,
-                                          resizerSize)
-        self._resizerSelected = False
         self.setPos(QtCore.QPoint(*self.model.position()))
 
     def mousePressEvent(self, event):
-
-        if self._resizerRect.contains(event.pos()):
-            self._resizerSelected = True
-            return
         self.model.setSelected(True)
         super(QBaseNode, self).mousePressEvent(event)
 
@@ -157,11 +146,6 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
 
     def mouseMoveEvent(self, event):
         scene = self.scene()
-        if self._resizerSelected:
-            pos = event.pos()
-            self.resize(QtCore.QSizeF(pos.x(), pos.y()))
-            self.scene().updateAllConnections()
-            return
         items = scene.selectedNodes()
 
         for i in items:
@@ -170,30 +154,6 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
             i.model.setPosition((pos.x(), pos.y()))
 
         self.scene().updateAllConnections()
-
-    def mouseReleaseEvent(self, event):
-        self._resizerSelected = False
-
-        super(QBaseNode, self).mouseReleaseEvent(event)
-
-    def _drawResizer(self, painter, option, widget, rect):
-        if self.model.isSelected():
-            colour = self.model.selectedNodeColour()
-        else:
-            colour = self.model.backgroundColour()
-            colour = colour.lighter(150)
-
-        path = QtGui.QPainterPath()
-        resizerSize = self.model.resizerSize()
-        rect = QtCore.QRectF(rect.right() - resizerSize, rect.bottom() - resizerSize, resizerSize,
-                             resizerSize)
-        self._resizerRect = rect
-        path.moveTo(rect.topRight())
-        path.lineTo(rect.bottomRight())
-        path.lineTo(rect.bottomLeft())
-        painter.setBrush(colour)
-        painter.setPen(QtCore.Qt.NoPen)
-        painter.fillPath(path, painter.brush())
 
 
 class Pin(QBaseNode):
@@ -225,6 +185,8 @@ class Comment(QBaseNode):
         super(Comment, self).__init__(objectModel, parent)
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
+        self._resizerRect = QtCore.QRectF()
+        self._resizerSelected = False
         self.init()
 
     def init(self):
@@ -235,13 +197,57 @@ class Comment(QBaseNode):
                                  self.model.secondaryText(),
                                  icon=self.model.icon(),
                                  parent=self)
+        self.header.headerButton.hide()
         # self.header.headerTextChanged.connect(self.onHeaderTextChanged)
         # self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
-
         layout.addItem(self.header)
-
         self.setLayout(layout)
+
+        rect = self.boundingRect()
+        resizerSize = self.model.resizerSize()
+        self._resizerRect = QtCore.QRectF(rect.right() - resizerSize, rect.bottom() - resizerSize, resizerSize,
+                                          resizerSize)
+
         super(Comment, self).init()
+
+    def mousePressEvent(self, event):
+        if self._resizerRect.contains(event.pos()):
+            self._resizerSelected = True
+            return
+        super(Comment, self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self._resizerSelected = False
+
+        super(Comment, self).mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self._resizerSelected:
+            pos = event.pos()
+            center = self._resizerRect.center()
+            self.resize(QtCore.QSizeF(pos.x() + center.x(), pos.y() + center.y()))
+            self.scene().updateAllConnections()
+            return
+        super(Comment, self).mouseMoveEvent(event)
+
+    def _drawResizer(self, painter, option, widget, rect):
+        if self.model.isSelected():
+            colour = self.model.selectedNodeColour()
+        else:
+            colour = self.model.backgroundColour()
+            colour = colour.lighter(150)
+
+        path = QtGui.QPainterPath()
+        resizerSize = self.model.resizerSize()
+        rect = QtCore.QRectF(rect.right() - resizerSize, rect.bottom() - resizerSize, resizerSize,
+                             resizerSize)
+        self._resizerRect = rect
+        path.moveTo(rect.topRight())
+        path.lineTo(rect.bottomRight())
+        path.lineTo(rect.bottomLeft())
+        painter.setBrush(colour)
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.fillPath(path, painter.brush())
 
     def paint(self, painter, option, widget):
         # main rounded rect
@@ -312,6 +318,8 @@ class GraphicsNode(QBaseNode):
 
         self.header.headerTextChanged.connect(self.onHeaderTextChanged)
         self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
+        self.header.headerButton.hide()
+
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
 
@@ -334,9 +342,10 @@ class GraphicsNode(QBaseNode):
         self.model.setText(text)
 
     def onHeaderButtonStateChanged(self, state):
-        self.attributeContainer.clear()
-        for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=state):
-            self.addAttribute(attr)
+        pass
+        # self.attributeContainer.clear()
+        # for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=state):
+        #     self.addAttribute(attr)
 
     def setAttributeName(self, attribute, name):
         attr = self.attributeItem(attribute)
@@ -347,12 +356,7 @@ class GraphicsNode(QBaseNode):
         container = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
         if attribute.isInput():
             index = container.layout().count() - 2
-
-            if attribute.isArray() or attribute.isCompound():
-                container.inCrossItem.show()
         else:
-            if attribute.isArray() or attribute.isCompound():
-                container.outCrossItem.show()
             index = 2
         container.layout().insertStretch(index, 1)
         self.attributeContainer.addItem(container)

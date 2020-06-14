@@ -17,7 +17,6 @@ class Plug(QtWidgets.QGraphicsWidget):
         self.ioType = ioType
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
-        self.setWindowFrameMargins(0, 0, 0, 0)
         self._defaultPen = QtGui.QPen(edgeColour, 2.5)
         self._hoverPen = QtGui.QPen(highlightColour, 3.0)
         self._defaultBrush = QtGui.QBrush(colour)
@@ -165,14 +164,21 @@ class PlugContainer(graphicitems.ItemContainer):
         self.outCircle.setToolTip(attributeModel.toolTip())
 
         self.label = graphicitems.GraphicsText(self.model.text(), parent=self)
-        self.label.text.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
+        self.label.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         self.label.colour = attributeModel.textColour()
         self.label.allowHoverHighlight = True
 
         if not attributeModel.isOutput():
             self.outCircle.hide()
+        else:
+            if attributeModel.isArray() or attributeModel.isCompound():
+                self.outCrossItem.show()
         if not attributeModel.isInput():
             self.inCircle.hide()
+        else:
+            if attributeModel.isArray() or attributeModel.isCompound():
+                self.inCrossItem.show()
+
         self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.addItem(self.label, attributeModel.textAlignment())
@@ -254,5 +260,6 @@ class PlugContainer(graphicitems.ItemContainer):
 
 def removeChildContainers(plugContainer, parentContainer):
     for container in plugContainer.childContainers:
+        removeChildContainers(container, parentContainer)
         parentContainer.removeItem(container)
     plugContainer.childContainers = []

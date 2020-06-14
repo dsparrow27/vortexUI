@@ -12,7 +12,6 @@ import os
 
 
 import logging
-import sys
 import pprint
 
 from Qt import QtGui, QtWidgets, QtCore
@@ -351,6 +350,7 @@ class AttributeModel(vortexApi.AttributeModel):
         return False
 
     def createConnection(self, attribute):
+
         if self.canAcceptConnection(attribute):
             self.internalAttr.setdefault("connections", []).append((self, attribute))
             return True
@@ -361,7 +361,7 @@ class AttributeModel(vortexApi.AttributeModel):
         newConnections = []
         changed = False
         for s_, source in connections:
-            if source != attribute:
+            if source == attribute:
                 newConnections.append((self, source))
                 changed = True
         self.internalAttr["connections"] = newConnections

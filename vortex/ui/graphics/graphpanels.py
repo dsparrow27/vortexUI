@@ -32,20 +32,17 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
 class Panel(QtWidgets.QGraphicsWidget):
     doubleClicked = QtCore.Signal(str)
 
-    color = QtGui.QColor(0.0, 0.0, 0.0, 125)
+    color = QtGui.QColor(0.0, 255, 0.0, 125)
 
     def __init__(self, objectModel, ioType, acceptsContextMenu=False, parent=None):
         super(Panel, self).__init__(parent=parent)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.acceptsContextMenu = acceptsContextMenu
+        self.setAcceptDrops(True)
         self.setZValue(100)
         self.model = objectModel
         self.ioType = ioType
-        layout = elements.vGraphicsLinearLayout(parent=self)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
-        layout.addItem(self.attributeContainer)
-
-        self.setLayout(layout)
         self.refresh()
 
     def refresh(self):
@@ -64,40 +61,42 @@ class Panel(QtWidgets.QGraphicsWidget):
         if event.button() == QtCore.Qt.RightButton and self.acceptsContextMenu:
             self._contextMenu(QtGui.QCursor.pos())
             return
+        print("click")
         super(Panel, self).mousePressEvent(event)
+
+    def dropEvent(self, event):
+        print("drop")
+        super(Panel, self).dropEvent(event)
 
     def addAttribute(self, attribute):
         plug = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
         layout = plug.layout()
-        if attribute.isInput() and self.ioType == "Input":
-            if attribute.isArray() or attribute.isCompound():
-                plug.inCrossItem.show()
-            plug.inCircle.show()
-            plug.outCircle.hide()
-            #     # insert the inCircle to the far right
-            layout.insertItem(3, plug.inCircle)
-            layout.insertItem(2, plug.inCrossItem)
-            # we switch this around for panels because the model input would be connected to another input
-            # making it difficult to which is the start point and end point of a connection
-            plug.inCircle.ioType = "Output"
-            layout.insertStretch(2, 1)
-        else:
-            if attribute.isArray() or attribute.isCompound():
-                plug.outCrossItem.show()
-            plug.outCircle.show()
-            plug.inCircle.hide()
-            #     # insert the outCircle to the far left
-            layout.insertItem(0, plug.outCircle)
-            layout.insertItem(1, plug.outCrossItem)
-            layout.itemAt(layout.count() - 1)
-            plug.inCircle.ioType = "Input"
-            plug.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        # if attribute.isInput() and self.ioType == "Input":
+
+        # plug.inCircle.show()
+        # plug.outCircle.hide()
+        #     # insert the inCircle to the far right
+        # layout.insertItem(3, plug.inCircle)
+        # layout.insertItem(2, plug.inCrossItem)
+        # we switch this around for panels because the model input would be connected to another input
+        # making it difficult to which is the start point and end point of a connection
+        # plug.inCircle.ioType = "Output"
+        # layout.insertStretch(2, 1)
+        # else:
+        # plug.outCircle.show()
+        # plug.inCircle.hide()
+        # #     # insert the outCircle to the far left
+        # layout.insertItem(0, plug.outCircle)
+        # layout.insertItem(1, plug.outCrossItem)
+        # layout.itemAt(layout.count() - 1)
+        # plug.inCircle.ioType = "Input"
+        # plug.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
 
         # swap the layout alignment
-        plug.setInputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        plug.layout().setAlignment(plug.inCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        plug.layout().setAlignment(plug.outCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        plug.setOutputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        # plug.setInputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        # plug.layout().setAlignment(plug.inCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        # plug.layout().setAlignment(plug.outCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        # plug.setOutputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.attributeContainer.addItem(plug)
 
     def attributeItem(self, attributeModel):
@@ -106,9 +105,8 @@ class Panel(QtWidgets.QGraphicsWidget):
                 return attr
 
     def paint(self, painter, option, widget):
-        rect = self.windowFrameRect()
+        rect = self.boundingRect()
         painter.fillRect(rect, self.color)
-        painter.setPen(QtGui.QPen(self.color, 3))
         super(Panel, self).paint(painter, option, widget)
 
     def _contextMenu(self, pos):

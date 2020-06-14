@@ -8,8 +8,8 @@ connectionStyle = {"SolidLine": QtCore.Qt.SolidLine,
                    "DotLine": QtCore.Qt.DotLine,
                    "DashDotLine": QtCore.Qt.DashDotLine,
                    "DashDotDotLine": QtCore.Qt.DashDotDotLine,
-                   "linear": 1,
-                   "cubic": 0}
+                   "linear": "linear",
+                   "cubic": "cubic"}
 
 
 class VortexConfig(graphviewconfig.Config):

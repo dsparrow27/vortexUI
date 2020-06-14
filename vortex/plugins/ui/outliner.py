@@ -21,7 +21,7 @@ class Outliner(QtWidgets.QFrame):
         layout = elements.vBoxLayout(self)
         self.tree = QtWidgets.QTreeWidget(parent=self)
         layout.addWidget(self.tree)
-        # self.initUi(tree)
+        #self.newNode(application.graphNoteBook.currentPage().model)
         # self.application.onSelectionChanged.connect(self.onSceneSelection)
         # self.application.onNodeDeleteRequested.connect(self.removeNode)
         # self.application.onNewNodeRequested.connect(self.newNode)
