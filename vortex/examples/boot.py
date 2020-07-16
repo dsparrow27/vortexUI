@@ -15,7 +15,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     from zoo.libs.pyqt import stylesheet
     stylesheet.loadDefaultFonts()
-    stylesheet.loadDefaultFonts()
 
     uiConfig = datamodel.Config()
     vortexApp = vortexApi.UIApplication(uiConfig)

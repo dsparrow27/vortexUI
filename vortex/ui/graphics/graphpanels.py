@@ -32,7 +32,7 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
 class Panel(QtWidgets.QGraphicsWidget):
     doubleClicked = QtCore.Signal(str)
 
-    color = QtGui.QColor(0.0, 255, 0.0, 125)
+    color = QtGui.QColor(20, 20, 20, 125)
 
     def __init__(self, objectModel, ioType, acceptsContextMenu=False, parent=None):
         super(Panel, self).__init__(parent=parent)
