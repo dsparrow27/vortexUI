@@ -161,7 +161,7 @@ class ScriptEditor(QtWidgets.QWidget):
 class Root(datasources.BaseDataSource):
     def __init__(self, attribute, *args, **kwargs):
         super(Root, self).__init__(*args, **kwargs)
-        self.headers = list(attribute.defaultFields.keys())
+        self.headers = list(attributemodel.AttributeModel.defaultFields.keys())
         self.attribute = attribute
 
     def data(self, index):

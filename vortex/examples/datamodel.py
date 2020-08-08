@@ -29,9 +29,10 @@ class Graph(vortexApi.GraphModel):
     def rootNode(self):
         return self._rootNode
 
-    def saveGraph(self, model, filePath=None):
+    def saveGraph(self,  filePath=None):
+        model = self.rootNode()
         pprint.pprint(model.serialize())
-        filePath = os.path.expanduser("~/vortexGraph/example.vgrh")
+        filePath = os.path.expanduser(filePath)
         filesystem.ensureFolderExists(os.path.dirname(filePath))
         filesystem.saveJson(model.serialize(), filePath)
         self.graphSaved.emit(filePath)
@@ -243,9 +244,16 @@ class NodeModel(vortexApi.ObjectModel):
             conns = attr.internalAttr.get("connections", [])
             for currentNodeAttr, source in conns:
                 connections.append((source.fullPathName(), currentNodeAttr.fullPathName()))
+        children = []
+        for child in self._children:
+            childInfo = child.serialize()
+            connections.extend(childInfo["connections"])
+            children.append(childInfo)
+            if self.isCompound():
+                del childInfo["connections"]
         return {"data": self._data,
                 "attributes": [attr.serialize() for attr in self._attributes],
-                "children": [child.serialize() for child in self._children],
+                "children": children,
                 "connections": connections
                 }
 

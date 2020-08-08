@@ -15,7 +15,8 @@ class ApplicationWindow(elements.FramelessWindow):
                                                 alwaysShowAllTitle)
         layout = elements.vBoxLayout()
         self.setMainLayout(layout)
-        layout.addWidget(VortexApplicationWindow(application))
+        self.win = VortexApplicationWindow(application, parent=self)
+        layout.addWidget(self.win)
 
         fileMenu = elements.IconMenuButton(iconlib.icon("magic", size=32))
 
@@ -30,14 +31,14 @@ class ApplicationWindow(elements.FramelessWindow):
     def onSave(self):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent=self, caption="Select Graph")
         if fname:
-            graphEditor = self.noteBook.currentPage()
+            graphEditor = self.win.noteBook.currentPage()
             if graphEditor is not None:
                 graphEditor.graph.saveGraph(fname)
 
     def onLoad(self):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(parent=self, caption="Select Graph")
         if fname:
-            self.uiApplication.createGraphFromPath(fname)
+            self.win.uiApplication.createGraphFromPath(fname)
 
 
 class VortexApplicationWindow(mainwindow.MainWindow):
