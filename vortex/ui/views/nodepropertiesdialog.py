@@ -6,7 +6,7 @@ from zoo.libs.pyqt.extended import tabwidget
 from zoo.libs.pyqt.extended import treeviewplus
 from zoo.libs.pyqt.extended import pythoneditor
 from zoo.libs.pyqt.models import treemodel, datasources
-from vortex import api
+from vortex.ui.model import attributemodel
 
 
 class NodePropertiesDialog(dialog.Dialog):
@@ -131,7 +131,7 @@ class AttributeEditorWidget(QtWidgets.QWidget):
         removeAttrBtn.clicked.connect(self.onRemove)
 
     def onCreate(self):
-        attr = Root(deepcopy(api.AttributeModel.defaultFields))
+        attr = Root(deepcopy(attributemodel.AttributeModel.defaultFields))
         self.treeModel.root.addChild(attr)
         self.treeModel.reload()
 
@@ -161,7 +161,7 @@ class ScriptEditor(QtWidgets.QWidget):
 class Root(datasources.BaseDataSource):
     def __init__(self, attribute, *args, **kwargs):
         super(Root, self).__init__(*args, **kwargs)
-        self.headers = list(api.AttributeModel.defaultFields.keys())
+        self.headers = list(attribute.defaultFields.keys())
         self.attribute = attribute
 
     def data(self, index):
