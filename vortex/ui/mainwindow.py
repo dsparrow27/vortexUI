@@ -20,8 +20,8 @@ class ApplicationWindow(elements.FramelessWindow):
         fileMenu = elements.IconMenuButton(iconlib.icon("magic", size=32))
 
         self.titlebarContentsLayout().addWidget(fileMenu)
-        self.loadAction = fileMenu.addAction("Load", connect=self.onSave)
-        self.saveAction = fileMenu.addAction("Save", connect=self.onLoad)
+        self.loadAction = fileMenu.addAction("Load", connect=self.onLoad)
+        self.saveAction = fileMenu.addAction("Save", connect=self.onSave)
         self.exitAction = fileMenu.addAction("Close", icon=iconlib.icon("close"))
         self.exitAction.setShortcut("ctrl+Q")
         self.exitAction.setToolTip("Closes application")
