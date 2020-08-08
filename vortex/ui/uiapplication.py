@@ -5,13 +5,20 @@ from zoo.libs.plugin import pluginmanager
 from vortex.ui import plugin
 
 
+class ApplicationEvents(QtCore.QObject):
+    selectionChanged = QtCore.Signal()
+    nodeDeleteRequested = QtCore.Signal(object)
+
+
 class UIApplication(QtCore.QObject):
+
     def __init__(self, uiConfig):
         self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin, variableName="id")
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
         self.graphNoteBook = None
         self.config = uiConfig
         self.graphType = None
+        self.events = ApplicationEvents()
 
     def mainWindow(self):
         for wid in QtWidgets.QApplication.topLevelWidgets():

@@ -49,7 +49,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.editorLayout.addWidget(self.toolbar)
         # constructor view and set scene
         self.scene = graph.Scene(self.graph, parent=self)
-        # self.scene.selectionChanged.connect(self.graph.onSelectionChanged.emit)
+        self.scene.selectionChanged.connect(self.application.events.selectionChanged.emit)
         self.view = graph.View(self.graph, self.model, parent=self)
         self.view.setScene(self.scene)
         self.view.contextMenuRequest.connect(self._onViewContextMenu)

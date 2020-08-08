@@ -13,7 +13,7 @@ class Scene(graphicsscene.GraphicsScene):
     def __init__(self, graph, *args, **kwargs):
         super(Scene, self).__init__(*args, **kwargs)
         self.selectionChanged.connect(self._onSelectionChanged)
-        self.uiApplication = graph
+        self.graph = graph
         self.nodes = {}
         self.panelWidget = None
         self.connections = set()
@@ -62,10 +62,10 @@ class Scene(graphicsscene.GraphicsScene):
 
     def createConnection(self, source, destination):
         newConnection = graphicitems.ConnectionEdge(source, destination,
-                                                    curveType=self.uiApplication.config.defaultConnectionShape,
+                                                    curveType=self.graph.config.defaultConnectionShape,
                                                     colour=source.colour)
-        newConnection.setLineStyle(self.uiApplication.config.defaultConnectionStyle)
-        newConnection.setWidth(self.uiApplication.config.connectionLineWidth)
+        newConnection.setLineStyle(self.graph.config.defaultConnectionStyle)
+        newConnection.setWidth(self.graph.config.connectionLineWidth)
         newConnection.setZValue(-1)
         self.addItem(newConnection)
         self.connections.add(newConnection)
@@ -95,19 +95,19 @@ class Scene(graphicsscene.GraphicsScene):
                     self.deleteConnection(sel)
                 continue
             elif isinstance(sel, graphnodes.QBaseNode):
+                self.graph.application.events.nodeDeleteRequested.emit(sel.model)
                 deleted = sel.model.delete()
                 del self.nodes[hash(sel.model)]
-            elif isinstance(sel, graphbackdrop.BackDrop):
-                deleted = self.deleteBackDrop(sel)
             else:
                 continue
             if deleted:
+
                 self.removeItem(sel)
 
     def onSetConnectionStyle(self):
         style = self.sender().text()
-        styleValue = self.uiApplication.config.connectionStyles.get(style)
-        self.uiApplication.config.defaultConnectionStyle = style
+        styleValue = self.graph.config.connectionStyles.get(style)
+        self.graph.config.defaultConnectionStyle = style
         if styleValue == "linear":
             for conn in self.connections:
                 conn.setAsLinearPath()

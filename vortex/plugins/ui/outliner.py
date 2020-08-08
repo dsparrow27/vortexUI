@@ -16,12 +16,12 @@ class OutlinerPlugin(api.UIPlugin):
 class Outliner(QtWidgets.QFrame):
     def __init__(self, application, parent=None):
         super(Outliner, self).__init__(parent)
-        self.graph = application
+        self.application = application
         self.setObjectName("Outliner")
         layout = elements.vBoxLayout(self)
         self.tree = QtWidgets.QTreeWidget(parent=self)
         layout.addWidget(self.tree)
-        #self.newNode(application.graphNoteBook.currentPage().model)
+        # self.newNode(application.graphNoteBook.currentPage().model)
         # self.application.onSelectionChanged.connect(self.onSceneSelection)
         # self.application.onNodeDeleteRequested.connect(self.removeNode)
         # self.application.onNewNodeRequested.connect(self.newNode)

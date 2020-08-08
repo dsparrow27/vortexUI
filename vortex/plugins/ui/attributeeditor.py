@@ -24,24 +24,17 @@ class AttributeEditor(groupedtreewidget.GroupedTreeWidget):
         self.application = application
         self.setObjectName("AttributeEditor")
         self.nodes = {}
-        # self.application.events.onSelectionChanged.connect(self.onSceneSelection)
-        # self.application.onSelectionChanged.connect(self.onSceneSelection)
-        # self.application.events.onNodeDeleted.connect(self.removeNode)
-        # self.application.onNodeDeleteRequested.connect(self.removeNode)
-        # self.graph.setShortcutForWidget(self, "AttributeEditor")
+        self.application.events.selectionChanged.connect(self.onSceneSelection)
+        self.application.events.nodeDeleteRequested.connect(self.removeNode)
 
-    def onSceneSelection(self, *args):
-        for i in self.application.notebook.currentPage().scene.selectedNodes():
+    def onSceneSelection(self):
+        for i in self.application.graphNoteBook.currentPage().scene.selectedNodes():
             self.addNode(i.model)
-        # if state:
-        #     self.addNode(selection)
-        # else:
-        #     self.removeNode(selection)
 
     def addNode(self, objectModel):
         exists = self.nodes.get(objectModel)
         if exists:
-            exists.setVisible(True)
+            exists.setHidden(False)
             return
         wid = NodeItem(objectModel.text(), parent=self)
         wid.setObjectModel(objectModel)
