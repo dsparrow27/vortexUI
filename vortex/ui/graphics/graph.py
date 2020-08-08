@@ -2,7 +2,9 @@ from Qt import QtWidgets, QtCore, QtGui
 
 from zoo.libs.pyqt.widgets.graphics import graphicsview
 from zoo.libs.pyqt.widgets.graphics import graphicsscene
-from vortex.ui.graphics import graphpanels, graphicsnode, plugwidget
+from vortex.ui.graphics import plugwidget
+from vortex.ui.graphics import graphnodes
+
 
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop, graphicitems
 
@@ -32,16 +34,17 @@ class Scene(graphicsscene.GraphicsScene):
 
     def createNode(self, model):
         if model.isPin():
-            graphNode = graphicsnode.Pin(model)
+            graphNode = graphnodes.Pin(model)
         elif model.isComment():
-            graphNode = graphicsnode.Comment(model)
+            graphNode = graphnodes.Comment(model)
         elif model.isBackdrop():
-            graphNode = graphicsnode.Backdrop(model)
+            graphNode = graphnodes.Backdrop(model)
         else:
-            graphNode = graphicsnode.GraphicsNode(model)
+            graphNode = graphnodes.GraphicsNode(model)
         self.addItem(graphNode)
         self.nodes[hash(model)] = {"qitem": graphNode,
                                    "model": model}
+        return graphNode
 
     def updateAllConnections(self):
         for connection in self.connections:
@@ -91,7 +94,7 @@ class Scene(graphicsscene.GraphicsScene):
                 if sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model):
                     self.deleteConnection(sel)
                 continue
-            elif isinstance(sel, graphicsnode.QBaseNode):
+            elif isinstance(sel, graphnodes.QBaseNode):
                 deleted = sel.model.delete()
                 del self.nodes[hash(sel.model)]
             elif isinstance(sel, graphbackdrop.BackDrop):
@@ -134,25 +137,10 @@ class View(graphicsview.GraphicsView):
         self.updateRequested.connect(self.rescaleGraphWidget)
         self.application.setShortcutForWidget(self, "nodeEditor")
 
-    def showPanels(self, state):
-        if state:
-            self.panelWidget = graphpanels.PanelWidget(self.model, acceptsContextMenu=True)
-            self.panelWidget.leftPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
-            self.panelWidget.rightPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
-            self.scene().panelWidget = self.panelWidget
-            self.scene().addItem(self.panelWidget)
-            size = self.size()
-            self.setSceneRect(0, 0, size.width(), size.height())
-
-    def resizeEvent(self, event):
-        super(View, self).resizeEvent(event)
-        self.rescaleGraphWidget()
-
     def mouseDoubleClickEvent(self, event):
         # ignore any graphicsitems we don't care about, ie. containers
         items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                          graphpanels.PanelWidget,
-                                                                          graphicsnode.NodeHeader))]
+                                                                          graphnodes.NodeHeader))]
         if not items:
             super(View, self).mouseDoubleClickEvent(event)
             return
@@ -160,11 +148,11 @@ class View(graphicsview.GraphicsView):
         modifiers = event.modifiers()
         button = event.buttons()
         model = None
-        if isinstance(item, (graphicsnode.QBaseNode, graphpanels.Panel)):
+        if isinstance(item, (graphnodes.QBaseNode, )):
             model = item.model
         elif isinstance(item, plugwidget.PlugContainer):
             model = item.model
-        elif isinstance(item.parentObject(), graphicsnode.QBaseNode):
+        elif isinstance(item.parentObject(), graphnodes.QBaseNode):
             item = item.parentObject()
             model = item.model
         if model:
@@ -192,8 +180,7 @@ class View(graphicsview.GraphicsView):
         self.previousMousePos = event.pos()
         # ignore any graphicsitems we don't care about, ie. containers
         items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                          graphpanels.PanelWidget,
-                                                                          graphicsnode.NodeHeader))]
+                                                                          graphnodes.NodeHeader))]
         if button == QtCore.Qt.LeftButton:
             if items:
                 item = items[0]
@@ -230,8 +217,7 @@ class View(graphicsview.GraphicsView):
             self._interactiveEdge = None
             # ignore any graphicsitems we don't care about, ie. containers
             items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                              graphpanels.PanelWidget,
-                                                                              graphicsnode.NodeHeader))]
+                                                                              graphnodes.NodeHeader))]
             if items:
                 item = items[0]
                 if isinstance(item, plugwidget.Plug):
@@ -264,10 +250,11 @@ class View(graphicsview.GraphicsView):
 
         rect = self.viewport().rect()
         leftCorner = self.mapToScene(0, 0).toPoint()
+        sceneRect = self.mapToScene(rect).boundingRect()
         self.panelWidget.setGeometry(leftCorner.x(),
                                      leftCorner.y(),
-                                     rect.width(),
-                                     rect.height())
+                                     sceneRect.width(),
+                                     sceneRect.height())
 
     def onTempConnectionRequested(self, plug, event):
         """Trigger when either the inCircle or outCircle is clicked, this method will handle setup of the connection
@@ -302,5 +289,4 @@ class View(graphicsview.GraphicsView):
 
     def itemsFromPos(self, pos):
         return [i for i in self.items(pos) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                 graphpanels.PanelWidget,
-                                                                 graphicsnode.NodeHeader))]
+                                                                 graphnodes.NodeHeader))]

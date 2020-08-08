@@ -10,7 +10,6 @@ graph
 """
 import os
 
-
 import logging
 import pprint
 
@@ -197,12 +196,30 @@ class NodeModel(vortexApi.ObjectModel):
     def setPosition(self, position):
         self._data["position"] = position
 
+    def width(self):
+        return self._data.get("width", self.minimumWidth())
+
+    def setWidth(self, width):
+        self._data["width"] = width
+
+    def height(self):
+        return self._data.get("height", self.minimumHeight())
+
+    def setHeight(self, height):
+        self._data["height"] = height
+
     # colors
     def backgroundColour(self):
         return QtGui.QColor(*self._data.get("backgroundColour", (40, 40, 40, 255)))
 
+    def setBackgroundColour(self, colour):
+        self._data["backgroundColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+
     def headerColour(self):
         return QtGui.QColor(*self._data.get("headerColour", (71, 115, 149, 255)))
+
+    def setHeaderColour(self, colour):
+        self._data["headerColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
 
     def edgeColour(self):
         return QtGui.QColor(*self._data.get("edgeColour", (0.0, 0.0, 0.0, 255)))
@@ -402,5 +419,3 @@ class Config(vortexApi.VortexConfig):
                 "command": "applications",
                 "pin": "organization",
                 "backdrop": "organization"}
-
-

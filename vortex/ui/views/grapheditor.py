@@ -8,7 +8,7 @@ from functools import partial
 from Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets import elements
 from vortex.ui import utils
-from vortex.ui.graphics import graphpanels, graphicsnode, graph
+from vortex.ui.graphics import graphnodes, graph
 from vortex.ui.views import nodepropertiesdialog
 
 logger = logging.getLogger(__name__)
@@ -39,9 +39,6 @@ class GraphEditor(QtWidgets.QWidget):
     def showNodeLibrary(self, point):
         self.nodeLibraryWidget.initUI(dock=False)
         self.nodeLibraryWidget.widget.move(self.mapFromGlobal(point))
-
-    def showPanels(self, state):
-        self.view.showPanels(state)
 
     def init(self):
         self.editorLayout = elements.vBoxLayout(parent=self)
@@ -86,9 +83,9 @@ class GraphEditor(QtWidgets.QWidget):
         items = self.view.itemsFromPos(pos)
         if items:
             item = items[0]
-            if isinstance(item, (graphicsnode.QBaseNode, graphpanels.Panel)) and item.model.supportsContextMenu():
+            if isinstance(item, (graphnodes.QBaseNode,)) and item.model.supportsContextMenu():
                 item.model.contextMenu(menu)
-            elif isinstance(item.parentObject(), (graphicsnode.QBaseNode, graphpanels.Panel)):
+            elif isinstance(item.parentObject(), (graphnodes.QBaseNode, )):
                 model = item.parentObject().model
                 if model.supportsContextMenu():
                     model.contextMenu(menu)

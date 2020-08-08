@@ -61,7 +61,8 @@ class NodePropertiesWidget(QtWidgets.QWidget):
         self.objectModel = objectModel
         self.newData = {"Text": "",
                         "Description": "",
-                        "BackgroundColour": None}
+                        "BackgroundColour": None,
+                        "HeaderColour": None}
         self.initUI()
 
     def initUI(self):
@@ -72,18 +73,30 @@ class NodePropertiesWidget(QtWidgets.QWidget):
                                             enableMenu=False,
                                             parent=self)
         color = self.objectModel.backgroundColour()
+        headerColor = self.objectModel.headerColour()
         self.colorBtn = elements.LabelColorBtn(label="Colour:",
                                                initialRgbColor=(color.red(), color.green(), color.blue()),
                                                parent=self)
-
+        self.colorBtn.colorChanged.connect(self.colourChanged)
+        self.headerColorBtn = elements.LabelColorBtn(label="Header Colour:",
+                                                     initialRgbColor=(headerColor.red(), headerColor.green(), headerColor.blue()),
+                                                     parent=self)
+        self.headerColorBtn.colorChanged.connect(self.headerColourChanged)
         self.description = elements.TextEdit(text=self.objectModel.toolTip(),
                                              parent=self)
         self.mainLayout.addWidget(self.nameEdit)
         self.mainLayout.addWidget(self.colorBtn)
+        self.mainLayout.addWidget(self.headerColorBtn)
         self.mainLayout.addWidget(elements.Label(text="Description:",
                                                  parent=self, enableMenu=False))
         self.mainLayout.addWidget(self.description)
         self.nameEdit.textChanged.connect(self.onSetName)
+
+    def colourChanged(self, colour):
+        self.newData["BackgroundColour"] = colour
+
+    def headerColourChanged(self, colour):
+        self.newData["HeaderColour"] = colour
 
     def onSetName(self, name):
         if name:

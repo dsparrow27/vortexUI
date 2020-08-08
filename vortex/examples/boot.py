@@ -20,7 +20,7 @@ if __name__ == "__main__":
     vortexApp = vortexApi.UIApplication(uiConfig)
     ui = vortexApi.ApplicationWindow(vortexApp)
     vortexApp.registerGraphType(datamodel.Graph)
-    vortexApp.createGraphFromPath(os.path.join(os.environ["VORTEX"], "vortex/examples/example.vgrh"))
+    # vortexApp.createGraphFromPath(os.path.join(os.environ["VORTEX"], "vortex/examples/example.vgrh"))
 
     # logger.debug("Completed boot process")
 

@@ -10,7 +10,7 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
 
     def __init__(self, model, acceptsContextMenu=True, parent=None):
         super(PanelWidget, self).__init__(parent=parent)
-        self.setFlags(self.ItemIgnoresTransformations)
+        # self.setFlags(self.ItemIgnoresTransformations)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         self.setZValue(1)
         self.model = model
@@ -50,10 +50,10 @@ class Panel(QtWidgets.QGraphicsWidget):
         if currentModel is None:
             return
         self.attributeContainer.clear()
-        for attr in currentModel.attributes(self.ioType == "Input", self.ioType == "Output",
+        for attr in currentModel.attributes(True, True,
                                             3):
             self.addAttribute(attr)
-
+    #
     def mouseDoubleClickEvent(self, event):
         self.doubleClicked.emit(self.ioType)
 
@@ -67,10 +67,12 @@ class Panel(QtWidgets.QGraphicsWidget):
     def dropEvent(self, event):
         print("drop")
         super(Panel, self).dropEvent(event)
-
+    def wheelEvent(self, event):
+        event.accept()
+        super(Panel, self).wheelEvent(event)
     def addAttribute(self, attribute):
-        plug = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
-        layout = plug.layout()
+        plug = plugwidget.PlugContainer(attribute, parent=self)
+        # layout = plug.layout()
         # if attribute.isInput() and self.ioType == "Input":
 
         # plug.inCircle.show()

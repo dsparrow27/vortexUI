@@ -34,6 +34,4 @@ class ApplicationWindow(mainwindow.MainWindow):
     def onLoad(self):
         fname, _ = QtWidgets.QFileDialog.getOpenFileName(parent=self, caption="Select Graph")
         if fname:
-            graphEditor = self.noteBook.currentPage()
-            if graphEditor is not None:
-                graphEditor.graph.loadGraph(fname)
+            self.uiApplication.createGraphFromPath(fname)

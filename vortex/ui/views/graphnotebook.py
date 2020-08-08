@@ -29,7 +29,7 @@ class GraphNotebook(QtWidgets.QWidget):
 
     def addPage(self, graph, objectModel):
         editor = grapheditor.GraphEditor(self.application, graph, objectModel, parent=self)
-        editor.showPanels(True)
+        # editor.showPanels(True)
 
         graph.graphLoaded.connect(self._onGraphLoad)
         editor.requestCompoundExpansion.connect(self._onRequestCompound)

@@ -34,6 +34,7 @@ class ObjectModel(QtCore.QObject):
     #
     # # connected by the GraphicsNode
     sigNodeNameChanged = QtCore.Signal(str)  # objectModel
+
     # attributeNameChangedSig = QtCore.Signal(object)  # attributeModel
     # parentChangedSig = QtCore.Signal(object, object)  # childObjectModel, parentObjectModel
     # progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
@@ -223,12 +224,30 @@ class ObjectModel(QtCore.QObject):
     def setPosition(self, position):
         pass
 
+    def width(self):
+        return self.minimumWidth()
+
+    def setWidth(self, width):
+        pass
+
+    def height(self):
+        return self.minimumHeight()
+
+    def setHeight(self, height):
+        pass
+
     # colours
     def backgroundColour(self):
         return QtGui.QColor(50, 50, 50, 225)
 
+    def setBackgroundColour(self, colour):
+        pass
+
     def headerColour(self):
         return QtGui.QColor("#4A71AB")
+
+    def setHeaderColour(self, colour):
+        pass
 
     def headerButtonColour(self):
         return QtGui.QColor(255, 255, 255)
