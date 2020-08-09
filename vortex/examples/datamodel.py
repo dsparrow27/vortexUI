@@ -58,7 +58,7 @@ class Graph(vortexApi.GraphModel):
     def createNode(self, nodeType, parent=None):
         registeredNodes = self.config.registeredNodes()
         if nodeType in registeredNodes:
-            nodeInfo = {"data": {"label": nodeType,
+            nodeInfo = {"properties": {"label": nodeType,
                                  "category": "misc",
                                  "secondaryLabel": "bob",
                                  "script": "", "commands": [],
@@ -71,16 +71,16 @@ class Graph(vortexApi.GraphModel):
             self.application.events.modelNodesCreated.emit(nodes)
 
     def createNodeFromInfo(self, info, parent=None):
-        data = dict(data=info["data"],
+        data = dict(properties=info["properties"],
                     attributes=info.get("attributes", []))
         connections = info.get("connections", [])
         parent = NodeModel(self.config, parent=parent, **data)
         createdNodes = [parent]
-        remappedNodes = {data["data"]["label"]: parent}
+        remappedNodes = {data["properties"]["label"]: parent}
         for child in info.get("children", []):
             childModel = NodeModel(self.config, parent=parent, **child)
             createdNodes.append(childModel)
-            name = child["data"].get("label")
+            name = child["properties"].get("label")
             remappedNodes[name] = childModel
 
         # handle connections
@@ -100,7 +100,7 @@ class Graph(vortexApi.GraphModel):
 class NodeModel(vortexApi.ObjectModel):
     def __init__(self, config, parent=None, **kwargs):
         super(NodeModel, self).__init__(config, parent)
-        self.properties = kwargs.get("data", {})
+        self.properties = kwargs.get("properties", {})
         for attr in kwargs.get("attributes", []):
             self.createAttribute(attr)
 
@@ -112,7 +112,7 @@ class NodeModel(vortexApi.ObjectModel):
     def serialize(self):
         connections = []
         for attr in self._attributes:
-            conns = attr.self.properties.get("connections", [])
+            conns = attr.properties.get("connections", [])
             for currentNodeAttr, source in conns:
                 connections.append((source.fullPathName(), currentNodeAttr.fullPathName()))
         children = []
