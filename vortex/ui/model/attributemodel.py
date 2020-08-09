@@ -23,6 +23,15 @@ class AttributeModel(QtCore.QObject):
         super(AttributeModel, self).__init__()
         self.objectModel = objectModel
         self.parent = parent
+        self._properties = {}
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @properties.setter
+    def properties(self, properties):
+        self._properties = properties
 
     def __repr__(self):
         return "<{}-{}>".format(self.__class__.__name__, self.text())
@@ -40,16 +49,76 @@ class AttributeModel(QtCore.QObject):
         return self.objectModel.fullPathName() + "." + self.text()
 
     def text(self):
-        return "attributeName"
+        return self._properties.get("label", "unknown")
+
+    def setText(self, text):
+        self._properties["label"] = text
 
     def description(self):
-        return ""
+        return self._properties.get("description", "")
+
+    def isInput(self):
+        return self._properties.get("isInput", False)
+
+    def isOutput(self):
+        return self._properties.get("isOutput", False)
 
     def setValue(self, value):
-        pass
+        self._properties["value"] = value
 
     def value(self):
-        return
+        return self._properties.get("value")
+
+    def isArray(self):
+        return self._properties.get("isArray", False)
+
+    def isCompound(self):
+        return self._properties.get("isCompound", False)
+
+    def isElement(self):
+        return self._properties.get("isElement", False)
+
+    def isChild(self):
+        return self._properties.get("isChild", False)
+
+    def hasChildren(self):
+        return len(self._properties.get("children", [])) > 0
+
+    def type(self):
+        return self._properties.get("type", "string")
+
+    def default(self):
+        return self._properties.get("default", "")
+
+    def min(self):
+        return self._properties.get("min", 0)
+
+    def max(self):
+        return self._properties.get("max", 9999)
+
+    def setType(self, value):
+        self._properties["type"] = value
+
+    def setAsInput(self, value):
+        self._properties["isInput"] = value
+
+    def setAsOutput(self, value):
+        self._properties["isOutput"] = value
+
+    def setDefault(self, value):
+        self._properties["default"] = value
+
+    def setMin(self, value):
+        self._properties["min"] = value
+
+    def setMax(self, value):
+        self._properties["max"] = value
+
+    def setIsCompound(self, value):
+        self._properties["isCompound"] = value
+
+    def setIsArray(self, value):
+        self._properties["isArray"] = value
 
     def textAlignment(self):
         if self.isInput():
@@ -57,69 +126,11 @@ class AttributeModel(QtCore.QObject):
         else:
             return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
 
-    def setText(self, text):
-        return False
-
-    def isArray(self):
-        return False
-
-    def setIsArray(self):
-        pass
-
-    def isElement(self):
-        if self.parent is not None:
-            return self.parent.isArray()
-
-    def isCompound(self):
-        return False
-
-    def type(self):
-        pass
-
-    def default(self):
-        pass
-
-    def min(self):
-        pass
-
-    def max(self):
-        pass
-
-    def setType(self, value):
-        pass
-
-    def setAsInput(self, value):
-        pass
-
-    def setAsOutput(self, value):
-        pass
-
-    def setDefault(self, value):
-        pass
-
-    def setMin(self, value):
-        pass
-
-    def setMax(self, value):
-        pass
-
-    def setIsCompound(self, value):
-        pass
-
-    def setIsArray(self, value):
-        pass
-
     def elements(self):
         return []
 
     def children(self):
         return []
-
-    def hasChildren(self):
-        return False
-
-    def canAcceptConnection(self, plug):
-        return True
 
     def acceptsMultipleConnections(self):
         if self.isInput():
@@ -127,7 +138,24 @@ class AttributeModel(QtCore.QObject):
         return True
 
     def isConnected(self):
+        if self.properties.get("connections"):
+            return True
         return False
+
+    def canAcceptConnection(self, plug):
+        if self.isInput() and plug.isInput():
+            return False
+        elif self.isOutput() and plug.isOutput():
+            return False
+        elif self.isInput() and self.isConnected():
+            return False
+        return plug != self
+
+    def connections(self):
+        return iter(self.properties.get("connections", []))
+
+    def toolTip(self):
+        return self.properties.get("description")
 
     def createConnection(self, attribute):
         return False
@@ -135,20 +163,11 @@ class AttributeModel(QtCore.QObject):
     def deleteConnection(self, attribute):
         return False
 
-    def toolTip(self):
-        return "Im a tooltip for attributes"
-
     def size(self):
         return QtCore.QSize(150, 30)
 
     def textColour(self):
         return QtGui.QColor(200, 200, 200)
-
-    def isInput(self):
-        return True
-
-    def isOutput(self):
-        return True
 
     def highlightColour(self):
         return QtGui.QColor(255, 255, 255)
@@ -160,4 +179,18 @@ class AttributeModel(QtCore.QObject):
         return QtGui.QColor(0, 180, 0)
 
     def serialize(self):
-        return {}
+        return {
+            "label": self.text(),
+            "isInput": self.isInput(),
+            "type": self.type(),
+            "isElement": self.isElement(),
+            "isChild": self.isChild(),
+            "isOutput": self.isOutput(),
+            "isArray": self.isArray(),
+            "isCompound": self.isCompound(),
+            "children": [child.serialize() for child in self.children()],
+            "min": self.min(),
+            "max": self.max(),
+            "value": self.value(),
+            "default": self.default()
+        }

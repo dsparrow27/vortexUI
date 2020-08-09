@@ -16,9 +16,18 @@ from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
 from zoo.libs.pyqt.widgets import frame, elements
 from zoo.libs.utils import filesystem
-from zoo.libs import iconlib
 
 logger = logging.getLogger(__name__)
+
+
+class Config(vortexApi.VortexConfig):
+    def registeredNodes(self):
+        return {"comment": "organization",
+                "sum": "math",
+                "float": "math",
+                "command": "applications",
+                "pin": "organization",
+                "backdrop": "organization"}
 
 
 class Graph(vortexApi.GraphModel):
@@ -82,200 +91,28 @@ class Graph(vortexApi.GraphModel):
             destinationNode = remappedNodes.get(destinationName)
             sourceAttr = sourceNode.attribute(sourceAttrName)
             destinationAttr = destinationNode.attribute(destAttrName)
+            if not sourceAttr or not destinationAttr:
+                continue
             sourceAttr.createConnection(destinationAttr)
         return createdNodes
 
 
 class NodeModel(vortexApi.ObjectModel):
-    defaults = {
-        "text": "",
-    }
-
     def __init__(self, config, parent=None, **kwargs):
         super(NodeModel, self).__init__(config, parent)
-        self._data = kwargs.get("data", {})
-        self._icon = self._data.get("icon")
-        if self._icon is not None:
-            self._icon = iconlib.icon(self._icon)
-        self._attributeData = kwargs.get("attributes", [])
-        for attr in self._attributeData:
-            self._attributes.append(AttributeModel(attr, self))
-
-    def isSelected(self):
-        """Returns if the node is currently selected
-
-        :rtype: bool
-        """
-        return self._data.get("selected", False)
-
-    def delete(self):
-        if self.isCompound():
-            for child in self._children:
-                child.delete()
-        parent = self.parentObject()
-        if parent:
-            return parent.deleteChild(self)
-        return False
-
-    def setSelected(self, value):
-        """Sets the nodes selection state, gets called from the nodeEditor each time a node is selected.
-
-        :param value: True if the node has been selected in the UI
-        :type value: bool
-        """
-        self._data["selected"] = value
-
-    def isCompound(self):
-        """Returns True if the node is a compound, Compounds a treated as special entities, Eg. Expansion
-
-        :rtype: bool
-        """
-        return self._data.get("isCompound", False)
-
-    def isPin(self):
-        return self._data.get("isPin", False)
-
-    def isComment(self):
-        return self._data.get("isComment", False)
-
-    def isBackdrop(self):
-        return self._data.get("isBackdrop", False)
-
-    def category(self):
-        """This method returns the node category, each node should be associated with one category the default is
-        'Basic'.
-        The category is used for the widgets to organize the node library.
-
-        :return: This node category
-        :rtype: str
-        """
-        return self._data.get("category", "Unknown")
-
-    def text(self):
-        """The primary node text usually the node name.
-
-        :return: The Text to display
-        :rtype: str
-        """
-        return self._data.get("label", "")
-
-    def setText(self, value):
-        self._data["label"] = str(value)
-        self.sigNodeNameChanged.emit(str(value))
-
-    def secondaryText(self):
-        """The Secondary text to display just under the primary text (self.text()).
-
-        :rtype: str
-        """
-        return self._data.get("secondaryLabel", "")
-
-    def attributes(self, inputs=True, outputs=True, attributeVisLevel=0):
-        """List of Attribute models to display on the node.
-
-        :param inputs: return inputs
-        :type inputs: bool
-        :param outputs: Return outputs
-        :type outputs: bool
-        :param attributeVisLevel:
-        :type attributeVisLevel: int
-        :return: Returns a list of AttributeModels containing inputs and outputs(depending of parameters)
-        :rtype: list(::class::`AttributeModel`)
-        """
-        return self._attributes
-
-    def canCreateAttributes(self):
-        """Determines if the user can create attributes on this node.
-
-        :rtype: bool
-        """
-        return self._data.get("canCreateAttributes", True)
+        self.properties = kwargs.get("data", {})
+        for attr in kwargs.get("attributes", []):
+            self.createAttribute(attr)
 
     def createAttribute(self, kwargs):
         attr = AttributeModel(kwargs, self)
         self._attributes.append(attr)
         self.sigAddAttribute.emit(attr)
 
-    def deleteAttribute(self, attribute):
-        pass
-
-    def toolTip(self):
-        """The Tooltip to display.
-
-        :return: The tooltip which will be display when hovering over the node.
-        :rtype: str
-        """
-        return self._data.get("toolTip", "")
-
-    def position(self):
-        return self._data.get("position", (0.0, 0.0))
-
-    def setPosition(self, position):
-        self._data["position"] = position
-
-    def width(self):
-        return self._data.get("width", self.minimumWidth())
-
-    def setWidth(self, width):
-        self._data["width"] = width
-
-    def height(self):
-        return self._data.get("height", self.minimumHeight())
-
-    def setHeight(self, height):
-        self._data["height"] = height
-
-    # colors
-    def backgroundColour(self):
-        return QtGui.QColor(*self._data.get("backgroundColour", (40, 40, 40, 255)))
-
-    def setBackgroundColour(self, colour):
-        self._data["backgroundColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
-
-    def headerColour(self):
-        return QtGui.QColor(*self._data.get("headerColour", (71, 115, 149, 255)))
-
-    def textColour(self):
-        color = self._data.get("textColour")
-        if color is None:
-            return super(NodeModel, self).textColor()
-        return QtGui.QColor(*color)
-
-    def setTextColour(self, colour):
-        self._data["textColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
-
-    def setSecondaryTextColour(self, colour):
-        self._data["secondaryTextColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
-
-    def secondaryTextColour(self):
-        color = self._data.get("secondaryTextColour")
-        if color is None:
-            return super(NodeModel, self).secondaryTextColour()
-        return QtGui.QColor(*color)
-
-    def setHeaderColour(self, colour):
-        self._data["headerColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
-
-    def edgeColour(self):
-        return QtGui.QColor(*self._data.get("edgeColour", (0.0, 0.0, 0.0, 255)))
-
-    def deleteChild(self, child):
-
-        for currentChild in self._children:
-            if currentChild == child:
-                self._children.remove(child)
-                child.delete()
-                return True
-
-        return False
-
-    def supportsContextMenu(self):
-        return True
-
     def serialize(self):
         connections = []
         for attr in self._attributes:
-            conns = attr.internalAttr.get("connections", [])
+            conns = attr.self.properties.get("connections", [])
             for currentNodeAttr, source in conns:
                 connections.append((source.fullPathName(), currentNodeAttr.fullPathName()))
         children = []
@@ -285,7 +122,7 @@ class NodeModel(vortexApi.ObjectModel):
             children.append(childInfo)
             if self.isCompound():
                 del childInfo["connections"]
-        return {"data": self._data,
+        return {"properties": self._properties,
                 "attributes": [attr.serialize() for attr in self._attributes],
                 "children": children,
                 "connections": connections
@@ -306,86 +143,14 @@ class NodeModel(vortexApi.ObjectModel):
 class AttributeModel(vortexApi.AttributeModel):
     def __init__(self, data, objectModel, parent=None):
         super(AttributeModel, self).__init__(objectModel, parent=parent)
-        self.internalAttr = data
-
-    def text(self):
-        return self.internalAttr.get("label", "unknown")
-
-    def setText(self, text):
-        self.internalAttr["label"] = text
-
-    def description(self):
-        return self.internalAttr.get("description", "")
-
-    def isInput(self):
-        return self.internalAttr.get("isInput", False)
-
-    def isOutput(self):
-        return self.internalAttr.get("isOutput", False)
-
-    def setValue(self, value):
-        self.internalAttr["value"] = value
-
-    def value(self):
-        return self.internalAttr.get("value")
-
-    def isArray(self):
-        return self.internalAttr.get("isArray", False)
-
-    def isCompound(self):
-        return self.internalAttr.get("isCompound", False)
-
-    def isElement(self):
-        return self.internalAttr.get("isElement", False)
-
-    def isChild(self):
-        return self.internalAttr.get("isChild", False)
-
-    def hasChildren(self):
-        return len(self.internalAttr.get("children", [])) > 0
-
-    def type(self):
-        return self.internalAttr.get("type", "string")
-
-    def default(self):
-        return self.internalAttr.get("default", "")
-
-    def min(self):
-        return self.internalAttr.get("min", 0)
-
-    def max(self):
-        return self.internalAttr.get("max", 9999)
-
-    def setType(self, value):
-        self.internalAttr["type"] = value
-
-    def setAsInput(self, value):
-        self.internalAttr["isInput"] = value
-
-    def setAsOutput(self, value):
-        self.internalAttr["isOutput"] = value
-
-    def setDefault(self, value):
-        self.internalAttr["default"] = value
-
-    def setMin(self, value):
-        self.internalAttr["min"] = value
-
-    def setMax(self, value):
-        self.internalAttr["max"] = value
-
-    def setIsCompound(self, value):
-        self.internalAttr["isCompound"] = value
-
-    def setIsArray(self, value):
-        self.internalAttr["isArray"] = value
+        self.properties = data
 
     def elements(self):
         items = []
         name = self.text()
         value = self.value()
         if isinstance(value, (list, tuple)):
-            isCompound = len(self.internalAttr.get("children", [])) > 0
+            isCompound = len(self.properties.get("children", [])) > 0
             for index, elementValue in enumerate(value):
                 item = AttributeModel({"label": "{}[{}]".format(name, index),
                                        "isInput": self.isInput(),
@@ -395,89 +160,42 @@ class AttributeModel(vortexApi.AttributeModel):
                                        "isOutput": self.isOutput(),
                                        "isArray": False,
                                        "isCompound": isCompound,
-                                       "children": self.internalAttr.get("children", [])
+                                       "children": self.properties.get("children", [])
                                        }, objectModel=self.objectModel, parent=self)
                 items.append(item)
         return items
 
     def children(self):
         children = []
-        for child in self.internalAttr.get("children", []):
+        for child in self.properties.get("children", []):
             child["isChild"] = True
             item = AttributeModel(child, objectModel=self.objectModel, parent=self)
             children.append(item)
         return children
 
-    def canAcceptConnection(self, plug):
-        if self.isInput() and plug.isInput():
-            return False
-        elif self.isOutput() and plug.isOutput():
-            return False
-        elif self.isInput() and self.isConnected():
-            return False
-        return plug != self
-
-    def isConnected(self):
-        if self.internalAttr.get("connections"):
-            return True
-        return False
-
-    def connections(self):
-        return iter(self.internalAttr.get("connections", []))
-
     def createConnection(self, attribute):
 
         if self.canAcceptConnection(attribute):
             if self.isInput():
-                self.internalAttr.setdefault("connections", []).append((self, attribute))
+                self.properties.setdefault("connections", []).append((self, attribute))
             else:
-                self.internalAttr.setdefault("connections", []).append((attribute, self))
+                self.properties.setdefault("connections", []).append((attribute, self))
             return True
         return False
 
     def deleteConnection(self, attribute):
-        connections = self.internalAttr.get("connections", [])
+        connections = self.properties.get("connections", [])
         newConnections = []
         changed = False
         for s_, source in connections:
             if source == attribute:
                 newConnections.append((self, source))
                 changed = True
-        self.internalAttr["connections"] = newConnections
+        self.properties["connections"] = newConnections
         return changed
 
-    def toolTip(self):
-        return self.internalAttr.get("description")
-
     def backgroundColour(self):
-        typeMap = self.objectModel.config.attributeMapping.get(self.internalAttr["type"])
+        typeMap = self.objectModel.config.attributeMapping.get(self.properties["type"])
         if typeMap:
             return typeMap["colour"]
         return QtGui.QColor(0, 0, 0)
-
-    def serialize(self):
-        return {
-            "label": self.text(),
-            "isInput": self.isInput(),
-            "type": self.type(),
-            "isElement": self.isElement(),
-            "isChild": self.isChild(),
-            "isOutput": self.isOutput(),
-            "isArray": self.isArray(),
-            "isCompound": self.isCompound(),
-            "children": [child.serialize() for child in self.children()],
-            "min": self.min(),
-            "max": self.max(),
-            "value": self.value(),
-            "default": self.default()
-        }
-
-
-class Config(vortexApi.VortexConfig):
-    def registeredNodes(self):
-        return {"comment": "organization",
-                "sum": "math",
-                "float": "math",
-                "command": "applications",
-                "pin": "organization",
-                "backdrop": "organization"}

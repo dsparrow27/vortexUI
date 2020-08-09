@@ -6,16 +6,6 @@ class ObjectModel(QtCore.QObject):
     Any subclass of ObjectModel must emit the following Signals which require objectModel  or attributeModel
      this will mean you will need to translate any client logic and objects back the objectModel currently
      being referenced.
-        addConnectionSig
-        removeConnectionSig
-        addAttributeSig
-        nodeNameChangedSig
-        removeAttributeSig
-        attributeNameChangedSig
-        valueChangedSig
-        selectionChangedSig
-        parentChangedSig
-        progressUpdatedSig
 
     """
     # constants for attribute visibility
@@ -28,17 +18,8 @@ class ObjectModel(QtCore.QObject):
     sigRemoveAttribute = QtCore.Signal(object)  # attributeModel
     sigSelectionChanged = QtCore.Signal(bool)  # bool
 
-    # # signals connected by the graphics scene
-    # addConnectionSig = QtCore.Signal(object, object)  # sourceAttrModel, destAttrModel
-    # removeConnectionSig = QtCore.Signal(object, object)  # sourceAttributeModel, destinationModel
-    #
     # # connected by the GraphicsNode
     sigNodeNameChanged = QtCore.Signal(str)  # objectModel
-
-    # attributeNameChangedSig = QtCore.Signal(object)  # attributeModel
-    # parentChangedSig = QtCore.Signal(object, object)  # childObjectModel, parentObjectModel
-    # progressUpdatedSig = QtCore.Signal(object, object)  # objectModel
-    # requestRefresh = QtCore.Signal()
 
     def __init__(self, config, parent=None):
         super(ObjectModel, self).__init__()
@@ -47,13 +28,20 @@ class ObjectModel(QtCore.QObject):
         self._children = []  # type: list[ObjectModel]
         self._icon = ""
         self._attributes = []
+        self._properties = {}
         if parent is not None and self not in parent.children():
             parent._children.append(self)
 
-        # self.sigAddAttribute.connect(self.createAttribute)
-
     def __repr__(self):
         return "<{}-{}>".format(self.__class__.__name__, self.text())
+
+    @property
+    def properties(self):
+        return self.properties
+
+    @properties.setter
+    def properties(self, properties):
+        self._properties = properties
 
     def fullPathName(self):
         path = self.text()
@@ -66,14 +54,14 @@ class ObjectModel(QtCore.QObject):
 
         :rtype: str
         """
-        return self._icon
+        return self._properties["icon"]
 
     def isSelected(self):
         """Returns if the node is currently selected
 
         :rtype: bool
         """
-        return False
+        return self._properties.get("selected", False)
 
     def setSelected(self, value):
         """Sets the nodes selection state, gets called from the nodeEditor each time a node is selected.
@@ -81,23 +69,59 @@ class ObjectModel(QtCore.QObject):
         :param value: True if the node has been selected in the UI
         :type value: bool
         """
-        pass
+        self._properties["selected"] = value
 
     def isCompound(self):
         """Returns True if the node is a compound, Compounds a treated as special entities, Eg. Expansion
 
         :rtype: bool
         """
-        return False
+        return self._properties.get("isCompound", False)
+
+    def isPin(self):
+        return self._properties.get("isPin", False)
+
+    def isComment(self):
+        return self._properties.get("isComment", False)
+
+    def isBackdrop(self):
+        return self._properties.get("isBackdrop", False)
 
     def category(self):
-        """This method returns the node category, each node should be associated with one category the default is 'Basic'.
+        """This method returns the node category, each node should be associated with one category the default is
+        'Basic'.
         The category is used for the widgets to organize the node library.
 
         :return: This node category
         :rtype: str
         """
-        return "Basic"
+        return self._properties.get("category", "Unknown")
+
+    def text(self):
+        """The primary node text usually the node name.
+
+        :return: The Text to display
+        :rtype: str
+        """
+        return self._properties.get("label", "")
+
+    def setText(self, value):
+        self._properties["label"] = str(value)
+        self.sigNodeNameChanged.emit(str(value))
+
+    def secondaryText(self):
+        """The Secondary text to display just under the primary text (self.text()).
+
+        :rtype: str
+        """
+        return self._properties.get("secondaryLabel", "")
+
+    def canCreateAttributes(self):
+        """Determines if the user can create attributes on this node.
+
+        :rtype: bool
+        """
+        return self._properties.get("canCreateAttributes", True)
 
     def parentObject(self):
         """Parent Object Model, should be a compound node.
@@ -143,24 +167,6 @@ class ObjectModel(QtCore.QObject):
     def __hash__(self):
         return id(self)
 
-    def text(self):
-        """The primary node text usually the node name.
-
-        :return: The Text to display
-        :rtype: str
-        """
-        return "primary header"
-
-    def setText(self, value):
-        pass
-
-    def secondaryText(self):
-        """The Secondary text to display just under the primary text (self.text()).
-
-        :rtype: str
-        """
-        return ""
-
     def attribute(self, name):
         """Return the attributeModel by name.
 
@@ -185,14 +191,7 @@ class ObjectModel(QtCore.QObject):
         :return: Returns a list of AttributeModels containing inputs and outputs(depending of parameters)
         :rtype: list(::class::`AttributeModel`)
         """
-        return []
-
-    def canCreateAttributes(self):
-        """Determines if the user can create attributes on this node.
-
-        :rtype: bool
-        """
-        return False
+        return self._attributes
 
     def createAttribute(self, attributeDefinition):
         pass
@@ -209,10 +208,25 @@ class ObjectModel(QtCore.QObject):
         :return: The tooltip which will be display when hovering over the node.
         :rtype: str
         """
-        return "hello world"
+        return self._properties.get("toolTip", "")
 
-    def properties(self):
-        return {}
+    def position(self):
+        return self._properties.get("position", (0.0, 0.0))
+
+    def setPosition(self, position):
+        self._properties["position"] = position
+
+    def width(self):
+        return self._properties.get("width", self.minimumWidth())
+
+    def setWidth(self, width):
+        self._properties["width"] = width
+
+    def height(self):
+        return self._properties.get("height", self.minimumHeight())
+
+    def setHeight(self, height):
+        self._properties["height"] = height
 
     def minimumHeight(self):
         return 50
@@ -223,57 +237,46 @@ class ObjectModel(QtCore.QObject):
     def cornerRounding(self):
         return 5
 
-    def position(self):
-        return (0, 0)
-
-    def setPosition(self, position):
-        pass
-
-    def width(self):
-        return self.minimumWidth()
-
-    def setWidth(self, width):
-        pass
-
-    def height(self):
-        return self.minimumHeight()
-
-    def setHeight(self, height):
-        pass
-
-    # colours
+    # colors
     def backgroundColour(self):
-        return QtGui.QColor(50, 50, 50, 225)
+        QtGui.QColor(50, 50, 50, 225)
+        return QtGui.QColor(*self._properties.get("backgroundColour", (40, 40, 40, 255)))
 
     def setBackgroundColour(self, colour):
-        pass
+        self._properties["backgroundColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
 
     def headerColour(self):
-        return QtGui.QColor("#4A71AB")
+        return QtGui.QColor(*self._properties.get("headerColour", (71, 115, 149, 255)))
+
+    def textColour(self):
+        color = self._properties.get("textColour")
+        if color is None:
+            return QtGui.QColor(225, 225, 225)
+        return QtGui.QColor(*color)
+
+    def setTextColour(self, colour):
+        self._properties["textColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+
+    def setSecondaryTextColour(self, colour):
+        self._properties["secondaryTextColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+
+    def secondaryTextColour(self):
+        color = self._properties.get("secondaryTextColour")
+        if color is None:
+            return QtGui.QColor(225, 225, 225)
+        return QtGui.QColor(*color)
 
     def setHeaderColour(self, colour):
-        pass
+        self._properties["headerColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+
+    def edgeColour(self):
+        return QtGui.QColor(*self._properties.get("edgeColour", (0.0, 0.0, 0.0, 255)))
 
     def headerButtonColour(self):
         return QtGui.QColor(255, 255, 255)
 
     def selectedNodeColour(self):
         return QtGui.QColor(180, 255, 180, 255)
-
-    def edgeColour(self):
-        return QtGui.QColor(0.0, 0.0, 0.0, 255)
-
-    def textColor(self):
-        return QtGui.QColor(225, 225, 225)
-
-    def setTextColour(self, colour):
-        pass
-
-    def secondaryTextColour(self):
-        return QtGui.QColor(225, 225, 225)
-
-    def setSecondaryTextColour(self, colour):
-        pass
 
     def edgeThickness(self):
         return 2
@@ -282,9 +285,21 @@ class ObjectModel(QtCore.QObject):
         return 12
 
     def deleteChild(self, child):
+        for currentChild in self._children:
+            if currentChild == child:
+                self._children.remove(child)
+                child.delete()
+                return True
+
         return False
 
     def delete(self):
+        if self.isCompound():
+            for child in self._children:
+                child.delete()
+        parent = self.parentObject()
+        if parent:
+            return parent.deleteChild(self)
         return False
 
     def supportsContextMenu(self):
