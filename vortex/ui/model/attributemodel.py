@@ -15,7 +15,7 @@ class AttributeModel(QtCore.QObject):
                      "max": 99999999,
                      }
 
-    def __init__(self, objectModel, parent=None):
+    def __init__(self, objectModel, properties, parent=None):
         """
         :param objectModel: The Node ObjectModel
         :type objectModel: ::class:`ObjectModel`
@@ -23,7 +23,7 @@ class AttributeModel(QtCore.QObject):
         super(AttributeModel, self).__init__()
         self.objectModel = objectModel
         self.parent = parent
-        self._properties = {}
+        self._properties = properties
 
     @property
     def properties(self):
@@ -158,10 +158,25 @@ class AttributeModel(QtCore.QObject):
         return self.properties.get("description")
 
     def createConnection(self, attribute):
+
+        if self.canAcceptConnection(attribute):
+            if self.isInput():
+                self.properties.setdefault("connections", []).append((self, attribute))
+            else:
+                self.properties.setdefault("connections", []).append((attribute, self))
+            return True
         return False
 
     def deleteConnection(self, attribute):
-        return False
+        connections = self.properties.get("connections", [])
+        newConnections = []
+        changed = False
+        for s_, source in connections:
+            if source == attribute:
+                newConnections.append((self, source))
+                changed = True
+        self.properties["connections"] = newConnections
+        return changed
 
     def size(self):
         return QtCore.QSize(150, 30)

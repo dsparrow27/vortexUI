@@ -21,23 +21,25 @@ class ObjectModel(QtCore.QObject):
     # # connected by the GraphicsNode
     sigNodeNameChanged = QtCore.Signal(str)  # objectModel
 
-    def __init__(self, config, parent=None):
+    def __init__(self, config, properties, parent=None):
         super(ObjectModel, self).__init__()
         self.config = config
         self._parent = parent
         self._children = []  # type: list[ObjectModel]
         self._icon = ""
         self._attributes = []
-        self._properties = {}
+        self._properties = properties["properties"]
         if parent is not None and self not in parent.children():
-            parent._children.append(self)
+            parent.children().append(self)
+        for attr in properties.get("attributes", []):
+            self.createAttribute(attr)
 
     def __repr__(self):
         return "<{}-{}>".format(self.__class__.__name__, self.text())
 
     @property
     def properties(self):
-        return self.properties
+        return self._properties
 
     @properties.setter
     def properties(self, properties):
@@ -312,7 +314,23 @@ class ObjectModel(QtCore.QObject):
         pass
 
     def serialize(self):
-        return {}
+        connections = []
+        for attr in self._attributes:
+            conns = attr.properties.get("connections", [])
+            for currentNodeAttr, source in conns:
+                connections.append((source.fullPathName(), currentNodeAttr.fullPathName()))
+        children = []
+        for child in self._children:
+            childInfo = child.serialize()
+            connections.extend(childInfo["connections"])
+            children.append(childInfo)
+            if self.isCompound():
+                del childInfo["connections"]
+        return {"properties": self._properties,
+                "attributes": [attr.serialize() for attr in self._attributes],
+                "children": children,
+                "connections": connections
+                }
 
     def copy(self):
         pass
