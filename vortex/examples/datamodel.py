@@ -74,11 +74,11 @@ class Graph(vortexApi.GraphModel):
         data = dict(properties=info["properties"],
                     attributes=info.get("attributes", []))
         connections = info.get("connections", [])
-        parent = NodeModel(self.config, parent=parent, **data)
+        parent = NodeModel(self.config, data, parent=parent)
         createdNodes = [parent]
         remappedNodes = {data["properties"]["label"]: parent}
         for child in info.get("children", []):
-            childModel = NodeModel(self.config, parent=parent, **child)
+            childModel = NodeModel(self.config, child, parent=parent)
             createdNodes.append(childModel)
             name = child["properties"].get("label")
             remappedNodes[name] = childModel
@@ -98,35 +98,13 @@ class Graph(vortexApi.GraphModel):
 
 
 class NodeModel(vortexApi.ObjectModel):
-    def __init__(self, config, parent=None, **kwargs):
-        super(NodeModel, self).__init__(config, parent)
-        self.properties = kwargs.get("properties", {})
-        for attr in kwargs.get("attributes", []):
-            self.createAttribute(attr)
+    def __init__(self, config, properties, parent=None):
+        super(NodeModel, self).__init__(config, properties=properties, parent=parent)
 
     def createAttribute(self, kwargs):
         attr = AttributeModel(kwargs, self)
         self._attributes.append(attr)
         self.sigAddAttribute.emit(attr)
-
-    def serialize(self):
-        connections = []
-        for attr in self._attributes:
-            conns = attr.properties.get("connections", [])
-            for currentNodeAttr, source in conns:
-                connections.append((source.fullPathName(), currentNodeAttr.fullPathName()))
-        children = []
-        for child in self._children:
-            childInfo = child.serialize()
-            connections.extend(childInfo["connections"])
-            children.append(childInfo)
-            if self.isCompound():
-                del childInfo["connections"]
-        return {"properties": self._properties,
-                "attributes": [attr.serialize() for attr in self._attributes],
-                "children": children,
-                "connections": connections
-                }
 
     def attributeWidget(self, parent):
         from vortex.plugins.ui.attributeeditor import attributewidgets
