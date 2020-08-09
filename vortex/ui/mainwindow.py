@@ -17,15 +17,13 @@ class ApplicationWindow(elements.FramelessWindow):
         self.setMainLayout(layout)
         self.win = VortexApplicationWindow(application, parent=self)
         layout.addWidget(self.win)
-
-        fileMenu = elements.IconMenuButton(iconlib.icon("magic", size=32))
-
-        self.titlebarContentsLayout().addWidget(fileMenu)
-        self.loadAction = fileMenu.addAction("Load", connect=self.onLoad)
-        self.saveAction = fileMenu.addAction("Save", connect=self.onSave)
-        self.exitAction = fileMenu.addAction("Close", icon=iconlib.icon("close"))
-        self.exitAction.setShortcut("ctrl+Q")
+        titleBtn = self.titleBar.logoButton
+        self.loadAction = titleBtn.addAction("Load", connect=self.onLoad)
+        self.saveAction = titleBtn.addAction("Save", connect=self.onSave)
+        self.exitAction = titleBtn.addAction("Close", icon=iconlib.icon("close"))
+        self.exitAction.setShortcut("Ctrl+Q")
         self.exitAction.setToolTip("Closes application")
+        self.toggleMaximized()
         # self.recentFilesMenu = QtWidgets.QMenu("Recent Files", parent=self)
 
     def onSave(self):
@@ -43,7 +41,7 @@ class ApplicationWindow(elements.FramelessWindow):
 
 class VortexApplicationWindow(mainwindow.MainWindow):
     def __init__(self, application, title="Vortex", width=800, height=600, parent=None):
-        super(VortexApplicationWindow, self).__init__(title=title, width=width, height=height, parent=parent)
+        super(VortexApplicationWindow, self).__init__(title=title, width=width, height=height, parent=parent, showOnInitialize=False)
         self.uiApplication = application
         self.noteBook = graphnotebook.GraphNotebook(self.uiApplication, parent=self)
         self.setCustomCentralWidget(self.noteBook)

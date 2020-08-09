@@ -5,24 +5,31 @@ from zoo.libs.pyqt.widgets.graphics import graphicsscene
 from vortex.ui.graphics import plugwidget
 from vortex.ui.graphics import graphnodes
 
-
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop, graphicitems
 
 
 class Scene(graphicsscene.GraphicsScene):
     def __init__(self, graph, *args, **kwargs):
         super(Scene, self).__init__(*args, **kwargs)
-        self.selectionChanged.connect(self._onSelectionChanged)
         self.graph = graph
         self.nodes = {}
         self.panelWidget = None
         self.connections = set()
+        self.selectionChanged.connect(self._onSelectionChanged)
 
     def _onSelectionChanged(self):
+        models = []
         for i in self.nodes.values():
             item = i["qitem"]
             try:
                 item.model.setSelected(item.isSelected())
+                # if item.model.isSelected():
+                models.append(item.model)
+            except RuntimeError:
+                pass
+        if models:
+            try:
+                self.graph.application.events.selectionChanged.emit(models)
             except RuntimeError:
                 pass
 
@@ -44,6 +51,7 @@ class Scene(graphicsscene.GraphicsScene):
         self.addItem(graphNode)
         self.nodes[hash(model)] = {"qitem": graphNode,
                                    "model": model}
+        self.graph.application.events.nodeCreated.emit(model)
         return graphNode
 
     def updateAllConnections(self):
@@ -89,20 +97,25 @@ class Scene(graphicsscene.GraphicsScene):
         return False
 
     def onDelete(self, selection):
+        nodesToDelete = []
+
         for sel in selection:
             if isinstance(sel, graphicitems.ConnectionEdge):
                 if sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model):
                     self.deleteConnection(sel)
                 continue
             elif isinstance(sel, graphnodes.QBaseNode):
-                self.graph.application.events.nodeDeleteRequested.emit(sel.model)
+                nodesToDelete.append(sel.model)
+                # self.graph.application.events.nodeDeleteRequested.emit(sel.model)
                 deleted = sel.model.delete()
                 del self.nodes[hash(sel.model)]
             else:
                 continue
-            if deleted:
 
+            if deleted:
                 self.removeItem(sel)
+
+        self.graph.application.events.nodeDeleted.emit(nodesToDelete)
 
     def onSetConnectionStyle(self):
         style = self.sender().text()
@@ -148,7 +161,7 @@ class View(graphicsview.GraphicsView):
         modifiers = event.modifiers()
         button = event.buttons()
         model = None
-        if isinstance(item, (graphnodes.QBaseNode, )):
+        if isinstance(item, (graphnodes.QBaseNode,)):
             model = item.model
         elif isinstance(item, plugwidget.PlugContainer):
             model = item.model

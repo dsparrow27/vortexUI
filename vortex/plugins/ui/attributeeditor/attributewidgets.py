@@ -2,7 +2,7 @@ import os
 import weakref
 
 from Qt import QtWidgets, QtCore
-from zoo.libs.pyqt import constants as uiconstants
+from zoo.libs.pyqt import uiconstants
 from zoo.libs.pyqt.widgets import elements
 
 
@@ -22,10 +22,11 @@ class AttributeItemWidget(QtWidgets.QFrame):
         self.setLayout(layout)
 
 
-class StringWidget(elements.LineEdit):
+class StringWidget(elements.StringEdit):
+
     def __init__(self, model, parent=None):
-        super(StringWidget, self).__init__(parent=parent)
-        self.model = model
+        super(StringWidget, self).__init__(model.text(), model.value(), enableMenu=False,parent=parent)
+        self.textModified.connect(model.setValue)
 
 
 class PathWidget(QtWidgets.QFrame):

@@ -261,6 +261,15 @@ class ObjectModel(QtCore.QObject):
     def textColor(self):
         return QtGui.QColor(225, 225, 225)
 
+    def setTextColour(self, colour):
+        pass
+
+    def secondaryTextColour(self):
+        return QtGui.QColor(225, 225, 225)
+
+    def setSecondaryTextColour(self, colour):
+        pass
+
     def edgeThickness(self):
         return 2
 

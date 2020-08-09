@@ -21,41 +21,49 @@ class Outliner(QtWidgets.QFrame):
         layout = elements.vBoxLayout(self)
         self.tree = QtWidgets.QTreeWidget(parent=self)
         layout.addWidget(self.tree)
+        self.tree.header().hide()
         # self.newNode(application.graphNoteBook.currentPage().model)
-        # self.application.onSelectionChanged.connect(self.onSceneSelection)
-        # self.application.onNodeDeleteRequested.connect(self.removeNode)
-        # self.application.onNewNodeRequested.connect(self.newNode)
+        self.application.events.selectionChanged.connect(self.onSceneSelection)
+        self.application.events.nodeDeleted.connect(self.removeNode)
+        self.application.events.nodeCreated.connect(self.newNode)
         # self.newNode({"model": self.application.currentModel})
         # self.graph.setShortcutForWidget(self, "Outliner")
 
-    def onSceneSelection(self, selection, state):
+    def onSceneSelection(self, selection):
 
         iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
         for it in iterator:
             item = it.value()
-            if item.data(0, QtCore.Qt.UserRole + 1) == selection:
-                item.setSelected(state)
+            itemModel = item.data(0, QtCore.Qt.UserRole + 1)
+            item.setSelected(itemModel.isSelected())
+
+    def _findItemForModel(self, objectModel):
+        iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
+        for it in iterator:
+            item = it.value()
+            if item.data(0, QtCore.Qt.UserRole + 1) == objectModel:
+                return item
 
     def newNode(self, objectModel):
-        objectModel = objectModel["model"]
+        objectModel = objectModel
         if not objectModel:
             return
         parentModel = objectModel.parentObject()
+        parentItem = self.tree.invisibleRootItem()
         if parentModel:
-            parentItem = self.tree.findItems(objectModel.parentObject().text(),
-                                             QtCore.Qt.MatchWildcard)[0]
-        else:
-            parentItem = self.tree.invisibleRootItem()
+            parent = self._findItemForModel(parentModel)
+            if parent is not None:
+                parentItem = parent
 
         item = QtWidgets.QTreeWidgetItem(parentItem, [objectModel.text()])
         item.setData(0, QtCore.Qt.UserRole + 1, objectModel)
         parentItem.addChild(item)
         item.setExpanded(True)
 
-    def removeNode(self, objectModel):
+    def removeNode(self, objectModels):
         iterator = QtWidgets.QTreeWidgetItemIterator(self.tree)
         for it in iterator:
             item = it.value()
-            if item.data(0, QtCore.Qt.UserRole + 1) == objectModel:
+            if item.data(0, QtCore.Qt.UserRole + 1) in objectModels:
                 parent = item.parent()
                 parent.removeChild(item)

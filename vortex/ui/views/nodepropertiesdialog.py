@@ -62,7 +62,9 @@ class NodePropertiesWidget(QtWidgets.QWidget):
         self.newData = {"Text": "",
                         "Description": "",
                         "BackgroundColour": None,
-                        "HeaderColour": None}
+                        "HeaderColour": None,
+                        "TextColour": None,
+                        "SecondaryTextColour": None}
         self.initUI()
 
     def initUI(self):
@@ -73,20 +75,36 @@ class NodePropertiesWidget(QtWidgets.QWidget):
                                             enableMenu=False,
                                             parent=self)
         color = self.objectModel.backgroundColour()
-        headerColor = self.objectModel.headerColour()
+        headerColour = self.objectModel.headerColour()
+        textColour = self.objectModel.textColour()
+        secondaryTextColour = self.objectModel.secondaryTextColour()
         self.colorBtn = elements.LabelColorBtn(label="Colour:",
                                                initialRgbColor=(color.red(), color.green(), color.blue()),
                                                parent=self)
         self.colorBtn.colorChanged.connect(self.colourChanged)
         self.headerColorBtn = elements.LabelColorBtn(label="Header Colour:",
-                                                     initialRgbColor=(headerColor.red(), headerColor.green(), headerColor.blue()),
+                                                     initialRgbColor=(
+                                                         headerColour.red(), headerColour.green(), headerColour.blue()),
                                                      parent=self)
         self.headerColorBtn.colorChanged.connect(self.headerColourChanged)
+        self.textColorBtn = elements.LabelColorBtn(label="Label Colour:",
+                                                   initialRgbColor=(
+                                                       textColour.red(), textColour.green(), textColour.blue()),
+                                                   parent=self)
+        self.textColorBtn.colorChanged.connect(self.textColourChanged)
+        self.secondaryTextColourBtn = elements.LabelColorBtn(label="Secondary Colour:",
+                                                             initialRgbColor=(
+                                                                 secondaryTextColour.red(), secondaryTextColour.green(),
+                                                                 secondaryTextColour.blue()),
+                                                             parent=self)
+        self.secondaryTextColourBtn.colorChanged.connect(self.secondaryTextColourChanged)
         self.description = elements.TextEdit(text=self.objectModel.toolTip(),
                                              parent=self)
         self.mainLayout.addWidget(self.nameEdit)
         self.mainLayout.addWidget(self.colorBtn)
         self.mainLayout.addWidget(self.headerColorBtn)
+        self.mainLayout.addWidget(self.textColorBtn)
+        self.mainLayout.addWidget(self.secondaryTextColourBtn)
         self.mainLayout.addWidget(elements.Label(text="Description:",
                                                  parent=self, enableMenu=False))
         self.mainLayout.addWidget(self.description)
@@ -97,6 +115,12 @@ class NodePropertiesWidget(QtWidgets.QWidget):
 
     def headerColourChanged(self, colour):
         self.newData["HeaderColour"] = colour
+
+    def textColourChanged(self, colour):
+        self.newData["TextColour"] = colour
+
+    def secondaryTextColourChanged(self, colour):
+        self.newData["SecondaryTextColour"] = colour
 
     def onSetName(self, name):
         if name:

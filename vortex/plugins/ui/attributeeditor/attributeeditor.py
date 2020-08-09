@@ -1,3 +1,5 @@
+from functools import partial
+
 from zoo.libs.pyqt.widgets import groupedtreewidget
 from zoo.libs.pyqt.widgets import stackwidget
 from vortex import api
@@ -25,11 +27,12 @@ class AttributeEditor(groupedtreewidget.GroupedTreeWidget):
         self.setObjectName("AttributeEditor")
         self.nodes = {}
         self.application.events.selectionChanged.connect(self.onSceneSelection)
-        self.application.events.nodeDeleteRequested.connect(self.removeNode)
+        self.application.events.nodeDeleted.connect(self.removeNode)
 
-    def onSceneSelection(self):
-        for i in self.application.graphNoteBook.currentPage().scene.selectedNodes():
-            self.addNode(i.model)
+    def onSceneSelection(self, selection):
+        for model in selection:
+            if model.isSelected():
+                self.addNode(model)
 
     def addNode(self, objectModel):
         exists = self.nodes.get(objectModel)
@@ -39,14 +42,16 @@ class AttributeEditor(groupedtreewidget.GroupedTreeWidget):
         wid = NodeItem(objectModel.text(), parent=self)
         wid.setObjectModel(objectModel)
         treeItem = self.insertNewItem("", widget=wid, index=0, treeParent=None)
+        wid.deletePressed.connect(partial(self.removeNode, [objectModel]))
         self.nodes[objectModel] = treeItem
 
-    def removeNode(self, objectModel):
-        treeItem = self.nodes.get(objectModel)
-        if treeItem:
-            parent = treeItem.parent() or self.invisibleRootItem()
-            parent.removeChild(treeItem)
-            del self.nodes[objectModel]
+    def removeNode(self, objectModels):
+        for objectModel in objectModels:
+            treeItem = self.nodes.get(objectModel)
+            if treeItem:
+                parent = treeItem.parent() or self.invisibleRootItem()
+                parent.removeChild(treeItem)
+                del self.nodes[objectModel]
 
 
 class NodeItem(stackwidget.StackItem):

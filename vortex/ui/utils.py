@@ -1,3 +1,6 @@
+from Qt import QtCore
+
+
 TOP = 0
 BOTTOM = 1
 LEFT = 2
@@ -41,27 +44,27 @@ def nodesAlignX(items, direction):
     if direction == CENTER:
         avg = avgPosX(items)
         for i in items:
-            i.setPos(avg, i.y())
+            i.setPos(QtCore.QPointF(avg, i.y()))
     elif direction == RIGHT:
         maxX = maxPosX(items)
         for i in items:
-            i.setPos(maxX, i.y())
+            i.setPos(QtCore.QPointF(maxX, i.y()))
     elif direction == LEFT:
         minX = minPosX(items)
         for i in items:
-            i.setPos(minX, i.y())
+            i.setPos(QtCore.QPointF(minX, i.y()))
 
 
 def nodesAlignY(items, direction):
     if direction == CENTER:
         avg = avgPosY(items)
         for i in items:
-            i.setPos(i.x(), avg)
+            i.setPos(QtCore.QPointF(i.x(), avg))
     elif direction == TOP:
         maxY = minPosY(items)
         for i in items:
-            i.setPos(i.x(), maxY)
+            i.setPos(QtCore.QPointF(i.x(), maxY))
     elif direction == BOTTOM:
         minY = maxPosY(items)
         for i in items:
-            i.setPos(i.x(), minY)
+            i.setPos(QtCore.QPointF(i.x(), minY))

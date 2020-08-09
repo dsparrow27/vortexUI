@@ -42,6 +42,9 @@ class AttributeModel(QtCore.QObject):
     def text(self):
         return "attributeName"
 
+    def description(self):
+        return ""
+
     def setValue(self, value):
         pass
 

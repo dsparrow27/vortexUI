@@ -6,8 +6,9 @@ from vortex.ui import plugin
 
 
 class ApplicationEvents(QtCore.QObject):
-    selectionChanged = QtCore.Signal()
-    nodeDeleteRequested = QtCore.Signal(object)
+    selectionChanged = QtCore.Signal(list)
+    nodeDeleted = QtCore.Signal(list)
+    nodeCreated = QtCore.Signal(list)
 
 
 class UIApplication(QtCore.QObject):
@@ -50,5 +51,7 @@ class UIApplication(QtCore.QObject):
         elif self.graphType is None:
             return
         newGraphInstance = self.graphType(self)
-        newGraphInstance.loadFromPath(filePath, parent=parent)
-        self.graphNoteBook.addPage(newGraphInstance, newGraphInstance.rootNode())
+        rootModel = newGraphInstance.loadFromPath(filePath, parent=parent)
+        if rootModel is not None:
+            self.graphNoteBook.addPage(newGraphInstance, rootModel)
+            self.events.nodeCreated.emit(rootModel)

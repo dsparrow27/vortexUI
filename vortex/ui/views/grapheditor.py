@@ -24,12 +24,15 @@ class GraphEditor(QtWidgets.QWidget):
         self.application = application
         self.model = objectModel
         self.graph = graphModel
+        self.editorLayout = None  # type: elements.vBoxLayout
+        self.toolbar = None  # type: QtWidgets.QToolBar
+        self.scene = None  # type: graph.Scene
+        self.view = None  # type: graph.View
         self.init()
         self.connections()
         self.nodeLibraryWidget = application.loadUIPlugin("NodeLibrary", dock=False)
         self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
         self.nodeLibraryWidget.hide()
-
 
     def connections(self):
         self.view.deletePress.connect(self.scene.onDelete)
@@ -49,7 +52,6 @@ class GraphEditor(QtWidgets.QWidget):
         self.editorLayout.addWidget(self.toolbar)
         # constructor view and set scene
         self.scene = graph.Scene(self.graph, parent=self)
-        self.scene.selectionChanged.connect(self.application.events.selectionChanged.emit)
         self.view = graph.View(self.graph, self.model, parent=self)
         self.view.setScene(self.scene)
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
@@ -85,7 +87,7 @@ class GraphEditor(QtWidgets.QWidget):
             item = items[0]
             if isinstance(item, (graphnodes.QBaseNode,)) and item.model.supportsContextMenu():
                 item.model.contextMenu(menu)
-            elif isinstance(item.parentObject(), (graphnodes.QBaseNode, )):
+            elif isinstance(item.parentObject(), (graphnodes.QBaseNode,)):
                 model = item.parentObject().model
                 if model.supportsContextMenu():
                     model.contextMenu(menu)

@@ -66,7 +66,7 @@ class NodesBox(frame.QFrame):
     def show(self, *args, **kwargs):
         self.lineEdit.setFocus()
         self.nodeListWidget.clear()
-        for item, category in self.graph.registeredNodes().items():
+        for item, category in self.graph.config.registeredNodes().items():
             self.nodeListWidget.addItem(item)
         super(NodesBox, self).show(*args, **kwargs)
 

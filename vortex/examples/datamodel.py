@@ -15,6 +15,7 @@ import pprint
 
 from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
+from zoo.libs.pyqt.widgets import frame, elements
 from zoo.libs.utils import filesystem
 from zoo.libs import iconlib
 
@@ -29,7 +30,7 @@ class Graph(vortexApi.GraphModel):
     def rootNode(self):
         return self._rootNode
 
-    def saveGraph(self,  filePath=None):
+    def saveGraph(self, filePath=None):
         model = self.rootNode()
         pprint.pprint(model.serialize())
         filePath = os.path.expanduser(filePath)
@@ -39,7 +40,7 @@ class Graph(vortexApi.GraphModel):
 
     def loadFromPath(self, filePath, parent=None):
         graphData = filesystem.loadJson(filePath)
-        self.loadFromDict(graphData, parent=parent)
+        return self.loadFromDict(graphData, parent=parent)
 
     def loadFromDict(self, data, parent=None):
         root = NodeModel.deserialize(self.config, data, parent=parent)
@@ -219,6 +220,24 @@ class NodeModel(vortexApi.ObjectModel):
     def headerColour(self):
         return QtGui.QColor(*self._data.get("headerColour", (71, 115, 149, 255)))
 
+    def textColour(self):
+        color = self._data.get("textColour")
+        if color is None:
+            return super(NodeModel, self).textColor()
+        return QtGui.QColor(*color)
+
+    def setTextColour(self, colour):
+        self._data["textColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+
+    def setSecondaryTextColour(self, colour):
+        self._data["secondaryTextColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+
+    def secondaryTextColour(self):
+        color = self._data.get("secondaryTextColour")
+        if color is None:
+            return super(NodeModel, self).secondaryTextColour()
+        return QtGui.QColor(*color)
+
     def setHeaderColour(self, colour):
         self._data["headerColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
 
@@ -257,6 +276,17 @@ class NodeModel(vortexApi.ObjectModel):
                 "connections": connections
                 }
 
+    def attributeWidget(self, parent):
+        from vortex.plugins.ui.attributeeditor import attributewidgets
+        parentFrame = frame.QFrame(parent=parent)
+        layout = elements.vBoxLayout(parentFrame)
+        for model in self.attributes():
+            dataType = model.type()
+            if dataType == "string":
+                layout.addWidget(attributewidgets.StringWidget(model, parent=parentFrame))
+
+        return parentFrame
+
 
 class AttributeModel(vortexApi.AttributeModel):
     def __init__(self, data, objectModel, parent=None):
@@ -268,6 +298,9 @@ class AttributeModel(vortexApi.AttributeModel):
 
     def setText(self, text):
         self.internalAttr["label"] = text
+
+    def description(self):
+        return self.internalAttr.get("description", "")
 
     def isInput(self):
         return self.internalAttr.get("isInput", False)

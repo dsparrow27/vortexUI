@@ -1,7 +1,6 @@
 from zoo.libs.pyqt.widgets.graphics import graphicitems
 from Qt import QtWidgets, QtCore, QtGui
 
-
 ATTRIBUTE_VIS_LEVEL_ZERO = 0
 ATTRIBUTE_VIS_LEVEL_ONE = 1
 ATTRIBUTE_VIS_LEVEL_TWO = 2
@@ -85,8 +84,7 @@ class NodeHeader(graphicitems.ItemContainer):
     headerButtonStateChanged = QtCore.Signal(int)
     headerTextChanged = QtCore.Signal(str)
 
-    def __init__(self, node, text, secondaryText="", icon=None, parent=None):
-        self._node = node
+    def __init__(self, model, parent=None):
         super(NodeHeader, self).__init__(orientation=QtCore.Qt.Horizontal, parent=parent)
         self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
         self.setWindowFrameMargins(0, 0, 0, 0)
@@ -96,12 +94,14 @@ class NodeHeader(graphicitems.ItemContainer):
         height = fontmetrics.height() * 2
         self.setMinimumHeight(height)
         self.setMaximumHeight(height)
+        self.model = model
 
-        self._createLabels(text)
-        self.headerButton = NodeHeaderButton(size=12, colour=node.model.headerButtonColour(), parent=self)
+        self._createLabels(model.text())
+        self.headerButton = NodeHeaderButton(size=12, colour=model.headerButtonColour(), parent=self)
         self.headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
         self.addItem(self.headerButton, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.layout().insertStretch(-2, 1)
+        self.setTextColour(self.model.textColour())
 
     def _createLabels(self, primary):
         self._titleWidget = graphicitems.GraphicsText(primary, parent=self)
@@ -114,11 +114,15 @@ class NodeHeader(graphicitems.ItemContainer):
         self._titleWidget.text = text
         self._titleWidget.blockSignals(False)
 
+    def setTextColour(self, color):
+        self._titleWidget.color = color
+
 
 class QBaseNode(QtWidgets.QGraphicsWidget):
     ATTRIBUTE_VIS_LEVEL_ZERO = 0
     ATTRIBUTE_VIS_LEVEL_ONE = 1
     ATTRIBUTE_VIS_LEVEL_TWO = 2
+
     def __init__(self, objectModel, parent=None):
         super(QBaseNode, self).__init__(parent=parent)
         self.model = objectModel
@@ -160,4 +164,3 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
             i.model.setPosition((pos.x(), pos.y()))
 
         self.scene().updateAllConnections()
-

@@ -2,6 +2,8 @@ from Qt import QtWidgets, QtGui, QtCore
 
 from vortex.ui.graphics.graphnodes import basenode
 from zoo.libs.pyqt.widgets import elements
+from zoo.libs.pyqt.widgets.graphics import graphicitems
+
 
 class BackdropSizer(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None, size=6.0):
@@ -69,26 +71,31 @@ class Comment(basenode.QBaseNode):
         super(Comment, self).init()
         layout = elements.vGraphicsLinearLayout(parent=self)
         # layout.set
-        self.header = basenode.NodeHeader(self,
-                                 self.model.text(),
-                                 self.model.secondaryText(),
-                                 icon=self.model.icon(),
-                                 parent=self)
+        self.header = basenode.NodeHeader(self.model,
+                                          parent=self)
         self.header.headerButton.hide()
+        self.descriptionText = graphicitems.GraphicsText(self.model.secondaryText() or "Please Enter a description",
+                                                         parent=self)
         # self.header.headerTextChanged.connect(self.onHeaderTextChanged)
         # self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         layout.addItem(self.header)
+        layout.addItem(self.descriptionText)
+        self.descriptionText.textChanged.emit(self.onDescriptionChanged)
         self.setLayout(layout)
         resizerSize = self.model.resizerSize()
         self.resizer = BackdropSizer(parent=self, size=resizerSize)
         self.resizer.setPos(self.minimumWidth(), self.minimumHeight())
+
+    def onDescriptionChanged(self, text):
+        self.model.setSecondaryText(text)
 
     def paint(self, painter, option, widget):
         # main rounded rect
         rect = self.boundingRect()
         thickness = self.model.edgeThickness()
         backgroundColour = self.model.backgroundColour()
-
+        self.descriptionText.color = self.model.secondaryTextColour()
+        self.header.setTextColour(self.model.textColour())
         titleHeight = 25
         rounding = self.cornerRounding
         nodeWidth = int(rect.width())
@@ -123,5 +130,3 @@ class Comment(basenode.QBaseNode):
                            standardPen)
 
         super(Comment, self).paint(painter, option, widget)
-
-

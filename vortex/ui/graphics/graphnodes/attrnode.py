@@ -6,18 +6,14 @@ from vortex.ui.graphics.graphnodes import basenode
 from Qt import QtWidgets, QtCore, QtGui
 
 
-
 class GraphicsNode(basenode.QBaseNode):
 
     def __init__(self, objectModel, parent=None):
         super(GraphicsNode, self).__init__(objectModel, parent=parent)
 
         self.cornerRounding = self.model.cornerRounding()
-        self.header = basenode.NodeHeader(self,
-                                 self.model.text(),
-                                 self.model.secondaryText(),
-                                 icon=self.model.icon(),
-                                 parent=self)
+        self.header = basenode.NodeHeader(self.model,
+                                          parent=self)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         self.init()
 
