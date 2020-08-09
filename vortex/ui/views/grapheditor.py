@@ -37,7 +37,7 @@ class GraphEditor(QtWidgets.QWidget):
     def connections(self):
         self.view.deletePress.connect(self.scene.onDelete)
         self.view.tabPress.connect(self.showNodeLibrary)
-        self.graph.nodeCreated.connect(self.createNode)
+        self.application.events.modelNodesCreated.connect(self.createNodes)
 
     def showNodeLibrary(self, point):
         self.nodeLibraryWidget.initUI(dock=False)
@@ -118,8 +118,13 @@ class GraphEditor(QtWidgets.QWidget):
         # :todo: only update the selected nodes
         self.scene.updateAllConnections()
 
-    def createNode(self, objectModel):
-        return self.scene.createNode(objectModel)
+    def createNodes(self, objectModels):
+        for model in objectModels:
+            self.scene.createNode(model)
+
+    def createConnections(self, connections):
+        for connection in connections:
+            self.scene.createConnectionForModels(*connection)
 
     def close(self):
         self.graph.delete()

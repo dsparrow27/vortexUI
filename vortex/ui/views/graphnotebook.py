@@ -31,17 +31,21 @@ class GraphNotebook(QtWidgets.QWidget):
         editor = grapheditor.GraphEditor(self.application, graph, objectModel, parent=self)
         # editor.showPanels(True)
 
-        graph.graphLoaded.connect(self._onGraphLoad)
+        self.application.events.modelGraphLoaded.connect(self._onGraphLoad)
         editor.requestCompoundExpansion.connect(self._onRequestCompound)
 
         self.pages.append(editor)
         self.notebook.onAddTab(editor, objectModel.text())
-        for child in objectModel.children():
-            editor.createNode(child)
+        editor.createNodes(objectModel.children())
+        for n in objectModel.children():
+            for attr in n.attributes():
+                connections = attr.connections()
+                editor.createConnections(connections)
+
         return editor
 
     def _onRequestCompound(self, objectModel):
-        self.addPage(self.application.graphType(self.application), objectModel)
+        self.addPage(self.currentPage().graph, objectModel)
 
     def setCurrentPageLabel(self, label):
         page = self.notebook.currentIndex()

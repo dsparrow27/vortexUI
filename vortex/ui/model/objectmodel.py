@@ -44,7 +44,7 @@ class ObjectModel(QtCore.QObject):
         super(ObjectModel, self).__init__()
         self.config = config
         self._parent = parent
-        self._children = []
+        self._children = []  # type: list[ObjectModel]
         self._icon = ""
         self._attributes = []
         if parent is not None and self not in parent.children():
@@ -134,6 +134,11 @@ class ObjectModel(QtCore.QObject):
 
     def children(self):
         return self._children
+
+    def findChild(self, name):
+        for child in self._children:
+            if child.text() == name:
+                return child
 
     def __hash__(self):
         return id(self)

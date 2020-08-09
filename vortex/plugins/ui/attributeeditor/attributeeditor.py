@@ -26,8 +26,8 @@ class AttributeEditor(groupedtreewidget.GroupedTreeWidget):
         self.application = application
         self.setObjectName("AttributeEditor")
         self.nodes = {}
-        self.application.events.selectionChanged.connect(self.onSceneSelection)
-        self.application.events.nodeDeleted.connect(self.removeNode)
+        self.application.events.uiSelectionChanged.connect(self.onSceneSelection)
+        self.application.events.uiNodesDeleted.connect(self.removeNode)
 
     def onSceneSelection(self, selection):
         for model in selection:

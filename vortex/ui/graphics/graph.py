@@ -29,7 +29,7 @@ class Scene(graphicsscene.GraphicsScene):
                 pass
         if models:
             try:
-                self.graph.application.events.selectionChanged.emit(models)
+                self.graph.application.events.uiSelectionChanged.emit(models)
             except RuntimeError:
                 pass
 
@@ -51,7 +51,7 @@ class Scene(graphicsscene.GraphicsScene):
         self.addItem(graphNode)
         self.nodes[hash(model)] = {"qitem": graphNode,
                                    "model": model}
-        self.graph.application.events.nodeCreated.emit(model)
+        self.graph.application.events.uiNodesCreated.emit([model])
         return graphNode
 
     def updateAllConnections(self):
@@ -78,6 +78,23 @@ class Scene(graphicsscene.GraphicsScene):
         self.addItem(newConnection)
         self.connections.add(newConnection)
         return newConnection
+
+    def createConnectionForModels(self, source, destination):
+        sourceItem = None
+        destinationItem = None
+        for hashNode, nodeInfo in self.nodes.items():
+            item = nodeInfo["qitem"]
+            if isinstance(item, graphnodes.GraphicsNode):
+                src = item.attributeItem(source)
+                dest = item.attributeItem(destination)
+                if src:
+                    sourceItem = src
+                if dest:
+                    destinationItem = dest
+                if sourceItem and destinationItem:
+                    break
+        if sourceItem is not None and destinationItem is not None:
+            self.createConnection(sourceItem.inCircle, destinationItem.outCircle)
 
     def deleteNode(self, node):
         key = hash(node)
@@ -106,7 +123,6 @@ class Scene(graphicsscene.GraphicsScene):
                 continue
             elif isinstance(sel, graphnodes.QBaseNode):
                 nodesToDelete.append(sel.model)
-                # self.graph.application.events.nodeDeleteRequested.emit(sel.model)
                 deleted = sel.model.delete()
                 del self.nodes[hash(sel.model)]
             else:
@@ -115,7 +131,7 @@ class Scene(graphicsscene.GraphicsScene):
             if deleted:
                 self.removeItem(sel)
 
-        self.graph.application.events.nodeDeleted.emit(nodesToDelete)
+        self.graph.application.events.uiNodesDeleted.emit(nodesToDelete)
 
     def onSetConnectionStyle(self):
         style = self.sender().text()

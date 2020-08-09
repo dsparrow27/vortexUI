@@ -11,7 +11,6 @@ graph
 import os
 
 import logging
-import pprint
 
 from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
@@ -32,21 +31,20 @@ class Graph(vortexApi.GraphModel):
 
     def saveGraph(self, filePath=None):
         model = self.rootNode()
-        pprint.pprint(model.serialize())
         filePath = os.path.expanduser(filePath)
         filesystem.ensureFolderExists(os.path.dirname(filePath))
         filesystem.saveJson(model.serialize(), filePath)
-        self.graphSaved.emit(filePath)
+        self.application.events.modelGraphSaved.emit(filePath)
 
     def loadFromPath(self, filePath, parent=None):
         graphData = filesystem.loadJson(filePath)
         return self.loadFromDict(graphData, parent=parent)
 
     def loadFromDict(self, data, parent=None):
-        root = NodeModel.deserialize(self.config, data, parent=parent)
-        self._rootNode = root
-        self.graphLoaded.emit(self)
-        return root
+        nodes = self.createNodeFromInfo(data, parent=parent)
+        self._rootNode = nodes[0]
+        self.application.events.modelGraphLoaded.emit(self)
+        return self._rootNode
 
     def createNode(self, nodeType, parent=None):
         registeredNodes = self.config.registeredNodes()
@@ -60,21 +58,38 @@ class Graph(vortexApi.GraphModel):
                                  "isComment": nodeType == "comment",
                                  "description": ""}
                         }
-            newNode = NodeModel.deserialize(self.config, nodeInfo, parent=parent)
-            self.nodeCreated.emit(newNode)
+            nodes = self.createNodeFromInfo(nodeInfo, parent=parent)
+            self.application.events.modelNodesCreated.emit(nodes)
+
+    def createNodeFromInfo(self, info, parent=None):
+        data = dict(data=info["data"],
+                    attributes=info.get("attributes", []))
+        connections = info.get("connections", [])
+        parent = NodeModel(self.config, parent=parent, **data)
+        createdNodes = [parent]
+        remappedNodes = {data["data"]["label"]: parent}
+        for child in info.get("children", []):
+            childModel = NodeModel(self.config, parent=parent, **child)
+            createdNodes.append(childModel)
+            name = child["data"].get("label")
+            remappedNodes[name] = childModel
+
+        # handle connections
+        for source, destination in connections:
+            sourceName, sourceAttrName = source.split("|")[-1].split(".")
+            destinationName, destAttrName = destination.split("|")[-1].split(".")
+            sourceNode = remappedNodes.get(sourceName)
+            destinationNode = remappedNodes.get(destinationName)
+            sourceAttr = sourceNode.attribute(sourceAttrName)
+            destinationAttr = destinationNode.attribute(destAttrName)
+            sourceAttr.createConnection(destinationAttr)
+        return createdNodes
 
 
 class NodeModel(vortexApi.ObjectModel):
     defaults = {
         "text": "",
     }
-
-    @classmethod
-    def deserialize(cls, config, data, parent=None):
-        newObject = cls(config, parent=parent, **data)
-        for child in data.get("children", []):
-            NodeModel.deserialize(config, child, parent=newObject)
-        return newObject
 
     def __init__(self, config, parent=None, **kwargs):
         super(NodeModel, self).__init__(config, parent)
@@ -407,10 +422,16 @@ class AttributeModel(vortexApi.AttributeModel):
             return True
         return False
 
+    def connections(self):
+        return iter(self.internalAttr.get("connections", []))
+
     def createConnection(self, attribute):
 
         if self.canAcceptConnection(attribute):
-            self.internalAttr.setdefault("connections", []).append((self, attribute))
+            if self.isInput():
+                self.internalAttr.setdefault("connections", []).append((self, attribute))
+            else:
+                self.internalAttr.setdefault("connections", []).append((attribute, self))
             return True
         return False
 

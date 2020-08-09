@@ -87,7 +87,7 @@ class GraphicsNode(basenode.QBaseNode):
         rect = self.boundingRect()
         thickness = self.model.edgeThickness()
         backgroundColour = self.model.backgroundColour()
-
+        self.header.setTextColour(self.model.textColour())
         titleHeight = self.header.size().height()
         rounding = self.cornerRounding
         nodeWidth = int(rect.width())

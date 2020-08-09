@@ -40,9 +40,9 @@ class NodesBox(frame.QFrame):
     """doc string for NodesBox"""
     finished = QtCore.Signal()
 
-    def __init__(self, graph, parent):
+    def __init__(self, application, parent):
         super(NodesBox, self).__init__(parent)
-        self.graph = graph
+        self.application = application
         self.setObjectName("NodeLibrary")
         self.verticalLayout = elements.vBoxLayout(self)
         self.verticalLayout.setObjectName("verticalLayout")
@@ -55,7 +55,7 @@ class NodesBox(frame.QFrame):
 
         self.resize(200, self.sizeHint().height())
         self.connections()
-        self.reload(self.graph.config.registeredNodes(), "")
+        self.reload(self.application.config.registeredNodes(), "")
 
     def connections(self):
         self.lineEdit.textChanged.connect(self.searchTextChanged)
@@ -66,14 +66,14 @@ class NodesBox(frame.QFrame):
     def show(self, *args, **kwargs):
         self.lineEdit.setFocus()
         self.nodeListWidget.clear()
-        for item, category in self.graph.config.registeredNodes().items():
+        for item, category in self.application.config.registeredNodes().items():
             self.nodeListWidget.addItem(item)
         super(NodesBox, self).show(*args, **kwargs)
 
     def searchTextChanged(self, text):
         if not self.lineEdit.text():
             self.lineEdit.setPlaceholderText("Enter node name..")
-        nodes = self.graph.config.registeredNodes()
+        nodes = self.application.config.registeredNodes()
         nodes["Group"] = "misc"
         self.reload(nodes, text)
 
@@ -88,12 +88,12 @@ class NodesBox(frame.QFrame):
 
     def onEnterPressed(self):
         currentText = self.nodeListWidget.currentItem().text()
-        if currentText in self.graph.registeredNodes().keys():
-            self.graph.graphNoteBook.currentPage().createNode(currentText)
+        if currentText in self.application.config.registeredNodes().keys():
+            self.application.graphNoteBook.currentPage().createNode(currentText)
             self.finished.emit()
 
     def onDoubleClicked(self, item):
-        graphEditor = self.graph.graphNoteBook.currentPage()
+        graphEditor = self.application.graphNoteBook.currentPage()
         graphEditor.graph.createNode(item.text(), parent=graphEditor.model)
         self.finished.emit()
 

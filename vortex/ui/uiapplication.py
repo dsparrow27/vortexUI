@@ -6,14 +6,21 @@ from vortex.ui import plugin
 
 
 class ApplicationEvents(QtCore.QObject):
-    selectionChanged = QtCore.Signal(list)
-    nodeDeleted = QtCore.Signal(list)
-    nodeCreated = QtCore.Signal(list)
+    # events which the UI reacts on, these should be used within the models
+    uiSelectionChanged = QtCore.Signal(list)
+    uiNodesDeleted = QtCore.Signal(list)
+    uiNodesCreated = QtCore.Signal(list)
+
+    # model events
+    modelGraphSaved = QtCore.Signal(str)
+    modelGraphLoaded = QtCore.Signal(object)
+    modelNodesCreated = QtCore.Signal(list)
 
 
 class UIApplication(QtCore.QObject):
 
     def __init__(self, uiConfig):
+        super(UIApplication, self).__init__()
         self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin, variableName="id")
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
         self.graphNoteBook = None
@@ -54,4 +61,4 @@ class UIApplication(QtCore.QObject):
         rootModel = newGraphInstance.loadFromPath(filePath, parent=parent)
         if rootModel is not None:
             self.graphNoteBook.addPage(newGraphInstance, rootModel)
-            self.events.nodeCreated.emit(rootModel)
+            self.events.uiNodesCreated.emit([rootModel])

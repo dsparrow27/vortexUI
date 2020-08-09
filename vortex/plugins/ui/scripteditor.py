@@ -43,7 +43,7 @@ class XStream(QtCore.QObject):
 
 
 class ScriptEditor(api.UIPlugin):
-    autoLoad = True
+    autoLoad = False
     id = "ScriptEditor"
     creator = "David Sparrow"
     dockArea = QtCore.Qt.BottomDockWidgetArea

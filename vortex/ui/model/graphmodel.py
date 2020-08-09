@@ -8,10 +8,7 @@ class GraphModel(QtCore.QObject):
 
 
     """
-    graphSaved = QtCore.Signal(str)
-    graphLoaded = QtCore.Signal(object)
-    nodeCreated = QtCore.Signal(object)
-    requestRefresh = QtCore.Signal()
+
 
     def __init__(self, application):
         """
