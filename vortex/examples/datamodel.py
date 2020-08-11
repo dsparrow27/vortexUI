@@ -102,7 +102,7 @@ class NodeModel(vortexApi.ObjectModel):
         super(NodeModel, self).__init__(config, properties=properties, parent=parent)
 
     def createAttribute(self, kwargs):
-        attr = AttributeModel(kwargs, self)
+        attr = AttributeModel(self, kwargs)
         self._attributes.append(attr)
         self.sigAddAttribute.emit(attr)
 
@@ -119,9 +119,8 @@ class NodeModel(vortexApi.ObjectModel):
 
 
 class AttributeModel(vortexApi.AttributeModel):
-    def __init__(self, data, objectModel, parent=None):
-        super(AttributeModel, self).__init__(objectModel, parent=parent)
-        self.properties = data
+    def __init__(self, objectModel, properties, parent=None):
+        super(AttributeModel, self).__init__(objectModel, properties, parent=parent)
 
     def elements(self):
         items = []

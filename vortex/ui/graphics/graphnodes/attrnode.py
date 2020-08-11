@@ -22,7 +22,6 @@ class GraphicsNode(basenode.QBaseNode):
         layout = elements.vGraphicsLinearLayout(parent=self)
 
         self.header.headerTextChanged.connect(self.onHeaderTextChanged)
-        self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         self.header.headerButton.hide()
 
         layout.addItem(self.header)
@@ -42,12 +41,6 @@ class GraphicsNode(basenode.QBaseNode):
 
     def onHeaderTextChanged(self, text):
         self.model.setText(text)
-
-    def onHeaderButtonStateChanged(self, state):
-        pass
-        # self.attributeContainer.clear()
-        # for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=state):
-        #     self.addAttribute(attr)
 
     def setAttributeName(self, attribute, name):
         attr = self.attributeItem(attribute)

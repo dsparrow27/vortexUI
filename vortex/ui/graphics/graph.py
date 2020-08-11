@@ -13,7 +13,6 @@ class Scene(graphicsscene.GraphicsScene):
         super(Scene, self).__init__(*args, **kwargs)
         self.graph = graph
         self.nodes = {}
-        self.panelWidget = None
         self.connections = set()
         self.selectionChanged.connect(self._onSelectionChanged)
 
@@ -54,6 +53,14 @@ class Scene(graphicsscene.GraphicsScene):
         self.graph.application.events.uiNodesCreated.emit([model])
         return graphNode
 
+    def createNodes(self, objectModels):
+        for model in objectModels:
+            self.createNode(model)
+
+    def createConnections(self, connections):
+        for connection in connections:
+            self.createConnectionForModels(*connection)
+
     def updateAllConnections(self):
         for connection in self.connections:
             connection.updatePosition()
@@ -69,6 +76,15 @@ class Scene(graphicsscene.GraphicsScene):
             conn.updatePosition()
 
     def createConnection(self, source, destination):
+        source = source if source.ioType == "Output" else destination
+        destination = destination if destination.ioType == "Input" else source
+
+        if source == destination:
+            return
+
+        if not source.container().model.createConnection(destination.container().model):
+            return
+
         newConnection = graphicitems.ConnectionEdge(source, destination,
                                                     curveType=self.graph.config.defaultConnectionShape,
                                                     colour=source.colour)
@@ -97,6 +113,14 @@ class Scene(graphicsscene.GraphicsScene):
             self.createConnection(sourceItem.inCircle, destinationItem.outCircle)
 
     def deleteNode(self, node):
+        """This deletes the given node item from the graphics scene but doesn't call
+        model.delete
+
+        :param node:
+        :type node:
+        :return:
+        :rtype:
+        """
         key = hash(node)
         if key in self.nodes:
             item = self.nodes[key]["qitem"]
@@ -152,7 +176,6 @@ class View(graphicsview.GraphicsView):
     requestCopy = QtCore.Signal()
     requestPaste = QtCore.Signal(object)
     nodeDoubleClicked = QtCore.Signal(object)
-    panelWidgetDoubleClicked = QtCore.Signal(str)
     requestNodeProperties = QtCore.Signal(object)
 
     def __init__(self, graph, model, parent=None, setAntialiasing=True):
@@ -160,10 +183,9 @@ class View(graphicsview.GraphicsView):
         self.application = graph
         self.model = model
         self.newScale = None
-        self.panelWidget = None
         self._plugSelected = None
         self._interactiveEdge = None
-        self.updateRequested.connect(self.rescaleGraphWidget)
+        self.pan_active = False
         self.application.setShortcutForWidget(self, "nodeEditor")
 
     def mouseDoubleClickEvent(self, event):
@@ -200,16 +222,13 @@ class View(graphicsview.GraphicsView):
                 self.onTempConnectionRequested(self._plugSelected, event)
             else:
                 self._interactiveEdge.destinationPoint = self.mapToScene(event.pos())
-        if self.pan_active:
-            self.rescaleGraphWidget()
 
     def mousePressEvent(self, event):
         button = event.buttons()
-        self._origin_pos = event.pos()
-        self.previousMousePos = event.pos()
+        eventPos = event.pos()
         # ignore any graphicsitems we don't care about, ie. containers
-        items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                          graphnodes.NodeHeader))]
+        items = [i for i in self.items(eventPos) if not isinstance(i, (graphicitems.ItemContainer,
+                                                                       graphnodes.NodeHeader))]
         if button == QtCore.Qt.LeftButton:
             if items:
                 item = items[0]
@@ -222,7 +241,7 @@ class View(graphicsview.GraphicsView):
                     else:
                         plug.onExpandOutput()
             else:
-                rect = QtCore.QRect(self.previousMousePos, QtCore.QSize())
+                rect = QtCore.QRect(eventPos, QtCore.QSize())
                 rect = rect.normalized()
                 map_rect = self.mapToScene(rect).boundingRect()
                 self.scene().update(map_rect)
@@ -250,7 +269,7 @@ class View(graphicsview.GraphicsView):
             if items:
                 item = items[0]
                 if isinstance(item, plugwidget.Plug):
-                    self.onConnectionRequested(self._plugSelected, item)
+                    self.scene().createConnection(self._plugSelected, item)
             self._plugSelected = None
             return super(View, self).mouseReleaseEvent(event)
 
@@ -269,22 +288,6 @@ class View(graphicsview.GraphicsView):
                 selItem.setParentItem(None)
         super(View, self).mouseReleaseEvent(event)
 
-    def wheelEvent(self, event):
-        super(View, self).wheelEvent(event)
-        self.rescaleGraphWidget()
-
-    def rescaleGraphWidget(self):
-        if self.panelWidget is None:
-            return
-
-        rect = self.viewport().rect()
-        leftCorner = self.mapToScene(0, 0).toPoint()
-        sceneRect = self.mapToScene(rect).boundingRect()
-        self.panelWidget.setGeometry(leftCorner.x(),
-                                     leftCorner.y(),
-                                     sceneRect.width(),
-                                     sceneRect.height())
-
     def onTempConnectionRequested(self, plug, event):
         """Trigger when either the inCircle or outCircle is clicked, this method will handle setup of the connection
         object and appropriately call the attributeModel.
@@ -300,21 +303,10 @@ class View(graphicsview.GraphicsView):
         self._interactiveEdge = graphicitems.InteractiveEdge(plug,
                                                              curveType=self.config.defaultConnectionShape,
                                                              colour=plug.colour)
+        self._interactiveEdge.destinationPoint = plug.center()
         self._interactiveEdge.setLineStyle(self.config.defaultConnectionStyle)
         self._interactiveEdge.setWidth(self.config.connectionLineWidth)
-        self._interactiveEdge.destinationPoint = plug.center()
         self.scene().addItem(self._interactiveEdge)
-
-    def onConnectionRequested(self, source, destination):
-        source = source if source.ioType == "Output" else destination
-        destination = destination if destination.ioType == "Input" else source
-
-        if source == destination:
-            return
-
-        if not source.container().model.createConnection(destination.container().model):
-            return
-        self.scene().createConnection(source, destination)
 
     def itemsFromPos(self, pos):
         return [i for i in self.items(pos) if not isinstance(i, (graphicitems.ItemContainer,

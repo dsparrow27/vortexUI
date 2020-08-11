@@ -29,18 +29,16 @@ class GraphNotebook(QtWidgets.QWidget):
 
     def addPage(self, graph, objectModel):
         editor = grapheditor.GraphEditor(self.application, graph, objectModel, parent=self)
-        # editor.showPanels(True)
-
         self.application.events.modelGraphLoaded.connect(self._onGraphLoad)
         editor.requestCompoundExpansion.connect(self._onRequestCompound)
 
         self.pages.append(editor)
         self.notebook.onAddTab(editor, objectModel.text())
-        editor.createNodes(objectModel.children())
+        editor.scene.createNodes(objectModel.children())
         for n in objectModel.children():
             for attr in n.attributes():
                 connections = attr.connections()
-                editor.createConnections(connections)
+                editor.scene.createConnections(connections)
 
         return editor
 

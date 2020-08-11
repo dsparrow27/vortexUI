@@ -48,6 +48,12 @@ class PlugContainer(graphicitems.ItemContainer):
     def setLabel(self, label):
         self.label.setText(label)
 
+    def inputPlug(self):
+        return self.inCircle
+
+    def outputPlug(self):
+        return self.outCircle
+
     def hideInput(self):
         self.inCircle.hide()
 
@@ -101,7 +107,9 @@ class PlugContainer(graphicitems.ItemContainer):
 
     def onExpandInput(self):
         parentContainer = self.parentObject()
+        # todo handle connections
         if self.inCrossItem.expanded:
+
             removeChildContainers(self, parentContainer)
         else:
             self.expand()
@@ -110,6 +118,7 @@ class PlugContainer(graphicitems.ItemContainer):
 
     def onExpandOutput(self):
         parentContainer = self.parentObject()
+        # todo handle connections
         if self.outCrossItem.expanded:
             removeChildContainers(self, parentContainer)
         else:
@@ -119,10 +128,6 @@ class PlugContainer(graphicitems.ItemContainer):
 
 
 class Plug(QtWidgets.QGraphicsWidget):
-    rightMouseButtonClicked = QtCore.Signal(object, object)
-    leftMouseButtonClicked = QtCore.Signal(object, object)
-    moveEventRequested = QtCore.Signal(object, object)
-    releaseEventRequested = QtCore.Signal(object, object)
     _diameter = 2 * 6
     INPUT_TYPE = 0
     OUTPUT_TYPE = 1
