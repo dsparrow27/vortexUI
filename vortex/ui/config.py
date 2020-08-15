@@ -8,8 +8,8 @@ connectionStyle = {"SolidLine": QtCore.Qt.SolidLine,
                    "DotLine": QtCore.Qt.DotLine,
                    "DashDotLine": QtCore.Qt.DashDotLine,
                    "DashDotDotLine": QtCore.Qt.DashDotDotLine,
-                   "linear": "Linear",
-                   "cubic": "Cubic"}
+                   "Linear": "Linear",
+                   "Cubic": "Cubic"}
 
 
 class VortexConfig(graphviewconfig.Config):
@@ -22,7 +22,7 @@ class VortexConfig(graphviewconfig.Config):
         self.graphBackgroundColor = QtGui.QColor(45, 45, 45)
         self.gridColor = QtGui.QColor(0.0, 0.0, 0.0)
         self.defaultConnectionStyle = connectionStyle["SolidLine"]
-        self.defaultConnectionShape = connectionStyle["cubic"]
+        self.defaultConnectionShape = connectionStyle["Cubic"]
 
         self.attributeMapping = {
             'quaternion': {"colour": QtGui.QColor(126.999945, 24.999944999999997, 24.999944999999997),

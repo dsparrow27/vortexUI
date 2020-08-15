@@ -28,6 +28,16 @@ class UIApplication(QtCore.QObject):
         self.graphType = None
         self.events = ApplicationEvents()
 
+    def currentGraph(self):
+        if self.graphNoteBook is None:
+            raise RuntimeError("No graph currently created")
+        return self.graphNoteBook.currentPage().graph
+
+    def currentNetworkEditor(self):
+        if self.graphNoteBook is None:
+            raise RuntimeError("No graph currently created")
+        return self.graphNoteBook.currentPage()
+
     def mainWindow(self):
         for wid in QtWidgets.QApplication.topLevelWidgets():
             if wid.objectName() == "Vortex":
@@ -60,5 +70,5 @@ class UIApplication(QtCore.QObject):
         newGraphInstance = self.graphType(self)
         rootModel = newGraphInstance.loadFromPath(filePath, parent=parent)
         if rootModel is not None:
-            self.graphNoteBook.addPage(newGraphInstance, rootModel)
+            self.graphNoteBook.addGraph(newGraphInstance, rootModel)
             self.events.uiNodesCreated.emit([rootModel])

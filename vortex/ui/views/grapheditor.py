@@ -34,6 +34,10 @@ class GraphEditor(QtWidgets.QWidget):
         self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
         self.nodeLibraryWidget.hide()
 
+    def close(self):
+        self.graph.delete()
+        super(GraphEditor, self).close()
+
     def connections(self):
         self.view.deletePress.connect(self.scene.onDelete)
         self.view.tabPress.connect(self.showNodeLibrary)
@@ -117,7 +121,3 @@ class GraphEditor(QtWidgets.QWidget):
             utils.nodesAlignY(nodes, utils.BOTTOM)
         # :todo: only update the selected nodes
         self.scene.updateAllConnections()
-
-    def close(self):
-        self.graph.delete()
-        super(GraphEditor, self).close()

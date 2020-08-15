@@ -4,8 +4,11 @@ from zoo.libs.pyqt.widgets.graphics import graphicsview
 from zoo.libs.pyqt.widgets.graphics import graphicsscene
 from vortex.ui.graphics import plugwidget
 from vortex.ui.graphics import graphnodes
-
+from zoo.libs.utils import zlogging
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop, graphicitems
+
+
+logger = zlogging.getLogger(__name__)
 
 
 class Scene(graphicsscene.GraphicsScene):
@@ -22,7 +25,6 @@ class Scene(graphicsscene.GraphicsScene):
             item = i["qitem"]
             try:
                 item.model.setSelected(item.isSelected())
-                # if item.model.isSelected():
                 models.append(item.model)
             except RuntimeError:
                 pass
@@ -76,21 +78,24 @@ class Scene(graphicsscene.GraphicsScene):
             conn.updatePosition()
 
     def createConnection(self, source, destination):
-        source = source if source.ioType == "Output" else destination
-        destination = destination if destination.ioType == "Input" else source
-
-        if source == destination:
+        src = source if source.model.isInput() else destination
+        dest = destination if destination.model.isOutput() else source
+        if src == dest:
+            logger.debug("source and destination is the same")
+            return
+        if not src.model.canAcceptConnection(dest.model):
+            return
+        newConnection = src.model.createConnection(dest.model)
+        if not newConnection:
             return
 
-        if not source.container().model.createConnection(destination.container().model):
-            return
-
-        newConnection = graphicitems.ConnectionEdge(source, destination,
+        newConnection = graphicitems.ConnectionEdge(src.inCircle, dest.outCircle,
                                                     curveType=self.graph.config.defaultConnectionShape,
-                                                    colour=source.colour)
+                                                    colour=src.inCircle.colour)
         newConnection.setLineStyle(self.graph.config.defaultConnectionStyle)
         newConnection.setWidth(self.graph.config.connectionLineWidth)
         newConnection.setZValue(-1)
+        newConnection.setCurveType(self.graph.config.defaultConnectionShape)
         self.addItem(newConnection)
         self.connections.add(newConnection)
         return newConnection
@@ -110,7 +115,7 @@ class Scene(graphicsscene.GraphicsScene):
                 if sourceItem and destinationItem:
                     break
         if sourceItem is not None and destinationItem is not None:
-            self.createConnection(sourceItem.inCircle, destinationItem.outCircle)
+            self.createConnection(sourceItem, destinationItem)
 
     def deleteNode(self, node):
         """This deletes the given node item from the graphics scene but doesn't call
@@ -161,10 +166,10 @@ class Scene(graphicsscene.GraphicsScene):
         style = self.sender().text()
         styleValue = self.graph.config.connectionStyles.get(style)
         self.graph.config.defaultConnectionStyle = style
-        if styleValue == "linear":
+        if styleValue == "Linear":
             for conn in self.connections:
                 conn.setAsLinearPath()
-        elif styleValue == "cubic":
+        elif styleValue == "Cubic":
             for conn in self.connections:
                 conn.setAsCubicPath()
         else:
@@ -255,7 +260,7 @@ class View(graphicsview.GraphicsView):
         elif button == QtCore.Qt.RightButton and items:
             self._contextMenu(event.pos())
         self.parent().nodeLibraryWidget.hide()
-        QtWidgets.QGraphicsView.mousePressEvent(self, event)
+        super(View, self).mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
 
@@ -269,7 +274,7 @@ class View(graphicsview.GraphicsView):
             if items:
                 item = items[0]
                 if isinstance(item, plugwidget.Plug):
-                    self.scene().createConnection(self._plugSelected, item)
+                    self.scene().createConnection(self._plugSelected.container(), item.container())
             self._plugSelected = None
             return super(View, self).mouseReleaseEvent(event)
 
@@ -306,6 +311,7 @@ class View(graphicsview.GraphicsView):
         self._interactiveEdge.destinationPoint = plug.center()
         self._interactiveEdge.setLineStyle(self.config.defaultConnectionStyle)
         self._interactiveEdge.setWidth(self.config.connectionLineWidth)
+        self._interactiveEdge.setCurveType(self.config.defaultConnectionShape)
         self.scene().addItem(self._interactiveEdge)
 
     def itemsFromPos(self, pos):

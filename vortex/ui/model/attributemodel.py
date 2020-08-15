@@ -159,13 +159,11 @@ class AttributeModel(QtCore.QObject):
 
     def createConnection(self, attribute):
 
-        if self.canAcceptConnection(attribute):
-            if self.isInput():
-                self.properties.setdefault("connections", []).append((self, attribute))
-            else:
-                self.properties.setdefault("connections", []).append((attribute, self))
-            return True
-        return False
+        if self.isInput():
+            self.properties.setdefault("connections", []).append((self, attribute))
+        else:
+            self.properties.setdefault("connections", []).append((attribute, self))
+        return True
 
     def deleteConnection(self, attribute):
         connections = self.properties.get("connections", [])
@@ -188,10 +186,12 @@ class AttributeModel(QtCore.QObject):
         return QtGui.QColor(255, 255, 255)
 
     def edgeColour(self):
-        return QtGui.QColor(25, 25, 25)
+        return QtGui.QColor(0, 180, 0)
 
     def backgroundColour(self):
-        return QtGui.QColor(0, 180, 0)
+        if self.isConnected():
+            return self.edgeColour()
+        return QtGui.QColor(25, 25, 25)
 
     def serialize(self):
         return {

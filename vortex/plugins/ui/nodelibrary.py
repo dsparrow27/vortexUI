@@ -89,12 +89,12 @@ class NodesBox(frame.QFrame):
     def onEnterPressed(self):
         currentText = self.nodeListWidget.currentItem().text()
         if currentText in self.application.config.registeredNodes().keys():
-            self.application.graphNoteBook.currentPage().createNode(currentText)
+            self.application.currentGraph().createNode(currentText)
             self.finished.emit()
 
     def onDoubleClicked(self, item):
-        graphEditor = self.application.graphNoteBook.currentPage()
-        graphEditor.graph.createNode(item.text(), parent=graphEditor.model)
+
+        self.application.currentGraph().createNode(item.text()) # todo: handle tab switching so we update the current active parent
         self.finished.emit()
 
     def onSelectionChanged(self, current):

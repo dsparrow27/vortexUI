@@ -9,7 +9,6 @@ class GraphModel(QtCore.QObject):
 
     """
 
-
     def __init__(self, application):
         """
         :param application:
@@ -22,9 +21,6 @@ class GraphModel(QtCore.QObject):
         self._rootNode = None
 
     def customToolbarActions(self, parent):
-        pass
-
-    def initialize(self):
         pass
 
     def registeredNodes(self):

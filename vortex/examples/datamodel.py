@@ -59,13 +59,13 @@ class Graph(vortexApi.GraphModel):
         registeredNodes = self.config.registeredNodes()
         if nodeType in registeredNodes:
             nodeInfo = {"properties": {"label": nodeType,
-                                 "category": "misc",
-                                 "secondaryLabel": "bob",
-                                 "script": "", "commands": [],
-                                 "isPin": nodeType == "pin",
-                                 "isBackdrop": nodeType == "backdrop",
-                                 "isComment": nodeType == "comment",
-                                 "description": ""}
+                                       "category": "misc",
+                                       "secondaryLabel": "bob",
+                                       "script": "", "commands": [],
+                                       "isPin": nodeType == "pin",
+                                       "isBackdrop": nodeType == "backdrop",
+                                       "isComment": nodeType == "comment",
+                                       "description": ""}
                         }
             nodes = self.createNodeFromInfo(nodeInfo, parent=parent)
             self.application.events.modelNodesCreated.emit(nodes)
@@ -102,7 +102,7 @@ class NodeModel(vortexApi.ObjectModel):
         super(NodeModel, self).__init__(config, properties=properties, parent=parent)
 
     def createAttribute(self, kwargs):
-        attr = AttributeModel(self, kwargs)
+        attr = TestModel(self, kwargs)
         self._attributes.append(attr)
         self.sigAddAttribute.emit(attr)
 
@@ -118,10 +118,7 @@ class NodeModel(vortexApi.ObjectModel):
         return parentFrame
 
 
-class AttributeModel(vortexApi.AttributeModel):
-    def __init__(self, objectModel, properties, parent=None):
-        super(AttributeModel, self).__init__(objectModel, properties, parent=parent)
-
+class TestModel(vortexApi.AttributeModel):
     def elements(self):
         items = []
         name = self.text()
@@ -129,16 +126,17 @@ class AttributeModel(vortexApi.AttributeModel):
         if isinstance(value, (list, tuple)):
             isCompound = len(self.properties.get("children", [])) > 0
             for index, elementValue in enumerate(value):
-                item = AttributeModel({"label": "{}[{}]".format(name, index),
-                                       "isInput": self.isInput(),
-                                       "type": "compound",
-                                       "isElement": True,
-                                       "value": elementValue,
-                                       "isOutput": self.isOutput(),
-                                       "isArray": False,
-                                       "isCompound": isCompound,
-                                       "children": self.properties.get("children", [])
-                                       }, objectModel=self.objectModel, parent=self)
+                item = TestModel(objectModel=self.objectModel,
+                                 properties={"label": "{}[{}]".format(name, index),
+                                             "isInput": self.isInput(),
+                                             "type": "compound",
+                                             "isElement": True,
+                                             "value": elementValue,
+                                             "isOutput": self.isOutput(),
+                                             "isArray": False,
+                                             "isCompound": isCompound,
+                                             "children": self.properties.get("children", [])
+                                             }, parent=self)
                 items.append(item)
         return items
 
@@ -146,19 +144,17 @@ class AttributeModel(vortexApi.AttributeModel):
         children = []
         for child in self.properties.get("children", []):
             child["isChild"] = True
-            item = AttributeModel(child, objectModel=self.objectModel, parent=self)
+            item = TestModel(objectModel=self.objectModel, properties=child, parent=self)
             children.append(item)
         return children
 
     def createConnection(self, attribute):
 
-        if self.canAcceptConnection(attribute):
-            if self.isInput():
-                self.properties.setdefault("connections", []).append((self, attribute))
-            else:
-                self.properties.setdefault("connections", []).append((attribute, self))
-            return True
-        return False
+        if self.isInput():
+            self.properties.setdefault("connections", []).append((self, attribute))
+        else:
+            self.properties.setdefault("connections", []).append((attribute, self))
+        return True
 
     def deleteConnection(self, attribute):
         connections = self.properties.get("connections", [])
@@ -171,7 +167,7 @@ class AttributeModel(vortexApi.AttributeModel):
         self.properties["connections"] = newConnections
         return changed
 
-    def backgroundColour(self):
+    def edgeColour(self):
         typeMap = self.objectModel.config.attributeMapping.get(self.properties["type"])
         if typeMap:
             return typeMap["colour"]

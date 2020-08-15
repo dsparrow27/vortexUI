@@ -89,11 +89,8 @@ class NodeHeader(graphicitems.ItemContainer):
         self.setSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Expanding)
         self.setWindowFrameMargins(0, 0, 0, 0)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
-        self.titleFont = QtGui.QFont("Roboto-Bold", 8)
-        fontmetrics = QtGui.QFontMetrics(self.titleFont)
-        height = fontmetrics.height() * 2
-        self.setMinimumHeight(height)
-        self.setMaximumHeight(height)
+
+
         self.model = model
 
         self._createLabels(model.text())
@@ -106,8 +103,11 @@ class NodeHeader(graphicitems.ItemContainer):
     def _createLabels(self, primary):
         self._titleWidget = graphicitems.GraphicsText(primary, parent=self)
         self._titleWidget.textChanged.connect(self.headerTextChanged)
-        self._titleWidget.font = self.titleFont
         self.addItem(self._titleWidget, QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
+        fontmetrics = QtGui.QFontMetrics(self._titleWidget.font)
+        height = fontmetrics.height() * 2
+        self.setMinimumHeight(height)
+        self.setMaximumHeight(height)
 
     def setText(self, text):
         self._titleWidget.blockSignals(True)
