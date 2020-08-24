@@ -16,11 +16,20 @@ from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
 from zoo.libs.pyqt.widgets import frame, elements
 from zoo.libs.utils import filesystem
+from vortex.ui import attributewidgets
 
 logger = logging.getLogger(__name__)
 
 
 class Config(vortexApi.VortexConfig):
+
+    def __init__(self):
+        super(Config, self).__init__()
+        self.registerAttributeWidget("string", attributewidgets.StringWidget)
+        self.registerAttributeWidget("path", attributewidgets.PathWidget)
+        self.registerAttributeWidget("float", attributewidgets.NumericAttributeWidget)
+        self.registerAttributeWidget("int", attributewidgets.NumericAttributeWidget)
+
     def registeredNodes(self):
         return {"comment": "organization",
                 "sum": "math",
@@ -107,14 +116,10 @@ class NodeModel(vortexApi.ObjectModel):
         self.sigAddAttribute.emit(attr)
 
     def attributeWidget(self, parent):
-        from vortex.plugins.ui.attributeeditor import attributewidgets
         parentFrame = frame.QFrame(parent=parent)
         layout = elements.vBoxLayout(parentFrame)
-        for model in self.attributes():
-            dataType = model.type()
-            if dataType == "string":
-                layout.addWidget(attributewidgets.StringWidget(model, parent=parentFrame))
-
+        for model in self.attributes(outputs=False):
+            layout.addWidget(self.config.attributeWidgetForType(model.type())(model, parent=parentFrame))
         return parentFrame
 
 

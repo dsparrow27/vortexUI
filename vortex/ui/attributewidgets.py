@@ -6,26 +6,11 @@ from zoo.libs.pyqt import uiconstants
 from zoo.libs.pyqt.widgets import elements
 
 
-class AttributeItemWidget(QtWidgets.QFrame):
-    """Class which encapsulates a single attribute widget
-    """
-
-    def __init__(self, label, widget, parent=None):
-        super(AttributeItemWidget, self).__init__(parent=parent)
-        layout = QtWidgets.QFormLayout()
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
-        label = QtWidgets.QLabel(label, parent=self)
-        widget.setParent(self)
-        layout.addWidget(label)
-        layout.addWidget(widget)
-        self.setLayout(layout)
-
-
 class StringWidget(elements.StringEdit):
 
     def __init__(self, model, parent=None):
-        super(StringWidget, self).__init__(model.text(), model.value(), enableMenu=False,parent=parent)
+        super(StringWidget, self).__init__(model.text(), model.value(), enableMenu=False, parent=parent)
+        self.model = weakref.ref(model)
         self.textModified.connect(model.setValue)
 
 
@@ -77,44 +62,21 @@ class NumericAttributeWidget(QtWidgets.QFrame):
         layout = elements.hBoxLayout()
         self.setLayout(layout)
 
-        self.slider = elements.HSlider(QtCore.Qt.Horizontal, parent=self)
-        self.valueSpinBox = QtWidgets.QSpinBox(parent=self)
-        self.valueSpinBox.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.valueSpinBox.setRange(-100, 100)
-        self.valueSpinBox.setSingleStep(1)
-        self.valueSpinBox.valueChanged.connect(self.setValue)
-        self.slider.valueChanged.connect(self.setValue)
+        self.slider = elements.FloatSlider(
+            label=model.text(),
+            defaultValue=model.default(),
+            parent=self,
+            toolTip=model.description(),
+            sliderMin=model.min(),
+            sliderMax=model.max(), sliderAccuracy=200, enableMenu=False, editBox=True, labelRatio=1,
+            editBoxRatio=1, sliderRatio=1, labelBtnRatio=1, decimalPlaces=3, orientation=QtCore.Qt.Horizontal,
+            dynamicMin=False, dynamicMax=False)
+        self.slider.numSliderMajorChange.connect(self.setValue)
         layout.addWidget(self.slider)
-        layout.addWidget(self.valueSpinBox)
-        self.setStyleSheet("""
-    QSlider::groove:horizontal
-    {
-        border:none;
-    }
+        self.slider.setValue(model.value())
 
-    QSlider::sub-page
-    {
-        background: rgb(164, 192, 2);
-    }
-
-    QSlider::add-page
-    {
-        background: rgb(70, 70, 70);
-    }
-
-    QSlider::handle
-    {
-        background: rgb(164, 192, 2);
-        width: 30px;
-        margin: -30px 0;
-    }
-            """)
-
-    def setValue(self, value):
-        if self.valueSpinBox.value() != value:
-            self.valueSpinBox.setValue(value)
-        if self.slider.value() != value:
-            self.slider.setValue(value)
+    def setValue(self):
+        value = self.slider.value()
         ref = self.model()
         if ref is not None and ref.value() != value:
             ref.setValue(value)

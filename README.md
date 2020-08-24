@@ -24,3 +24,4 @@ set PYTHON_INTERPRETER=%APPDATA%\..\Local\Programs\Python\Python37\python.exe
  - [ ] maya friendly
  - [ ] houdini friendly
  - [X] text antialiasing
+ - [ ] dpi scaling support

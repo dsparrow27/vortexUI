@@ -88,7 +88,7 @@ class AttributeModel(QtCore.QObject):
         return self._properties.get("type", "string")
 
     def default(self):
-        return self._properties.get("default", "")
+        return self._properties.get("default", 0)
 
     def min(self):
         return self._properties.get("min", 0)

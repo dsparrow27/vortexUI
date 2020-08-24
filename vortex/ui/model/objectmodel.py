@@ -193,6 +193,11 @@ class ObjectModel(QtCore.QObject):
         :return: Returns a list of AttributeModels containing inputs and outputs(depending of parameters)
         :rtype: list(::class::`AttributeModel`)
         """
+        for attribute in self._attributes:
+            if inputs and attribute.isInput():
+                yield attribute
+            elif outputs and attribute.isOutput():
+                yield attribute
         return self._attributes
 
     def createAttribute(self, attributeDefinition):
