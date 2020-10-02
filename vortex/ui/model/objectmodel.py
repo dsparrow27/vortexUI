@@ -17,6 +17,7 @@ class ObjectModel(QtCore.QObject):
     sigAddAttribute = QtCore.Signal(object)  # attributeModel
     sigRemoveAttribute = QtCore.Signal(object)  # attributeModel
     sigSelectionChanged = QtCore.Signal(bool)  # bool
+    sigAttributeNameChanged = QtCore.Signal(object, str)
 
     # # connected by the GraphicsNode
     sigNodeNameChanged = QtCore.Signal(str)  # objectModel

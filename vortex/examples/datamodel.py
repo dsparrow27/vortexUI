@@ -173,6 +173,9 @@ class TestModel(vortexApi.AttributeModel):
         return changed
 
     def edgeColour(self):
+        return self.backgroundColour().darker()
+
+    def backgroundColour(self):
         typeMap = self.objectModel.config.attributeMapping.get(self.properties["type"])
         if typeMap:
             return typeMap["colour"]

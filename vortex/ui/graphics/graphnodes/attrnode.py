@@ -27,14 +27,16 @@ class GraphicsNode(basenode.QBaseNode):
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
         # now bind the attributes from the model if it has any
-        for attr in self.model.attributes(inputs=True, outputs=True, attributeVisLevel=self.ATTRIBUTE_VIS_LEVEL_ONE):
+        for attr in self.model.attributes(inputs=False, outputs=True, attributeVisLevel=self.ATTRIBUTE_VIS_LEVEL_ONE):
+            self.addAttribute(attr)
+        for attr in self.model.attributes(inputs=True, outputs=False, attributeVisLevel=self.ATTRIBUTE_VIS_LEVEL_ONE):
             self.addAttribute(attr)
         self._connections()
 
     def _connections(self):
         # bind the objectModel signals to this qNode
         self.model.sigAddAttribute.connect(self.addAttribute)
-        # self.model.attributeNameChangedSig.connect(self.setAttributeName)
+        self.model.sigAttributeNameChanged.connect(self.setAttributeName)
         self.model.sigNodeNameChanged.connect(self.header.setText)
         self.model.sigRemoveAttribute.connect(self.removeAttribute)
         self.model.sigSelectionChanged.connect(self.setSelected)

@@ -46,12 +46,12 @@ class GraphNotebook(tabwidget.TabWidget):
             self.removeTab(index)
 
     def clear(self):
-        for i in range(len(self.pages)):
+        for i in range(self.count):
             self.deleteGraph(i)
         self.clear()
 
     def currentPage(self):
-        if self.currentIndex() in range(len(self.pages)):
+        if self.currentIndex() in range(self.count()):
             return self.editors[self.currentIndex()]
 
     def _onGraphLoad(self, graph, clear=False):

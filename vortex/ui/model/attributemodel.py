@@ -53,6 +53,7 @@ class AttributeModel(QtCore.QObject):
 
     def setText(self, text):
         self._properties["label"] = text
+        self.objectModel.sigAttributeNameChanged.emit(self, text)
 
     def description(self):
         return self._properties.get("description", "")
@@ -189,9 +190,10 @@ class AttributeModel(QtCore.QObject):
         return QtGui.QColor(0, 180, 0)
 
     def backgroundColour(self):
-        if self.isConnected():
-            return self.edgeColour()
-        return QtGui.QColor(25, 25, 25)
+        return self.edgeColour()
+        # if self.isConnected():
+        #     return self.edgeColour()
+        # return QtGui.QColor(25, 25, 25)
 
     def serialize(self):
         return {

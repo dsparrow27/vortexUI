@@ -90,7 +90,6 @@ class NodeHeader(graphicitems.ItemContainer):
         self.setWindowFrameMargins(0, 0, 0, 0)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
 
-
         self.model = model
 
         self._createLabels(model.text())

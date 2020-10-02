@@ -47,9 +47,9 @@ class Outliner(QtWidgets.QFrame):
     def newNode(self, objectModels):
         for objectModel in objectModels:
             if not objectModel:
-                return
+                continue
             if self._findItemForModel(objectModel):
-                return
+                continue
             parentModel = objectModel.parentObject()
             parentItem = self.tree.invisibleRootItem()
             if parentModel:
@@ -68,4 +68,6 @@ class Outliner(QtWidgets.QFrame):
             item = it.value()
             if item.data(0, QtCore.Qt.UserRole + 1) in objectModels:
                 parent = item.parent()
+                if not parent :
+                    parent = self.tree.invisibleRootItem()
                 parent.removeChild(item)

@@ -62,6 +62,7 @@ class Comment(basenode.QBaseNode):
 
     def __init__(self, objectModel, parent=None):
         super(Comment, self).__init__(objectModel, parent)
+        self.setZValue(-1.1)
         self.backgroundColour = QtGui.QBrush(self.model.backgroundColour())
         self.cornerRounding = self.model.cornerRounding()
         self.resizer = None
@@ -76,6 +77,7 @@ class Comment(basenode.QBaseNode):
         self.header.headerButton.hide()
         self.descriptionText = graphicitems.GraphicsText(self.model.secondaryText() or "Please Enter a description",
                                                          parent=self)
+        self.descriptionText.setWrap(True)
         # self.header.headerTextChanged.connect(self.onHeaderTextChanged)
         # self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
         layout.addItem(self.header)
