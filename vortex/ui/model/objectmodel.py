@@ -29,7 +29,7 @@ class ObjectModel(QtCore.QObject):
         self._children = []  # type: list[ObjectModel]
         self._icon = ""
         self._attributes = []
-        self._properties = properties["properties"]
+        self._properties = properties.get("properties", {})
         if parent is not None and self not in parent.children():
             parent.children().append(self)
         for attr in properties.get("attributes", []):
@@ -49,7 +49,7 @@ class ObjectModel(QtCore.QObject):
     def fullPathName(self):
         path = self.text()
         if self._parent is not None:
-            return "|".join([self._parent.fullPathName(), path])
+            return "/".join([self._parent.fullPathName(), path])
         return path
 
     def icon(self):
@@ -57,7 +57,7 @@ class ObjectModel(QtCore.QObject):
 
         :rtype: str
         """
-        return self._properties["icon"]
+        return self._properties.get("icon", "")
 
     def isSelected(self):
         """Returns if the node is currently selected
@@ -162,10 +162,12 @@ class ObjectModel(QtCore.QObject):
     def children(self):
         return self._children
 
-    def findChild(self, name):
+    def findChild(self, name, recursive=False):
         for child in self._children:
             if child.text() == name:
                 return child
+            if recursive and child.isCompound():
+                child.findChild(name, recursive)
 
     def __hash__(self):
         return id(self)

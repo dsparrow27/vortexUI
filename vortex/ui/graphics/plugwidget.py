@@ -3,6 +3,7 @@ from Qt import QtWidgets, QtCore, QtGui
 
 
 class PlugContainer(graphicitems.ItemContainer):
+    expandedSig = QtCore.Signal()
 
     def __init__(self, attributeModel, parent=None):
         super(PlugContainer, self).__init__(QtCore.Qt.Horizontal, parent)
@@ -94,6 +95,7 @@ class PlugContainer(graphicitems.ItemContainer):
             elementContainer.outCrossItem.isChild = element.isChild()
             elementContainer.outCrossItem.hasChildren = element.hasChildren()
             parentContainer.insertItem(selfIndex, elementContainer)
+            elementContainer.expandedSig.connect(self.expandedSig.emit)
             self.childContainers.append(elementContainer)
             if element.isInput():
                 index = elementContainer.layout().count() - 2
@@ -109,12 +111,11 @@ class PlugContainer(graphicitems.ItemContainer):
         parentContainer = self.parentObject()
         # todo handle connections
         if self.inCrossItem.expanded:
-
             removeChildContainers(self, parentContainer)
         else:
             self.expand()
         self.inCrossItem.expanded = not self.inCrossItem.expanded
-        self.update()
+        self.expandedSig.emit()
 
     def onExpandOutput(self):
         parentContainer = self.parentObject()
@@ -124,7 +125,7 @@ class PlugContainer(graphicitems.ItemContainer):
         else:
             self.expand()
         self.outCrossItem.expanded = not self.outCrossItem.expanded
-        self.update()
+        self.expandedSig.emit()
 
 
 class Plug(QtWidgets.QGraphicsWidget):
@@ -166,7 +167,7 @@ class Plug(QtWidgets.QGraphicsWidget):
 
     def center(self):
         rect = self.boundingRect()
-        center = QtCore.QPointF(rect.x() + rect.width() * 0.5, rect.y() + rect.height() * 0.5)
+        center = QtCore.QPointF((rect.x() + rect.width()) * 0.5, (rect.y() + rect.height()) * 0.5)
         return self.mapToScene(center)
 
     def hoverEnterEvent(self, event):

@@ -170,7 +170,7 @@
                     "min": 0,
                     "max": 9999,
                     "value": null,
-                    "default": ""
+                    "default": 0.0
                 },
                 {
                     "label": "output",
@@ -185,7 +185,7 @@
                     "min": 0,
                     "max": 9999,
                     "value": null,
-                    "default": ""
+                    "default": 0.0
                 }
             ],
             "children": []
@@ -220,7 +220,7 @@
                     "min": 0,
                     "max": 9999,
                     "value": null,
-                    "default": ""
+                    "default": 0.0
                 },
                 {
                     "label": "output",
@@ -235,7 +235,7 @@
                     "min": 0,
                     "max": 9999,
                     "value": null,
-                    "default": ""
+                    "default": 0.0
                 }
             ],
             "children": []
@@ -376,7 +376,7 @@
                                     "min": 0,
                                     "max": 9999,
                                     "value": null,
-                                    "default": ""
+                                    "default": 0.0
                                 },
                                 {
                                     "label": "minY",
@@ -391,7 +391,7 @@
                                     "min": 0,
                                     "max": 9999,
                                     "value": null,
-                                    "default": ""
+                                    "default": 0.0
                                 },
                                 {
                                     "label": "minZ",
@@ -406,7 +406,7 @@
                                     "min": 0,
                                     "max": 9999,
                                     "value": null,
-                                    "default": ""
+                                    "default": 0.0
                                 }
                             ],
                             "min": 0,
@@ -437,7 +437,7 @@
                                     "min": 0,
                                     "max": 9999,
                                     "value": null,
-                                    "default": ""
+                                    "default": 0.0
                                 },
                                 {
                                     "label": "maxY",
@@ -452,7 +452,7 @@
                                     "min": 0,
                                     "max": 9999,
                                     "value": null,
-                                    "default": ""
+                                    "default": 0.0
                                 },
                                 {
                                     "label": "maxZ",
@@ -467,13 +467,13 @@
                                     "min": 0,
                                     "max": 9999,
                                     "value": null,
-                                    "default": ""
+                                    "default": 0.0
                                 }
                             ],
                             "min": 0,
                             "max": 9999,
                             "value": null,
-                            "default": ""
+                            "default": 0.0
                         }
                     ],
                     "min": 0,
@@ -504,7 +504,7 @@
                             "min": 0,
                             "max": 9999,
                             "value": null,
-                            "default": ""
+                            "default":0.0
                         },
                         {
                             "label": "y",
@@ -519,7 +519,7 @@
                             "min": 0,
                             "max": 9999,
                             "value": null,
-                            "default": ""
+                            "default": 0.0
                         },
                         {
                             "label": "z",
@@ -534,13 +534,13 @@
                             "min": 0,
                             "max": 9999,
                             "value": null,
-                            "default": ""
+                            "default": 0.0
                         }
                     ],
                     "min": 0,
                     "max": 9999,
                     "value": null,
-                    "default": ""
+                    "default": 0.0
                 }
             ],
             "children": []

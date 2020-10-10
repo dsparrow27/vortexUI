@@ -159,11 +159,10 @@ class AttributeModel(QtCore.QObject):
         return self.properties.get("description")
 
     def createConnection(self, attribute):
-
         if self.isInput():
-            self.properties.setdefault("connections", []).append((self, attribute))
-        else:
             self.properties.setdefault("connections", []).append((attribute, self))
+        else:
+            self.properties.setdefault("connections", []).append((self, attribute))
         return True
 
     def deleteConnection(self, attribute):
@@ -176,6 +175,9 @@ class AttributeModel(QtCore.QObject):
                 changed = True
         self.properties["connections"] = newConnections
         return changed
+
+    def deleteAllConnections(self):
+        self.properties["connections"] = []
 
     def size(self):
         return QtCore.QSize(150, 30)
@@ -191,9 +193,6 @@ class AttributeModel(QtCore.QObject):
 
     def backgroundColour(self):
         return self.edgeColour()
-        # if self.isConnected():
-        #     return self.edgeColour()
-        # return QtGui.QColor(25, 25, 25)
 
     def serialize(self):
         return {

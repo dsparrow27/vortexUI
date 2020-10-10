@@ -8,9 +8,7 @@ from zoo.libs.pyqt.widgets.graphics import graphicitems
 class BackdropSizer(QtWidgets.QGraphicsItem):
     def __init__(self, parent=None, size=6.0):
         super(BackdropSizer, self).__init__(parent)
-        self.setFlag(self.ItemIsSelectable, True)
-        self.setFlag(self.ItemIsMovable, True)
-        self.setFlag(self.ItemSendsScenePositionChanges, True)
+        self.setFlags(self.ItemIsMovable | self.ItemSendsGeometryChanges)
         self.setCursor(QtGui.QCursor(QtCore.Qt.SizeFDiagCursor))
         self._size = size
 
@@ -25,8 +23,7 @@ class BackdropSizer(QtWidgets.QGraphicsItem):
             x = mx if value.x() < mx else value.x()
             y = my if value.y() < my else value.y()
             value = QtCore.QPointF(x, y)
-            item.model.setWidth(x + rect.width())
-            item.model.setHeight(y + rect.height())
+            item.resize(x + rect.width(), y + rect.height())
             return value
         return super(BackdropSizer, self).itemChange(change, value)
 
@@ -70,23 +67,19 @@ class Comment(basenode.QBaseNode):
 
     def init(self):
         super(Comment, self).init()
-        layout = elements.vGraphicsLinearLayout(parent=self)
-        # layout.set
         self.header = basenode.NodeHeader(self.model,
                                           parent=self)
         self.header.headerButton.hide()
         self.descriptionText = graphicitems.GraphicsText(self.model.secondaryText() or "Please Enter a description",
                                                          parent=self)
         self.descriptionText.setWrap(True)
+        self.descriptionText.setPos(0, self.header.size().height())
         # self.header.headerTextChanged.connect(self.onHeaderTextChanged)
         # self.header.headerButtonStateChanged.connect(self.onHeaderButtonStateChanged)
-        layout.addItem(self.header)
-        layout.addItem(self.descriptionText)
         self.descriptionText.textChanged.emit(self.onDescriptionChanged)
-        self.setLayout(layout)
         resizerSize = self.model.resizerSize()
         self.resizer = BackdropSizer(parent=self, size=resizerSize)
-        self.resizer.setPos(self.minimumWidth(), self.minimumHeight())
+        self.resizer.setPos(self.model.width(), self.model.height())
 
     def onDescriptionChanged(self, text):
         self.model.setSecondaryText(text)

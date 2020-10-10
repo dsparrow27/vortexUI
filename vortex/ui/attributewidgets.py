@@ -61,7 +61,6 @@ class NumericAttributeWidget(QtWidgets.QFrame):
         self.model = weakref.ref(model)
         layout = elements.hBoxLayout()
         self.setLayout(layout)
-
         self.slider = elements.FloatSlider(
             label=model.text(),
             defaultValue=model.default(),
@@ -73,7 +72,7 @@ class NumericAttributeWidget(QtWidgets.QFrame):
             dynamicMin=False, dynamicMax=False)
         self.slider.numSliderMajorChange.connect(self.setValue)
         layout.addWidget(self.slider)
-        self.slider.setValue(model.value())
+        self.slider.setValue(model.value() or 0.0)
 
     def setValue(self):
         value = self.slider.value()

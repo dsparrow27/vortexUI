@@ -17,7 +17,7 @@ def createWindow(graphType, config, parent=None):
     return ui, vortexApp
 
 
-def standalone(graphType, config, filePath):
+def standalone(graphType, config, filePath=None):
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
     stylesheet.loadDefaultFonts()

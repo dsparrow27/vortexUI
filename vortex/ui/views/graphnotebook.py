@@ -20,20 +20,14 @@ class GraphNotebook(tabwidget.TabWidget):
     def addGraph(self, graph, objectModel):
         editor = grapheditor.GraphEditor(self.application, graph, objectModel, parent=self)
         self.application.events.modelGraphLoaded.connect(self._onGraphLoad)
-        editor.requestCompoundExpansion.connect(self._onRequestCompound)
 
         self.editors.append(editor)
         self.onAddTab(editor, objectModel.text())
-        editor.scene.createNodes(objectModel.children())
-        for n in objectModel.children():
-            for attr in n.attributes():
-                connections = attr.connections()
-                editor.scene.createConnections(connections)
 
         return editor
 
     def _onRequestCompound(self, objectModel):
-        self.addGraph(self.currentPage().graph, objectModel)
+        self.addGraph(self.currentEditor().graph, objectModel)
 
     def setCurrentGraphLabel(self, label):
         page = self.currentIndex()
@@ -50,7 +44,7 @@ class GraphNotebook(tabwidget.TabWidget):
             self.deleteGraph(i)
         self.clear()
 
-    def currentPage(self):
+    def currentEditor(self):
         if self.currentIndex() in range(self.count()):
             return self.editors[self.currentIndex()]
 

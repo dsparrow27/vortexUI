@@ -1,7 +1,7 @@
 """Main Graph editor widget which is attached to a page of the graphnote book,
 Each editor houses a graphicsview and graphicsScene.
 """
-
+import json
 import os, logging
 from functools import partial
 
@@ -17,22 +17,24 @@ logger = logging.getLogger(__name__)
 class GraphEditor(QtWidgets.QWidget):
     """Graph UI manager
     """
-    requestCompoundExpansion = QtCore.Signal(object)
 
     def __init__(self, application, graphModel, objectModel, parent=None):
         super(GraphEditor, self).__init__(parent=parent)
         self.application = application
-        self.model = objectModel
         self.graph = graphModel
         self.editorLayout = None  # type: elements.vBoxLayout
         self.toolbar = None  # type: QtWidgets.QToolBar
         self.scene = None  # type: graph.Scene
         self.view = None  # type: graph.View
-        self.init()
+        self.init(objectModel)
         self.connections()
         self.nodeLibraryWidget = application.loadUIPlugin("NodeLibrary", dock=False)
         self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
         self.nodeLibraryWidget.hide()
+
+    @property
+    def model(self):
+        return self.scene.model
 
     def close(self):
         self.graph.delete()
@@ -47,7 +49,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.nodeLibraryWidget.initUI(dock=False)
         self.nodeLibraryWidget.widget.move(self.mapFromGlobal(point))
 
-    def init(self):
+    def init(self, objectModel):
         self.editorLayout = elements.vBoxLayout(parent=self)
         self.toolbar = QtWidgets.QToolBar(parent=self)
         self.createAlignmentActions(self.toolbar)
@@ -56,34 +58,23 @@ class GraphEditor(QtWidgets.QWidget):
         self.editorLayout.addWidget(self.toolbar)
         # constructor view and set scene
         self.scene = graph.Scene(self.graph, parent=self)
-        self.view = graph.View(self.graph, self.model, parent=self)
+        self.view = graph.View(self.graph, parent=self)
         self.view.setScene(self.scene)
+
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
-        self.view.nodeDoubleClicked.connect(self.requestCompoundExpansion)
         self.view.requestNodeProperties.connect(self.displayNodeProperties)
+        self.view.nodeDoubleClicked.connect(self._requestCompoundAsCurrent)
+        self.view.compoundExpansionSig.connect(self._requestCompoundAsCurrent)
+        self.view.compoundAsCurrentSig.connect(self._requestCompoundAsCurrent)
+        self.breadCrumbWidget = QtWidgets.QLabel("", parent=self)
+        # self.editorLayout.insertWidget(0, self.breadCrumbWidget)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
+        self.scene.setModel(objectModel)
 
     def displayNodeProperties(self, objectModel):
         a = nodepropertiesdialog.NodePropertiesDialog(self.graph, objectModel, parent=self)
         a.exec_()
-
-    def createAlignmentActions(self, parent):
-        icons = os.environ["VORTEX_ICONS"]
-        iconsData = {
-            "horizontalAlignCenter.png": ("Aligns the selected nodes to the horizontal center", utils.CENTER | utils.X),
-            "horizontalAlignLeft.png": ("Aligns the selected nodes to the Left", utils.LEFT),
-            "horizontalAlignRight.png": ("Aligns the selected nodes to the Right", utils.RIGHT),
-            "verticalAlignBottom.png": ("Aligns the selected nodes to the bottom", utils.BOTTOM),
-            "verticalAlignCenter.png": ("Aligns the selected nodes to the vertical center", utils.CENTER | utils.Y),
-            "verticalAlignTop.png": ("Aligns the selected nodes to the Top", utils.TOP)}
-
-        for name, tip in iconsData.items():
-            act = QtWidgets.QAction(QtGui.QIcon(os.path.join(icons, name)), "", self)
-            act.setStatusTip(tip[0])
-            act.setToolTip(tip[0])
-            act.triggered.connect(partial(self.alignSelectedNodes, tip[1]))
-            parent.addAction(act)
 
     def _onViewContextMenu(self, menu, item, pos):
         items = self.view.itemsFromPos(pos)
@@ -101,7 +92,24 @@ class GraphEditor(QtWidgets.QWidget):
             edgeStyle.addAction(i, self.scene.onSetConnectionStyle)
         alignment = menu.addMenu("Alignment")
         self.createAlignmentActions(alignment)
-        menu.addAction("Save Graph", partial(self.graph.saveGraph, self.model))
+        menu.addAction("Save Graph", partial(self.graph.saveGraph, self.scene.model))
+
+    def createAlignmentActions(self, parent):
+        icons = os.environ["VORTEX_ICONS"]
+        iconsData = {
+            "horizontalAlignCenter.png": ("Aligns the selected nodes to the horizontal center", utils.CENTER | utils.X),
+            "horizontalAlignLeft.png": ("Aligns the selected nodes to the Left", utils.LEFT),
+            "horizontalAlignRight.png": ("Aligns the selected nodes to the Right", utils.RIGHT),
+            "verticalAlignBottom.png": ("Aligns the selected nodes to the bottom", utils.BOTTOM),
+            "verticalAlignCenter.png": ("Aligns the selected nodes to the vertical center", utils.CENTER | utils.Y),
+            "verticalAlignTop.png": ("Aligns the selected nodes to the Top", utils.TOP)}
+
+        for name, tip in iconsData.items():
+            act = QtWidgets.QAction(QtGui.QIcon(os.path.join(icons, name)), "", self)
+            act.setStatusTip(tip[0])
+            act.setToolTip(tip[0])
+            act.triggered.connect(partial(self.alignSelectedNodes, tip[1]))
+            parent.addAction(act)
 
     def alignSelectedNodes(self, direction):
         nodes = self.scene.selectedNodes()
@@ -121,3 +129,9 @@ class GraphEditor(QtWidgets.QWidget):
             utils.nodesAlignY(nodes, utils.BOTTOM)
         # :todo: only update the selected nodes
         self.scene.updateAllConnections()
+
+    def _requestCompoundAsCurrent(self, model):
+        self.breadCrumbWidget.setText("->".join(model.fullPathName().split("/")))
+        self.scene.setModel(model)
+        self.view.viewport().update()
+

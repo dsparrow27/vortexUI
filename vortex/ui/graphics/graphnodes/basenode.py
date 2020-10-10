@@ -1,3 +1,5 @@
+import os
+
 from zoo.libs.pyqt.widgets.graphics import graphicitems
 from Qt import QtWidgets, QtCore, QtGui
 
@@ -95,8 +97,8 @@ class NodeHeader(graphicitems.ItemContainer):
         self._createLabels(model.text())
         self.headerButton = NodeHeaderButton(size=12, colour=model.headerButtonColour(), parent=self)
         self.headerButton.stateChanged.connect(self.headerButtonStateChanged.emit)
+
         self.addItem(self.headerButton, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        self.layout().insertStretch(-2, 1)
         self.setTextColour(self.model.textColour())
 
     def _createLabels(self, primary):
@@ -129,7 +131,6 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
         self.setAcceptHoverEvents(True)
         self.setFlags(self.ItemIsSelectable | self.ItemIsMovable | self.ItemSendsGeometryChanges)
         self.setMinimumSize(objectModel.minimumWidth(), objectModel.minimumHeight())
-        self.setPreferredSize(objectModel.minimumWidth(), objectModel.minimumHeight())
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setToolTip(self.model.toolTip())
 
@@ -137,21 +138,30 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
         self.model.setPosition((pos.x(), pos.y()))
         super(QBaseNode, self).setPos(pos)
 
+    def resize(self, x, y):
+        self.model.setWidth(x)
+        self.model.setHeight(y)
+        super(QBaseNode, self).resize(x, y)
+
     def init(self):
         self.setPos(QtCore.QPoint(*self.model.position()))
-        self.model.setHeight(self.minimumHeight())
-        self.model.setWidth(self.minimumWidth())
 
-    def boundingRect(self):
-        return QtCore.QRectF(0.0, 0.0, self.model.width(), self.model.height())
+    def boundingRect(self, *args, **kwargs):
+        return QtCore.QRectF(0, 0, self.model.width(), self.model.height())
 
-    def mousePressEvent(self, event):
-        self.model.setSelected(True)
-        super(QBaseNode, self).mousePressEvent(event)
+    def geometry(self):
+        return QtCore.QRectF(0, 0, self.model.width(), self.model.height())
 
     def setSelected(self, selected):
         self.model.setSelected(True)
         super(QBaseNode, self).setSelected(selected)
+
+    if os.environ.get("DEBUG"):
+        def paint(self, painter, option, widget):
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setPen(QtGui.QPen(QtCore.Qt.green, 0.75))
+            painter.drawRect(self.geometry())
+            super(QBaseNode, self).paint(painter, option, widget)
 
     def mouseMoveEvent(self, event):
         scene = self.scene()
@@ -160,6 +170,5 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
         for i in items:
             pos = i.pos() + i.mapToParent(event.pos()) - i.mapToParent(event.lastPos())
             i.setPos(pos)
-            i.model.setPosition((pos.x(), pos.y()))
 
         self.scene().updateAllConnections()

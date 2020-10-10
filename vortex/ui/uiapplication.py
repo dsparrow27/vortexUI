@@ -31,12 +31,12 @@ class UIApplication(QtCore.QObject):
     def currentGraph(self):
         if self.graphNoteBook is None:
             raise RuntimeError("No graph currently created")
-        return self.graphNoteBook.currentPage().graph
+        return self.graphNoteBook.currentEditor().graph
 
     def currentNetworkEditor(self):
         if self.graphNoteBook is None:
             raise RuntimeError("No graph currently created")
-        return self.graphNoteBook.currentPage()
+        return self.graphNoteBook.currentEditor()
 
     def mainWindow(self):
         for wid in QtWidgets.QApplication.topLevelWidgets():
@@ -70,5 +70,9 @@ class UIApplication(QtCore.QObject):
         newGraphInstance = self.graphType(self)
         rootModel = newGraphInstance.loadFromPath(filePath, parent=parent)
         if rootModel is not None:
+            self.events.uiNodesCreated.emit(rootModel)
+            for node in rootModel:
+                if not node.parentObject():
+                    rootModel = node
+                    break
             self.graphNoteBook.addGraph(newGraphInstance, rootModel)
-            self.events.uiNodesCreated.emit([rootModel])

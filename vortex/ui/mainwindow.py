@@ -30,7 +30,7 @@ class ApplicationWindow(mainwindow.MainWindow):
     def onSave(self):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent=self, caption="Select Graph")
         if fname:
-            graphEditor = self.noteBook.currentPage()
+            graphEditor = self.noteBook.currentEditor()
             if graphEditor is not None:
                 graphEditor.graph.saveGraph(fname)
 
@@ -71,7 +71,7 @@ class ApplicationWindow(elements.FramelessWindow):
     def onSave(self):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent=self, caption="Select Graph")
         if fname:
-            graphEditor = self.win.noteBook.currentPage()
+            graphEditor = self.win.noteBook.currentEditor()
             if graphEditor is not None:
                 graphEditor.graph.saveGraph(fname)
 

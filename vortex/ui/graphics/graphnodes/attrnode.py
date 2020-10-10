@@ -57,6 +57,17 @@ class GraphicsNode(basenode.QBaseNode):
             index = 2
         container.layout().insertStretch(index, 1)
         self.attributeContainer.addItem(container)
+        container.expandedSig.connect(self.updateSizeFromAttributes)
+        self.updateSizeFromAttributes()
+
+    def updateSizeFromAttributes(self):
+
+        height = self.header.boundingRect().height()
+        for child in self.attributeContainer.items():
+            rect = child.boundingRect()
+            height += rect.height()
+        self.prepareGeometryChange()
+        self.model.setHeight(height + 10)
 
     def removeAttribute(self, attribute):
         for index, item in enumerate(self.attributeContainer.items()):
@@ -69,13 +80,6 @@ class GraphicsNode(basenode.QBaseNode):
         for attr in iter(self.attributeContainer.items()):
             if attr.model == attributeModel:
                 return attr
-
-    def boundingRect(self, *args, **kwargs):
-        childBoundingRect = self.childrenBoundingRect(*args, **kwargs)
-        self.model.setHeight(childBoundingRect.height())
-        return QtCore.QRectF(0, 0,
-                             (childBoundingRect.width() - plugwidget.Plug._diameter * 2) + 1,
-                             childBoundingRect.height())
 
     def paint(self, painter, option, widget):
         # main rounded rect

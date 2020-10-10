@@ -19,6 +19,8 @@ from zoo.libs.utils import filesystem
 from vortex.ui import attributewidgets
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
 
 
 class Config(vortexApi.VortexConfig):
@@ -36,7 +38,7 @@ class Config(vortexApi.VortexConfig):
                 "float": "math",
                 "command": "applications",
                 "pin": "organization",
-                "backdrop": "organization"}
+                "backdrop": "organization", "compound": "organization"}
 
 
 class Graph(vortexApi.GraphModel):
@@ -59,21 +61,20 @@ class Graph(vortexApi.GraphModel):
         return self.loadFromDict(graphData, parent=parent)
 
     def loadFromDict(self, data, parent=None):
-        nodes = self.createNodeFromInfo(data, parent=parent)
-        self._rootNode = nodes[0]
-        self.application.events.modelGraphLoaded.emit(self)
-        return self._rootNode
+        return self.createNodeFromInfo(data, parent=parent)
 
     def createNode(self, nodeType, parent=None):
         registeredNodes = self.config.registeredNodes()
         if nodeType in registeredNodes:
             nodeInfo = {"properties": {"label": nodeType,
-                                       "category": "misc",
-                                       "secondaryLabel": "bob",
+                                       "category": registeredNodes[nodeType],
+                                       "secondaryLabel": nodeType,
                                        "script": "", "commands": [],
                                        "isPin": nodeType == "pin",
                                        "isBackdrop": nodeType == "backdrop",
                                        "isComment": nodeType == "comment",
+                                       "isCompound": nodeType == "compound",
+                                       "children": [],
                                        "description": ""}
                         }
             nodes = self.createNodeFromInfo(nodeInfo, parent=parent)
@@ -83,6 +84,8 @@ class Graph(vortexApi.GraphModel):
         data = dict(properties=info["properties"],
                     attributes=info.get("attributes", []))
         connections = info.get("connections", [])
+        if parent is None:
+            parent = self._rootNode
         parent = NodeModel(self.config, data, parent=parent)
         createdNodes = [parent]
         remappedNodes = {data["properties"]["label"]: parent}
@@ -153,24 +156,18 @@ class TestModel(vortexApi.AttributeModel):
             children.append(item)
         return children
 
-    def createConnection(self, attribute):
-
-        if self.isInput():
-            self.properties.setdefault("connections", []).append((self, attribute))
-        else:
-            self.properties.setdefault("connections", []).append((attribute, self))
-        return True
-
     def deleteConnection(self, attribute):
         connections = self.properties.get("connections", [])
         newConnections = []
-        changed = False
+        logger.debug("current Connections {}".format(connections))
+
         for s_, source in connections:
-            if source == attribute:
+            if source != attribute:
                 newConnections.append((self, source))
-                changed = True
+
+        logger.debug("new Connections: {}".format(newConnections))
         self.properties["connections"] = newConnections
-        return changed
+        return len(connections) != len(newConnections)
 
     def edgeColour(self):
         return self.backgroundColour().darker()

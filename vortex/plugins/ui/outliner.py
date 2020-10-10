@@ -22,11 +22,9 @@ class Outliner(QtWidgets.QFrame):
         self.tree = QtWidgets.QTreeWidget(parent=self)
         layout.addWidget(self.tree)
         self.tree.header().hide()
-        # self.newNode(application.graphNoteBook.currentPage().model)
         self.application.events.uiSelectionChanged.connect(self.onSceneSelection)
         self.application.events.uiNodesDeleted.connect(self.removeNode)
         self.application.events.uiNodesCreated.connect(self.newNode)
-        # self.graph.setShortcutForWidget(self, "Outliner")
 
     def onSceneSelection(self, selection):
 
@@ -68,6 +66,6 @@ class Outliner(QtWidgets.QFrame):
             item = it.value()
             if item.data(0, QtCore.Qt.UserRole + 1) in objectModels:
                 parent = item.parent()
-                if not parent :
+                if not parent:
                     parent = self.tree.invisibleRootItem()
                 parent.removeChild(item)
