@@ -46,9 +46,6 @@ class Graph(vortexApi.GraphModel):
     def __init__(self, application):
         super(Graph, self).__init__(application)
 
-    def rootNode(self):
-        return self._rootNode
-
     def saveGraph(self, filePath=None):
         model = self.rootNode()
         filePath = os.path.expanduser(filePath)

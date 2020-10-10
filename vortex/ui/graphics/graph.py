@@ -6,6 +6,7 @@ from zoo.libs.pyqt.widgets.graphics import graphicsview
 from zoo.libs.pyqt.widgets.graphics import graphicsscene
 from vortex.ui.graphics import plugwidget
 from vortex.ui.graphics import graphnodes
+from vortex.ui import utils
 from zoo.libs.utils import zlogging
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop, graphicitems
 
@@ -37,7 +38,6 @@ class View(graphicsview.GraphicsView):
         self._plugSelected = None
         self._interactiveEdge = None
         self.pan_active = False
-        self.graph.setShortcutForWidget(self, "nodeEditor")
 
     @property
     def model(self):
@@ -156,7 +156,7 @@ class View(graphicsview.GraphicsView):
                             except KeyError:
                                 pass
                             nodes = self.graph.loadFromDict(node, self.model)
-                            self.graph.application.events.modelNodesCreated.emit(nodes)
+                            self.scene.createNodes(nodes)
 
                 except json.decoder.JSONDecodeError:
                     logger.error("unable to paste in compatible format", exc_info=True)

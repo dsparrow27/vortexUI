@@ -6,14 +6,13 @@ from vortex.ui import plugin
 
 
 class ApplicationEvents(QtCore.QObject):
-    # events which the UI reacts on, these should be used within the models
+    # events which the UI Plugins react on, these should be used within the models and/or internal signals
     uiSelectionChanged = QtCore.Signal(list)
     uiNodesDeleted = QtCore.Signal(list)
     uiNodesCreated = QtCore.Signal(list)
 
     # model events
     modelGraphSaved = QtCore.Signal(str)
-    modelGraphLoaded = QtCore.Signal(object)
     modelNodesCreated = QtCore.Signal(list)
 
 
@@ -75,4 +74,5 @@ class UIApplication(QtCore.QObject):
                 if not node.parentObject():
                     rootModel = node
                     break
+            newGraphInstance.rootNode = rootModel
             self.graphNoteBook.addGraph(newGraphInstance, rootModel)

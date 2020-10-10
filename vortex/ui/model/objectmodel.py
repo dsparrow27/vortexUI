@@ -159,7 +159,14 @@ class ObjectModel(QtCore.QObject):
         if index in range(len(self._children)):
             return self._children[index]
 
-    def children(self):
+    def children(self, recursive=False):
+        if recursive:
+            children = []
+            for child in self._children:
+                children.append(child)
+                for sub in child.children(recursive=recursive):
+                    children.append(sub)
+            return children
         return self._children
 
     def findChild(self, name, recursive=False):

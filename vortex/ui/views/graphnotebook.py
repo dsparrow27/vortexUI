@@ -19,8 +19,6 @@ class GraphNotebook(tabwidget.TabWidget):
 
     def addGraph(self, graph, objectModel):
         editor = grapheditor.GraphEditor(self.application, graph, objectModel, parent=self)
-        self.application.events.modelGraphLoaded.connect(self._onGraphLoad)
-
         self.editors.append(editor)
         self.onAddTab(editor, objectModel.text())
 

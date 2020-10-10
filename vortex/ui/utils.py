@@ -1,5 +1,5 @@
-from Qt import QtCore
-
+from Qt import QtCore, QtGui
+import warnings
 
 TOP = 0
 BOTTOM = 1
@@ -68,3 +68,34 @@ def nodesAlignY(items, direction):
         minY = maxPosY(items)
         for i in items:
             i.setPos(QtCore.QPointF(i.x(), minY))
+
+def eventKeySequence(event):
+    key = event.key()
+
+    if key == QtCore.Qt.Key_unknown:
+        warnings.warn("Unknown key from a macro probably")
+        return
+
+    # the user have clicked just and only the special keys Ctrl, Shift, Alt, Meta.
+    if (key == QtCore.Qt.Key_Control or
+            key == QtCore.Qt.Key_Shift or
+            key == QtCore.Qt.Key_Alt or
+            key == QtCore.Qt.Key_Meta):
+        return
+
+    # check for a combination of user clicks
+    modifiers = event.modifiers()
+    keyText = event.text()
+    # if the keyText is empty than it's a special key like F1, F5, ...
+
+    if modifiers & QtCore.Qt.ShiftModifier:
+        key += QtCore.Qt.SHIFT
+    if modifiers & QtCore.Qt.ControlModifier:
+        key += QtCore.Qt.CTRL
+    if modifiers & QtCore.Qt.AltModifier:
+        key += QtCore.Qt.ALT
+    if modifiers & QtCore.Qt.MetaModifier:
+        key += QtCore.Qt.META
+    seq = QtGui.QKeySequence(key)
+    print("New KeySequence:",seq.toString(QtGui.QKeySequence.NativeText))
+    return seq

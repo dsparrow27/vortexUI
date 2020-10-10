@@ -17,8 +17,18 @@ class GraphModel(QtCore.QObject):
         super(GraphModel, self).__init__()
         self.config = application.config
         self.application = application
-        self._keyBoardMapping = {}
         self._rootNode = None
+
+    @property
+    def rootNode(self):
+        """
+        :rtype: :class:`vortex.ui.model.objectmodel.ObjectModel`
+        """
+        return self._rootNode
+
+    @rootNode.setter
+    def rootNode(self, value):
+        self._rootNode = value
 
     def customToolbarActions(self, parent):
         pass
@@ -30,15 +40,6 @@ class GraphModel(QtCore.QObject):
         :rtype: list(str)
         """
         return []
-
-    def setShortcutForWidget(self, widget, name):
-        keymap = self._keyBoardMapping.get(name)
-        if not keymap:
-            return
-
-        for k, command in keymap:
-            if command:
-                QtWidgets.QShortcut(QtGui.QKeySequence(k), widget, partial(self.executeCommand, widget, command))
 
     def rootNode(self):
         return self._rootNode
