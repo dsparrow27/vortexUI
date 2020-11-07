@@ -1,7 +1,6 @@
 """Main Graph editor widget which is attached to a page of the graphnote book,
 Each editor houses a graphicsview and graphicsScene.
 """
-import json
 import os, logging
 from functools import partial
 
@@ -61,7 +60,6 @@ class GraphEditor(QtWidgets.QWidget):
         self.scene = graph.Scene(self.graph, parent=self)
         self.view = graph.View(self.graph, parent=self)
         self.view.setScene(self.scene)
-
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
         self.view.requestNodeProperties.connect(self.displayNodeProperties)
         self.view.nodeDoubleClicked.connect(self._requestCompoundAsCurrent)
@@ -71,6 +69,7 @@ class GraphEditor(QtWidgets.QWidget):
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
         self.scene.setModel(objectModel)
+        self.view.showPanels(True)
 
     def displayNodeProperties(self, objectModel):
         a = nodepropertiesdialog.NodePropertiesDialog(self.graph, objectModel, parent=self)

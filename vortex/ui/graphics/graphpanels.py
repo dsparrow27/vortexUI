@@ -1,3 +1,5 @@
+import os
+
 from Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets.graphics import graphicitems
 from zoo.libs.pyqt.widgets import elements
@@ -10,7 +12,7 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
 
     def __init__(self, model, acceptsContextMenu=True, parent=None):
         super(PanelWidget, self).__init__(parent=parent)
-        # self.setFlags(self.ItemIgnoresTransformations)
+        self.setFlags(self.ItemIgnoresTransformations)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         self.setZValue(1)
         self.model = model
@@ -24,9 +26,22 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
         layout.addItem(self.rightPanel)
         self.setZValue(100)
         self.setLayout(layout)
-
         self.leftPanel.doubleClicked.connect(self.leftPanelDoubleClicked)
         self.rightPanel.doubleClicked.connect(self.rightPanelDoubleClicked)
+
+    def geometry(self):
+        return self.boundingRect()
+
+    def boundingRect(self):
+        for view in self.scene().views():
+            return view.viewport().rect()
+
+    if os.environ.get("DEBUG", "0") == "1":
+        def paint(self, painter, option, widget):
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setPen(QtGui.QPen(QtCore.Qt.green, 0.75))
+            painter.drawRect(self.geometry())
+            super(PanelWidget, self).paint(painter, option, widget)
 
 
 class Panel(QtWidgets.QGraphicsWidget):
@@ -53,7 +68,7 @@ class Panel(QtWidgets.QGraphicsWidget):
         for attr in currentModel.attributes(True, True,
                                             3):
             self.addAttribute(attr)
-    #
+
     def mouseDoubleClickEvent(self, event):
         self.doubleClicked.emit(self.ioType)
 
@@ -67,38 +82,13 @@ class Panel(QtWidgets.QGraphicsWidget):
     def dropEvent(self, event):
         print("drop")
         super(Panel, self).dropEvent(event)
+
     def wheelEvent(self, event):
         event.accept()
         super(Panel, self).wheelEvent(event)
+
     def addAttribute(self, attribute):
         plug = plugwidget.PlugContainer(attribute, parent=self)
-        # layout = plug.layout()
-        # if attribute.isInput() and self.ioType == "Input":
-
-        # plug.inCircle.show()
-        # plug.outCircle.hide()
-        #     # insert the inCircle to the far right
-        # layout.insertItem(3, plug.inCircle)
-        # layout.insertItem(2, plug.inCrossItem)
-        # we switch this around for panels because the model input would be connected to another input
-        # making it difficult to which is the start point and end point of a connection
-        # plug.inCircle.ioType = "Output"
-        # layout.insertStretch(2, 1)
-        # else:
-        # plug.outCircle.show()
-        # plug.inCircle.hide()
-        # #     # insert the outCircle to the far left
-        # layout.insertItem(0, plug.outCircle)
-        # layout.insertItem(1, plug.outCrossItem)
-        # layout.itemAt(layout.count() - 1)
-        # plug.inCircle.ioType = "Input"
-        # plug.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-
-        # swap the layout alignment
-        # plug.setInputAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        # plug.layout().setAlignment(plug.inCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        # plug.layout().setAlignment(plug.outCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        # plug.setOutputAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.attributeContainer.addItem(plug)
 
     def attributeItem(self, attributeModel):
@@ -106,10 +96,32 @@ class Panel(QtWidgets.QGraphicsWidget):
             if attr.model == attributeModel:
                 return attr
 
-    def paint(self, painter, option, widget):
-        rect = self.boundingRect()
-        painter.fillRect(rect, self.color)
-        super(Panel, self).paint(painter, option, widget)
+    def geometry(self):
+        return self.boundingRect()
+
+    def boundingRect(self):
+        parent = self.parentItem()
+        rect = parent.boundingRect()
+        if self.ioType == "Input":
+            rect.setWidth(150)
+            return rect
+        rect.setWidth(150)
+        rect.setX(rect.topRight().x() - 150)
+        return rect
+
+    if os.environ.get("DEBUG", "0") == "1":
+        def paint(self, painter, option, widget):
+            rect = self.boundingRect()
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setPen(QtGui.QPen(QtCore.Qt.green, 0.75))
+            painter.fillRect(rect, self.color)
+            painter.drawRect(self.geometry())
+            super(Panel, self).paint(painter, option, widget)
+    else:
+        def paint(self, painter, option, widget):
+            rect = self.boundingRect()
+            painter.fillRect(rect, self.color)
+            super(Panel, self).paint(painter, option, widget)
 
     def _contextMenu(self, pos):
         app = self.scene().uiApplication

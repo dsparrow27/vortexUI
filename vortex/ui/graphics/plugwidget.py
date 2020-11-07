@@ -176,9 +176,10 @@ class Plug(QtWidgets.QGraphicsWidget):
         self.update()
 
     def center(self):
-        rect = self.boundingRect()
-        center = QtCore.QPointF((rect.x() + rect.width()) * 0.5, (rect.y() + rect.height()) * 0.5)
-        return self.mapToScene(center)
+        for view in self.scene().views():
+            rect = self.boundingRect()
+            transform = self.deviceTransform(view.viewportTransform())
+            return view.mapToScene(transform.m31()+rect.width()*0.5, transform.m32()+rect.height()*0.5)
 
     def hoverEnterEvent(self, event):
         self.highlight()

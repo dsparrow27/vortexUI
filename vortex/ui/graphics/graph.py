@@ -6,10 +6,12 @@ from zoo.libs.pyqt.widgets.graphics import graphicsview
 from zoo.libs.pyqt.widgets.graphics import graphicsscene
 from vortex.ui.graphics import plugwidget
 from vortex.ui.graphics import graphnodes
+from vortex.ui.graphics import graphpanels
 from zoo.libs.utils import zlogging
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop, graphicitems
 
 logger = zlogging.getLogger(__name__)
+
 
 # todo: current context ie. compound node
 
@@ -37,6 +39,7 @@ class View(graphicsview.GraphicsView):
         self._plugSelected = None
         self._interactiveEdge = None
         self.pan_active = False
+        self.panelWidget = None
 
     @property
     def model(self):
@@ -45,6 +48,7 @@ class View(graphicsview.GraphicsView):
     def mouseDoubleClickEvent(self, event):
         # ignore any graphicsitems we don't care about, ie. containers
         items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
+                                                                          graphpanels.PanelWidget,
                                                                           graphnodes.NodeHeader))]
         if not items:
             super(View, self).mouseDoubleClickEvent(event)
@@ -71,11 +75,17 @@ class View(graphicsview.GraphicsView):
 
     def mouseMoveEvent(self, event):
         super(View, self).mouseMoveEvent(event)
+        if self.pan_active:
+            self.rescaleGraphWidget()
         if self._plugSelected:
             if not self._interactiveEdge:
                 self.onTempConnectionRequested(self._plugSelected, event)
             else:
                 self._interactiveEdge.destinationPoint = self.mapToScene(event.pos())
+
+    def wheelEvent(self, event):
+        super(View, self).wheelEvent(event)
+        self.rescaleGraphWidget()
 
     def mousePressEvent(self, event):
         button = event.buttons()
@@ -205,6 +215,32 @@ class View(graphicsview.GraphicsView):
         return [i for i in self.items(pos) if not isinstance(i, (graphicitems.ItemContainer,
                                                                  graphnodes.NodeHeader))]
 
+    def showPanels(self, state):
+        if state:
+            self.panelWidget = graphpanels.PanelWidget(self.scene().model, acceptsContextMenu=True)
+            # self.panelWidget.leftPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
+            # self.panelWidget.rightPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
+            self.scene().panelWidget = self.panelWidget
+            self.scene().addItem(self.panelWidget)
+
+    def resizeEvent(self, event):
+        super(View, self).resizeEvent(event)
+        self.rescaleGraphWidget()
+
+    def rescaleGraphWidget(self):
+        if self.panelWidget is None:
+            return
+
+        rect = self.viewport().rect()
+        leftCorner = self.mapToScene(0, 0).toPoint()
+        self.panelWidget.setGeometry(leftCorner.x(),
+                                     leftCorner.y(),
+                                     rect.width(),
+                                     rect.height())
+        # force the heights
+        self.panelWidget.rightPanel.setMinimumHeight(rect.height())
+        self.panelWidget.leftPanel.setMinimumHeight(rect.height())
+
 
 class Scene(graphicsscene.GraphicsScene):
     """
@@ -312,7 +348,7 @@ class Scene(graphicsscene.GraphicsScene):
         return newConnection
 
     def createConnectionItem(self, srcItem, destinationItem):
-        newConnection = graphicitems.ConnectionEdge(srcItem.outCircle,destinationItem.inCircle,
+        newConnection = graphicitems.ConnectionEdge(srcItem.outCircle, destinationItem.inCircle,
                                                     curveType=self.graph.config.defaultConnectionShape,
                                                     colour=srcItem.inCircle.colour)
         newConnection.setLineStyle(self.graph.config.defaultConnectionStyle)
