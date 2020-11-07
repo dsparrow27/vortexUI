@@ -5,6 +5,9 @@ however they can also be completed isolated.
 """
 from vortex.ui.views import grapheditor
 from zoo.libs.pyqt.extended import tabwidget
+from zoo.libs.pyqt.widgets import frame
+from zoo.libs.pyqt.widgets import elements
+from Qt import QtCore
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,20 +15,36 @@ logger = logging.getLogger(__name__)
 
 class GraphNotebook(tabwidget.TabWidget):
     def __init__(self, application, parent=None):
-        super(GraphNotebook, self).__init__("NoteBook", parent=parent)
+        super(GraphNotebook, self).__init__("NoteBook", showNewTab=True, parent=parent)
+        self.newTabRequested.connect(self._onNewGraph)
+        self.tabCloseRequested.connect(self._onTabClose)
         self.application = application
         application.graphNoteBook = self
         self.editors = []
+        self.hasWelcome = True
+        self.addWelcomeTab()
+
+    def _onNewGraph(self, wid, text):
+        self.application.createNewGraph(text)
+
+    def _onTabClose(self, index):
+        if self.onTabCloseRequested(index):
+            self.deleteGraph(index)
+
+    def addWelcomeTab(self):
+        wel = WelcomeWidget(self.application, parent=self)
+        wel.createSig.connect(self.application.createNewGraph)
+        self.onAddTab(wel, "Welcome")
+        self.hasWelcome = True
 
     def addGraph(self, graph, objectModel):
         editor = grapheditor.GraphEditor(self.application, graph, objectModel, parent=self)
         self.editors.append(editor)
+        if self.hasWelcome:
+            self.removeTab(0)
+            self.hasWelcome = False
         self.onAddTab(editor, objectModel.text())
-
         return editor
-
-    def _onRequestCompound(self, objectModel):
-        self.addGraph(self.currentEditor().graph, objectModel)
 
     def setCurrentGraphLabel(self, label):
         page = self.currentIndex()
@@ -34,8 +53,12 @@ class GraphNotebook(tabwidget.TabWidget):
     def deleteGraph(self, index):
         if index in range(self.count()):
             # show popup
+            graph = self.editors[index].graph
+            self.application.events.uiGraphDeleted.emit(graph)
             self.editors[index].close()
             self.removeTab(index)
+            if self.count() < 1:
+                self.addWelcomeTab()
 
     def clear(self):
         for i in range(self.count):
@@ -50,3 +73,15 @@ class GraphNotebook(tabwidget.TabWidget):
         if clear:
             self.clear()
         self.addGraph(graph, graph.rootNode())
+
+
+class WelcomeWidget(frame.QFrame):
+    createSig = QtCore.Signal()
+
+    def __init__(self, application, parent=None):
+        super(WelcomeWidget, self).__init__(parent)
+        self.application = application
+        self.btn = elements.regularButton(text="Create Graph", parent=self)
+        self.btn.clicked.connect(self.createSig.emit)
+        layout = elements.hBoxLayout(parent=self)
+        layout.addWidget(self.btn)

@@ -22,7 +22,7 @@ class PathWidget(QtWidgets.QFrame):
         self.layout = elements.hBoxLayout(parent=self)
         self.edit = elements.LineEdit(parent=self)
         self.layout.addWidget(self.edit)
-        self.browserBtn = elements.styledButton("",
+        self.browserBtn = elements.styledButton(model.text(),
                                                 "browse",
                                                 toolTip="Browse",
                                                 parent=self,
@@ -59,8 +59,7 @@ class NumericAttributeWidget(QtWidgets.QFrame):
     def __init__(self, model, parent=None):
         super(NumericAttributeWidget, self).__init__(parent=parent)
         self.model = weakref.ref(model)
-        layout = elements.hBoxLayout()
-        self.setLayout(layout)
+        layout = elements.hBoxLayout(self)
         self.slider = elements.FloatSlider(
             label=model.text(),
             defaultValue=model.default(),
@@ -71,8 +70,8 @@ class NumericAttributeWidget(QtWidgets.QFrame):
             editBoxRatio=1, sliderRatio=1, labelBtnRatio=1, decimalPlaces=3, orientation=QtCore.Qt.Horizontal,
             dynamicMin=False, dynamicMax=False)
         self.slider.numSliderMajorChange.connect(self.setValue)
-        layout.addWidget(self.slider)
         self.slider.setValue(model.value() or 0.0)
+        layout.addWidget(self.slider)
 
     def setValue(self):
         value = self.slider.value()

@@ -1,6 +1,7 @@
+from collections import defaultdict
 from Qt import QtWidgets, QtCore, QtGui
-from zoo.libs.pyqt.widgets import elements
-from zoo.libs.pyqt.widgets import frame
+from zoo.libs.pyqt.extended import treeviewplus
+from zoo.libs.pyqt.models import datasources, treemodel
 from vortex import api
 import logging
 
@@ -14,68 +15,42 @@ class NodeLibraryPlugin(api.UIPlugin):
     dockArea = QtCore.Qt.LeftDockWidgetArea
 
     def show(self, parent):
-        nb = NodesBox(self.application, parent=parent)
-        return nb
+        items = self.application.config.registeredNodes().items()
+        plus = View(self.application, parent=parent)
+        plus.reload(items)
+        return plus
 
 
-class NodeBoxWidget(QtWidgets.QListWidget):
-    enterPressed = QtCore.Signal()
-
-    def __init__(self, parent):
-        super(NodeBoxWidget, self).__init__(parent)
-        self.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.setObjectName("nodeLibraryTreeWidget")
-        self.setSortingEnabled(True)
-        self.setDragEnabled(True)
-        self.setDragDropMode(QtWidgets.QAbstractItemView.DragOnly)
-
-    def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Enter:
-            self.enterPressed.emit()
-        super(NodeBoxWidget, self).keyPressEvent(event)
-
-
-class NodesBox(frame.QFrame):
-    """doc string for NodesBox"""
+class View(treeviewplus.TreeViewPlus):
     finished = QtCore.Signal()
 
-    def __init__(self, application, parent):
-        super(NodesBox, self).__init__(parent)
+    def __init__(self, application, searchable=True, parent=None, expand=True, sorting=True,
+                 labelVisible=False, comboVisible=False):
+        super(View, self).__init__(searchable, parent, expand, sorting, labelVisible, comboVisible)
         self.application = application
         self.setObjectName("NodeLibrary")
-        self.verticalLayout = elements.vBoxLayout(self)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.lineEdit = elements.LineEdit("Name: ", parent=self)
-        self.lineEdit.setObjectName("nodelibraryLineEdit")
-        self.lineEdit.setPlaceholderText("Enter node name..")
-        self.verticalLayout.addWidget(self.lineEdit)
-        self.nodeListWidget = NodeBoxWidget(parent=self)
-        self.verticalLayout.addWidget(self.nodeListWidget)
+        self.setAlternatingColorEnabled(False)
+        root = NodeItem("")
+        self.setModel(treemodel.TreeModel(root))
+        self.treeView.doubleClicked.connect(self.onDoubleClicked)
 
-        self.resize(200, self.sizeHint().height())
-        self.connections()
-        self.reload(self.application.config.registeredNodes(), "")
-
-    def connections(self):
-        self.lineEdit.textChanged.connect(self.searchTextChanged)
-        self.nodeListWidget.itemChanged.connect(self.onSelectionChanged)
-        self.nodeListWidget.itemDoubleClicked.connect(self.onDoubleClicked)
-        self.nodeListWidget.enterPressed.connect(self.onEnterPressed)
-
-    def show(self, *args, **kwargs):
-        self.lineEdit.setFocus()
-        self.nodeListWidget.clear()
-        for item, category in self.application.config.registeredNodes().items():
-            self.nodeListWidget.addItem(item)
-        super(NodesBox, self).show(*args, **kwargs)
-
-    def searchTextChanged(self, text):
-        if not self.lineEdit.text():
-            self.lineEdit.setPlaceholderText("Enter node name..")
-        nodes = self.application.config.registeredNodes()
-        nodes["Group"] = "misc"
-        self.reload(nodes, text)
+    def reload(self, nodes):
+        result = defaultdict(list)
+        for item, category in sorted(nodes):
+            result[category].append(item)
+        categoryItems = {}
+        model = self.model
+        root = self.model.root
+        for category, types in result.items():
+            cat = categoryItems.get(category)
+            if cat is None:
+                cat = NodeItem(category, model=model, parent=root)
+                root.addChild(cat)
+                categoryItems[category] = cat
+            for item in types:
+                cat.addChild(NodeItem(item, model=model, parent=cat))
+        self.model.reload()
+        self.expandAll()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Escape:
@@ -84,30 +59,38 @@ class NodesBox(frame.QFrame):
             self.onEnterPressed()
         elif event.key() in (QtCore.Qt.Key_Down, QtCore.Qt.Key_Up):
             return self.nodeListWidget.keyPressEvent(event)
-        super(NodesBox, self).keyPressEvent(event)
+        super(View, self).keyPressEvent(event)
+
+    def onDoubleClicked(self, index):
+        self.createNode(index.data())
 
     def onEnterPressed(self):
-        currentText = self.nodeListWidget.currentItem().text()
-        if currentText in self.application.config.registeredNodes().keys():
-            self.application.currentGraph().createNode(currentText)
-            self.finished.emit()
+        for item in self.selectedItems():
+            self.createNode(item.data(0))
 
-    def onDoubleClicked(self, item):
-
-        self.application.currentGraph().createNode(item.text()) # todo: handle tab switching so we update the current active parent
+    def createNode(self, nodeType):
+        editor = self.application.currentNetworkEditor()
+        graph = self.application.currentGraph()
+        graph.createNode(nodeType, parent=editor.model)
         self.finished.emit()
 
-    def onSelectionChanged(self, current):
-        self.lineEdit.setText(current.text())
 
-    def reload(self, items, searchText=None):
-        searchText = (searchText or "").lower()
-        self.nodeListWidget.clear()
+class NodeItem(datasources.BaseDataSource):
 
-        for item, category in items.items():
-            if searchText not in item.lower():
-                continue
-            self.nodeListWidget.addItem(item)
+    def __init__(self, nodeType, headerText=None, model=None, parent=None):
+        super(NodeItem, self).__init__(headerText, model, parent)
+        self.nodeType = nodeType
 
-        self.nodeListWidget.sortItems(QtCore.Qt.AscendingOrder)
-        self.nodeListWidget.setCurrentRow(0)
+    def headerText(self, index):
+        if index == 0:
+            return "Node Type"
+
+    def columnCount(self):
+        return 1
+
+    def isEditable(self, index):
+        return False
+
+    def data(self, index):
+        if index == 0:
+            return self.nodeType

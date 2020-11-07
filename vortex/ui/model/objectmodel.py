@@ -208,7 +208,6 @@ class ObjectModel(QtCore.QObject):
                 yield attribute
             elif outputs and attribute.isOutput():
                 yield attribute
-        return self._attributes
 
     def createAttribute(self, attributeDefinition):
         pass
@@ -256,7 +255,6 @@ class ObjectModel(QtCore.QObject):
 
     # colors
     def backgroundColour(self):
-        QtGui.QColor(50, 50, 50, 225)
         return QtGui.QColor(*self._properties.get("backgroundColour", (40, 40, 40, 255)))
 
     def setBackgroundColour(self, colour):

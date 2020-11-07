@@ -9,12 +9,13 @@ class GraphModel(QtCore.QObject):
 
     """
 
-    def __init__(self, application):
+    def __init__(self, application, name):
         """
         :param application:
         :type application:
         """
         super(GraphModel, self).__init__()
+        self.name = name
         self.config = application.config
         self.application = application
         self._rootNode = None
@@ -40,9 +41,6 @@ class GraphModel(QtCore.QObject):
         :rtype: list(str)
         """
         return []
-
-    def rootNode(self):
-        return self._rootNode
 
     def saveGraph(self, objectModel):
         return {}

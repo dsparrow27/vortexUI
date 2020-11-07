@@ -1,7 +1,0 @@
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-export VORTEX=`realpath $DIR`
-export PATH=${PATH}:$DIR:${ZOOTOOLS_ROOT}/install/core/python
-export VORTEX_ICONS="$DIR/icons"
-export PYTHONPATH=${PYTHONPATH}:$DIR:${ZOOTOOLS_ROOT}/install/core/python
-export VORTEX_UI_PLUGINS="$DIR/vortex/plugins/ui"
-${PYTHON_INTERPRETER} ./vortex/examples/datamodel.py

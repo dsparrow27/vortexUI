@@ -1,45 +1,5 @@
-"""
-# this is a standard window which is faster until we debug frameless latency
-
 from vortex.ui.views import graphnotebook
-from Qt import QtWidgets
-from zoo.libs.pyqt.widgets import mainwindow
-from zoo.preferences.core import preference
 
-
-class ApplicationWindow(mainwindow.MainWindow):
-    def __init__(self, application, title="Vortex", width=800, height=600, parent=None):
-        super(ApplicationWindow, self).__init__(title=title, width=width, height=height, parent=parent)
-        self.uiApplication = application
-
-        self.setStyleSheet(preference.interface("core_interface").stylesheet().data)
-        self.noteBook = graphnotebook.GraphNotebook(self.uiApplication, parent=self)
-        self.setCustomCentralWidget(self.noteBook)
-        self.setupMenuBar()
-        self.loadAction = QtWidgets.QAction("Load", parent=self)
-        self.saveAction = QtWidgets.QAction("Save", parent=self)
-        self.recentFilesMenu = QtWidgets.QMenu("Recent Files", parent=self)
-
-        self.fileMenu.insertAction(self.exitAction, self.saveAction)
-        self.fileMenu.insertAction(self.exitAction, self.loadAction)
-        self.fileMenu.insertMenu(self.exitAction, self.recentFilesMenu)
-        self.saveAction.triggered.connect(self.onSave)
-        self.loadAction.triggered.connect(self.onLoad)
-        self.uiApplication.loadPlugins()
-
-    def onSave(self):
-        fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent=self, caption="Select Graph")
-        if fname:
-            graphEditor = self.noteBook.currentEditor()
-            if graphEditor is not None:
-                graphEditor.graph.saveGraph(fname)
-
-    def onLoad(self):
-        fname, _ = QtWidgets.QFileDialog.getOpenFileName(parent=self, caption="Select Graph")
-        if fname:
-            self.uiApplication.createGraphFromPath(fname)
-"""
-from vortex.ui.views import graphnotebook
 from Qt import QtWidgets, QtCore
 from zoo.libs.pyqt.widgets import mainwindow
 from zoo.libs.pyqt.widgets import elements
@@ -59,14 +19,18 @@ class ApplicationWindow(elements.FramelessWindow):
         self.win = VortexApplicationWindow(application, parent=self)
         layout.addWidget(self.win)
         titleBtn = self.titleBar.logoButton
+        self.newAction = titleBtn.addAction("New", connect=self.onNew)
         self.loadAction = titleBtn.addAction("Load", connect=self.onLoad)
         self.saveAction = titleBtn.addAction("Save", connect=self.onSave)
-        self.exitAction = titleBtn.addAction("Close", icon=iconlib.icon("close"))
+        self.exitAction = titleBtn.addAction("Close", icon=iconlib.icon("close"), connect=self.close)
         self.exitAction.setShortcut("Ctrl+Q")
         self.exitAction.setToolTip("Closes application")
         self.toggleMaximized()
         # self.recentFilesMenu = QtWidgets.QMenu("Recent Files", parent=self)
         self.setShadowEffectEnabled(False)  # disabling shadow effect as it's shit slow
+
+    def onNew(self):
+        self.win.uiApplication.createNewGraph()
 
     def onSave(self):
         fname, _ = QtWidgets.QFileDialog.getSaveFileName(parent=self, caption="Select Graph")
@@ -90,3 +54,4 @@ class VortexApplicationWindow(mainwindow.MainWindow):
         self.noteBook = graphnotebook.GraphNotebook(self.uiApplication, parent=self)
         self.setCustomCentralWidget(self.noteBook)
         self.uiApplication.loadPlugins()
+

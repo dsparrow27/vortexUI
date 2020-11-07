@@ -6,3 +6,5 @@ def initialize():
     if api.currentConfig() is None:
         cfg = api.zooFromPath(os.environ["ZOOTOOLS_ROOT"])
         cfg.resolver.resolveFromPath(cfg.resolver.environmentPath())
+        from zoo.libs.utils import zlogging
+        zlogging.setGlobalDebug(True)

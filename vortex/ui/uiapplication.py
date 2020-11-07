@@ -10,7 +10,7 @@ class ApplicationEvents(QtCore.QObject):
     uiSelectionChanged = QtCore.Signal(list)
     uiNodesDeleted = QtCore.Signal(list)
     uiNodesCreated = QtCore.Signal(list)
-
+    uiGraphDeleted = QtCore.Signal(object)
     # model events
     modelGraphSaved = QtCore.Signal(str)
     modelNodesCreated = QtCore.Signal(list)
@@ -61,16 +61,21 @@ class UIApplication(QtCore.QObject):
     def registerGraphType(self, objectType):
         self.graphType = objectType
 
-    def createGraphFromPath(self, filePath, parent=None):
+    def createNewGraph(self, name=None):
+        newGraphInstance = self.graphType(self, name=name)
+        self.events.uiNodesCreated.emit([newGraphInstance.rootNode])
+        self.graphNoteBook.addGraph(newGraphInstance, newGraphInstance.rootNode)
+
+    def createGraphFromPath(self, filePath, name=None, parent=None):
         if self.graphNoteBook is None:
             return
         elif self.graphType is None:
             return
-        newGraphInstance = self.graphType(self)
-        rootModel = newGraphInstance.loadFromPath(filePath, parent=parent)
-        if rootModel is not None:
-            self.events.uiNodesCreated.emit(rootModel)
-            for node in rootModel:
+        newGraphInstance = self.graphType(self, name=name or "NewGraph")
+        models = newGraphInstance.loadFromPath(filePath, parent=parent)
+        if models is not None:
+            self.events.uiNodesCreated.emit(models)
+            for node in models:
                 if not node.parentObject():
                     rootModel = node
                     break

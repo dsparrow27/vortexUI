@@ -25,6 +25,10 @@ class Outliner(QtWidgets.QFrame):
         self.application.events.uiSelectionChanged.connect(self.onSceneSelection)
         self.application.events.uiNodesDeleted.connect(self.removeNode)
         self.application.events.uiNodesCreated.connect(self.newNode)
+        self.application.events.uiGraphDeleted.connect(self.graphDeleted)
+
+    def graphDeleted(self, graph):
+        self.removeNode([graph.rootNode])
 
     def onSceneSelection(self, selection):
 
@@ -39,7 +43,6 @@ class Outliner(QtWidgets.QFrame):
         for it in iterator:
             item = it.value()
             if item.data(0, QtCore.Qt.UserRole + 1) == objectModel:
-
                 return item
 
     def newNode(self, objectModels):
@@ -68,4 +71,5 @@ class Outliner(QtWidgets.QFrame):
                 parent = item.parent()
                 if not parent:
                     parent = self.tree.invisibleRootItem()
+                print("removed", item, parent)
                 parent.removeChild(item)

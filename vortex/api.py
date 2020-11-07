@@ -10,24 +10,27 @@ from zoo.libs.pyqt import stylesheet
 import sys
 
 
-def createWindow(graphType, config, parent=None):
-    vortexApp = UIApplication(config())
+def createWindow(application, graphType, config, parent=None):
+    if application is None:
+        vortexApp = UIApplication(config())
+    else:
+        vortexApp = application(config())
     ui = ApplicationWindow(vortexApp, parent=parent)
     vortexApp.registerGraphType(graphType)
     return ui, vortexApp
 
 
-def standalone(graphType, config, filePath=None):
+def standalone(application, graphType, config, filePath=None):
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     app = QtWidgets.QApplication(sys.argv)
     stylesheet.loadDefaultFonts()
-    win, vortexApplication = createWindow(graphType, config, parent=None)
+    win, vortexApplication = createWindow(application, graphType, config, parent=None)
     if filePath:
         vortexApplication.createGraphFromPath(filePath)
     sys.exit(app.exec_())
 
 
-def maya(graphType, config, parent=None):
+def maya(application, graphType, config, parent=None):
     from zoo.libs.maya.qt import mayaui
-    ui, _ = createWindow(graphType, config, parent=parent or mayaui.getMayaWindow())
+    ui, _ = createWindow(application, graphType, config, parent=parent or mayaui.getMayaWindow())
     return ui

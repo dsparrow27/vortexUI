@@ -29,6 +29,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.init(objectModel)
         self.connections()
         self.nodeLibraryWidget = application.loadUIPlugin("NodeLibrary", dock=False)
+
         self.nodeLibraryWidget.widget.finished.connect(self.nodeLibraryWidget.hide)
         self.nodeLibraryWidget.hide()
 
@@ -64,10 +65,9 @@ class GraphEditor(QtWidgets.QWidget):
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
         self.view.requestNodeProperties.connect(self.displayNodeProperties)
         self.view.nodeDoubleClicked.connect(self._requestCompoundAsCurrent)
-        self.view.compoundExpansionSig.connect(self._requestCompoundAsCurrent)
         self.view.compoundAsCurrentSig.connect(self._requestCompoundAsCurrent)
         self.breadCrumbWidget = QtWidgets.QLabel("", parent=self)
-        # self.editorLayout.insertWidget(0, self.breadCrumbWidget)
+        self.editorLayout.insertWidget(0, self.breadCrumbWidget)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
         self.scene.setModel(objectModel)
@@ -92,7 +92,6 @@ class GraphEditor(QtWidgets.QWidget):
             edgeStyle.addAction(i, self.scene.onSetConnectionStyle)
         alignment = menu.addMenu("Alignment")
         self.createAlignmentActions(alignment)
-        menu.addAction("Save Graph", partial(self.graph.saveGraph, self.scene.model))
 
     def createAlignmentActions(self, parent):
         icons = os.environ["VORTEX_ICONS"]

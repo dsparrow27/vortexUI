@@ -1,3 +1,5 @@
+import os
+
 from zoo.libs.pyqt.widgets.graphics import graphicitems
 from Qt import QtWidgets, QtCore, QtGui
 
@@ -29,6 +31,12 @@ class PlugContainer(graphicitems.ItemContainer):
         self.label.colour = attributeModel.textColour()
         self.label.allowHoverHighlight = True
 
+        self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+        self.addItem(self.label, attributeModel.textAlignment())
+        self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+        self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
         if not attributeModel.isOutput():
             self.outCircle.hide()
         else:
@@ -39,12 +47,6 @@ class PlugContainer(graphicitems.ItemContainer):
         else:
             if attributeModel.isArray() or attributeModel.isCompound():
                 self.inCrossItem.show()
-
-        self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.addItem(self.label, attributeModel.textAlignment())
-        self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
     def setLabel(self, label):
         self.label.setText(label)
@@ -84,7 +86,7 @@ class PlugContainer(graphicitems.ItemContainer):
             children = reversed(self.model.children())
         if not children:
             return
-
+        self.prepareGeometryChange()
         selfIndex = parentContainer.indexOf(self) + 1
         for element in children:
             elementContainer = PlugContainer(attributeModel=element, parent=self)
@@ -127,6 +129,13 @@ class PlugContainer(graphicitems.ItemContainer):
         self.outCrossItem.expanded = not self.outCrossItem.expanded
         self.expandedSig.emit()
 
+    if os.environ.get("DEBUG", "0") == "1":
+        def paint(self, painter, option, widget):
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setPen(QtGui.QPen(QtCore.Qt.blue, 0.75))
+            painter.drawRect(self.geometry())
+            super(PlugContainer, self).paint(painter, option, widget)
+
 
 class Plug(QtWidgets.QGraphicsWidget):
     _diameter = 2 * 6
@@ -135,6 +144,7 @@ class Plug(QtWidgets.QGraphicsWidget):
 
     def __init__(self, colour, edgeColour, highlightColour, ioType, parent=None):
         super(Plug, self).__init__(parent=parent)
+        self.setAcceptHoverEvents(True)
         size = QtCore.QSizeF(self._diameter, self._diameter)
         self.ioType = ioType
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
@@ -143,8 +153,8 @@ class Plug(QtWidgets.QGraphicsWidget):
         self._hoverPen = QtGui.QPen(highlightColour, 3.0)
         self._defaultBrush = QtGui.QBrush(colour)
         self._currentBrush = QtGui.QBrush(colour)
-        self.xPos = -5.0 if self.ioType == "Input" else +5.0
-        self.setAcceptHoverEvents(True)
+        self.xPos = 5.0 if self.ioType == "Input" else -5.0
+        self.setPos(self.xPos, 0)
 
     def container(self):
         return self.parentObject()
@@ -185,17 +195,27 @@ class Plug(QtWidgets.QGraphicsWidget):
         elif btn == QtCore.Qt.RightButton:
             event.accept()
 
-    def paint(self, painter, options, widget=None):
-        rect = self.boundingRect()
-        painter.setBrush(self._currentBrush)
+    if os.environ.get("DEBUG", "0") == "1":
+        def paint(self, painter, option, widget):
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setPen(QtGui.QPen(QtCore.Qt.red, 0.75))
+            painter.drawRect(self.geometry())
+            super(Plug, self).paint(painter, option, widget)
+    else:
+        def paint(self, painter, options, widget=None):
+            rect = self.boundingRect()
+            painter.setBrush(self._currentBrush)
 
-        painter.setPen(self._defaultPen)
-        painter.drawEllipse(rect)
-        super(Plug, self).paint(painter, options, widget)
+            painter.setPen(self._defaultPen)
+            painter.drawEllipse(rect)
+            super(Plug, self).paint(painter, options, widget)
+
+    def geometry(self):
+        return self.boundingRect()
 
     def boundingRect(self):
         return QtCore.QRectF(
-            self.xPos,
+            0.0,
             0.0,
             self._diameter,
             self._diameter,
@@ -227,7 +247,6 @@ class CrossSquare(QtWidgets.QGraphicsWidget):
     def plug(self):
         return self.parentObject()
 
-    #
     def mousePressEvent(self, event):
         btn = event.button()
         if btn == QtCore.Qt.LeftButton and not self.isElement or not self.isChild:

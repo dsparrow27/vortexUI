@@ -118,6 +118,16 @@ class NodeHeader(graphicitems.ItemContainer):
     def setTextColour(self, color):
         self._titleWidget.color = color
 
+    def boundingRect(self):
+        return QtCore.QRectF(0, 0, self.model.width(), 25)
+
+    if os.environ.get("DEBUG", "0") == "1":
+        def paint(self, painter, option, widget):
+            painter.setBrush(QtCore.Qt.NoBrush)
+            painter.setPen(QtGui.QPen(QtCore.Qt.green, 0.75))
+            painter.drawRect(self.geometry())
+            super(NodeHeader, self).paint(painter, option, widget)
+
 
 class QBaseNode(QtWidgets.QGraphicsWidget):
     ATTRIBUTE_VIS_LEVEL_ZERO = 0
@@ -156,7 +166,7 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
         self.model.setSelected(True)
         super(QBaseNode, self).setSelected(selected)
 
-    if os.environ.get("DEBUG"):
+    if os.environ.get("DEBUG", "0") == "1":
         def paint(self, painter, option, widget):
             painter.setBrush(QtCore.Qt.NoBrush)
             painter.setPen(QtGui.QPen(QtCore.Qt.green, 0.75))

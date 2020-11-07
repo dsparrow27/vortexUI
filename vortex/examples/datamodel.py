@@ -43,11 +43,11 @@ class Config(vortexApi.VortexConfig):
 
 class Graph(vortexApi.GraphModel):
 
-    def __init__(self, application):
-        super(Graph, self).__init__(application)
+    def __init__(self, application, name):
+        super(Graph, self).__init__(application, name)
 
     def saveGraph(self, filePath=None):
-        model = self.rootNode()
+        model = self.rootNode
         filePath = os.path.expanduser(filePath)
         filesystem.ensureFolderExists(os.path.dirname(filePath))
         filesystem.saveJson(model.serialize(), filePath)
@@ -104,6 +104,17 @@ class Graph(vortexApi.GraphModel):
                 continue
             sourceAttr.createConnection(destinationAttr)
         return createdNodes
+
+    def customToolbarActions(self, parent):
+        action = parent.addAction("Execute")
+        action.triggered.connect(self._execute)
+
+    def _execute(self):
+        selection = []
+        for child in self.rootNode.children(recursive=True):
+            if child.isSelected():
+                selection.append(child)
+                child.properties["edgeColor"] = 255, 0, 0, 1
 
 
 class NodeModel(vortexApi.ObjectModel):

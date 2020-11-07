@@ -1,7 +1,8 @@
 from Qt import QtCore, QtGui
 from zoo.libs.pyqt.widgets.graphics import graphviewconfig
+from zoo.libs.utils import zlogging
+logger = zlogging.getLogger(__name__)
 
-# from vortex.vortexmodel import attributewidgets
 
 connectionStyle = {"SolidLine": QtCore.Qt.SolidLine,
                    "DashLine": QtCore.Qt.DashLine,
@@ -56,5 +57,6 @@ class VortexConfig(graphviewconfig.Config):
     def attributeWidgetForType(self, attributeType):
         widget = self.attributeMapping.get(attributeType, {}).get("widget")
         if widget is None:
-            raise TypeError("Missing attributeType: {}".format(attributeType))
+            logger.warning("Missing attributeType: {}".format(attributeType))
+            return
         return widget

@@ -1,9 +1,23 @@
+import os
+
 from zoo.libs.pyqt.widgets.graphics import graphicitems
 from zoo.libs.pyqt.widgets import elements
 from vortex.ui.graphics import plugwidget
 from vortex.ui.graphics.graphnodes import basenode
 
 from Qt import QtWidgets, QtCore, QtGui
+
+
+class Container(graphicitems.ItemContainer):
+
+    def __init__(self, orientation=QtCore.Qt.Vertical, parent=None):
+        super(Container, self).__init__(orientation, parent)
+
+    if os.environ.get("DEBUG", "0") == "1":
+        def paint(self, painter, option, widget):
+            painter.setPen(QtGui.QPen(QtCore.Qt.cyan, 0.75))
+            painter.drawRect(self.geometry())
+            super(Container, self).paint(painter, option, widget)
 
 
 class GraphicsNode(basenode.QBaseNode):
@@ -14,7 +28,8 @@ class GraphicsNode(basenode.QBaseNode):
         self.cornerRounding = self.model.cornerRounding()
         self.header = basenode.NodeHeader(self.model,
                                           parent=self)
-        self.attributeContainer = graphicitems.ItemContainer(parent=self)
+        self.attributeContainer = Container(parent=self)
+        self.attributeContainer.setPos(self.header.y(), 0)
         self.init()
 
     def init(self):
@@ -27,9 +42,18 @@ class GraphicsNode(basenode.QBaseNode):
         layout.addItem(self.header)
         layout.addItem(self.attributeContainer)
         # now bind the attributes from the model if it has any
+        visited = set()
         for attr in self.model.attributes(inputs=False, outputs=True, attributeVisLevel=self.ATTRIBUTE_VIS_LEVEL_ONE):
+            name = attr.text()
+            if name in visited:
+                continue
+            visited.add(name)
             self.addAttribute(attr)
         for attr in self.model.attributes(inputs=True, outputs=False, attributeVisLevel=self.ATTRIBUTE_VIS_LEVEL_ONE):
+            name = attr.text()
+            if name in visited:
+                continue
+            visited.add(name)
             self.addAttribute(attr)
         self._connections()
 
@@ -57,8 +81,8 @@ class GraphicsNode(basenode.QBaseNode):
             index = 2
         container.layout().insertStretch(index, 1)
         self.attributeContainer.addItem(container)
-        container.expandedSig.connect(self.updateSizeFromAttributes)
         self.updateSizeFromAttributes()
+        container.expandedSig.connect(self.updateSizeFromAttributes)
 
     def updateSizeFromAttributes(self):
 
@@ -73,6 +97,7 @@ class GraphicsNode(basenode.QBaseNode):
         for index, item in enumerate(self.attributeContainer.items()):
             if item.objectModel == attribute:
                 self.attributeContainer.removeItemAtIndex(index)
+                self.updateSizeFromAttributes()
                 return True
         return False
 

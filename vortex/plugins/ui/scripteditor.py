@@ -56,7 +56,7 @@ class ScriptEditor(api.UIPlugin):
         self.layout.addWidget(self.splitter)
         self.editor = pythoneditor.TabbedEditor(parent=parent)
         self.editor.setObjectName("Script Editor")
-        self.editor.addNewEditor("New Tab")
+        self.editor.addNewEditor("New Tab", variables={"app": self.application})
         self.logout = logoutput.OutputLogDialog("History", parent=parent)
 
         self.pythonHighlighter = highlighter.highlighterFromJson(os.path.join(os.path.dirname(highlighter.__file__),

@@ -6,11 +6,12 @@ from zoo.libs.pyqt.widgets.graphics import graphicsview
 from zoo.libs.pyqt.widgets.graphics import graphicsscene
 from vortex.ui.graphics import plugwidget
 from vortex.ui.graphics import graphnodes
-from vortex.ui import utils
 from zoo.libs.utils import zlogging
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop, graphicitems
 
 logger = zlogging.getLogger(__name__)
+
+# todo: current context ie. compound node
 
 
 class View(graphicsview.GraphicsView):
@@ -18,10 +19,8 @@ class View(graphicsview.GraphicsView):
 
     :param graph:
     :type graph: :class:`vortex.ui.model.graphmodel.Graph`
-    :param model:
-    :type model: :class:`vortex.ui.model.objectmodel.ObjectModel`
     :param parent:
-    :type parent: :class:`:class:`vortex.ui.views.grapheditor.View``
+    :type parent: :class:`vortex.ui.views.grapheditor.View`
     :param setAntialiasing:
     :type setAntialiasing: bool
     """
@@ -172,7 +171,7 @@ class View(graphicsview.GraphicsView):
                 if sel.model.isCompound():
                     compounds.append(sel)
             if compounds:
-                self.compoundExpansionSig.emit(sel.model)
+                self.compoundAsCurrentSig.emit(sel.model)
 
         elif event.key() == QtCore.Qt.Key_U:
             model = self.model
