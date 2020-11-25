@@ -55,6 +55,13 @@ class VortexConfig(graphviewconfig.Config):
         return {}
 
     def attributeWidgetForType(self, attributeType):
+        """
+
+        :param attributeType:
+        :type attributeType:
+        :return:
+        :rtype: callable
+        """
         widget = self.attributeMapping.get(attributeType, {}).get("widget")
         if widget is None:
             logger.warning("Missing attributeType: {}".format(attributeType))

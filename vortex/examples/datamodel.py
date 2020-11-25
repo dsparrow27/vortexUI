@@ -130,7 +130,10 @@ class NodeModel(vortexApi.ObjectModel):
         parentFrame = frame.QFrame(parent=parent)
         layout = elements.vBoxLayout(parentFrame)
         for model in self.attributes(outputs=False):
-            layout.addWidget(self.config.attributeWidgetForType(model.type())(model, parent=parentFrame))
+            attributeWidget = self.config.attributeWidgetForType(model.type())
+            if not attributeWidget:
+                continue
+            layout.addWidget(attributeWidget(model, parent=parentFrame))
         return parentFrame
 
 

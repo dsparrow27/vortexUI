@@ -45,11 +45,31 @@ class View(graphicsview.GraphicsView):
     def model(self):
         return self.scene().model
 
+    def frameSceneItems(self):
+        super(View, self).frameSceneItems()
+        self.rescaleGraphWidget()
+        self.scene().updateAllConnections()
+
+    def frameSelectedItems(self):
+        super(View, self).frameSelectedItems()
+        self.rescaleGraphWidget()
+        self.scene().updateAllConnections()
+
+    def itemAt(self, position):
+        item = super(View, self).itemAt(position)
+        if isinstance(item, graphpanels.PanelWidget):
+            return
+        return item
+
+    def items(self, position):
+        items = super(View, self).items(position)
+        return [i for i in items if isinstance(i, (graphnodes.QBaseNode,
+                                                   plugwidget.PlugContainer,
+                                                   plugwidget.CrossSquare,
+                                                   plugwidget.Plug))]
+
     def mouseDoubleClickEvent(self, event):
-        # ignore any graphicsitems we don't care about, ie. containers
-        items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                          graphpanels.PanelWidget,
-                                                                          graphnodes.NodeHeader))]
+        items = self.items(event.pos())
         if not items:
             super(View, self).mouseDoubleClickEvent(event)
             return
@@ -82,17 +102,16 @@ class View(graphicsview.GraphicsView):
                 self.onTempConnectionRequested(self._plugSelected, event)
             else:
                 self._interactiveEdge.destinationPoint = self.mapToScene(event.pos())
+        self.scene().updateAllConnections()
 
     def wheelEvent(self, event):
         super(View, self).wheelEvent(event)
         self.rescaleGraphWidget()
+        self.scene().updateAllConnections()
 
     def mousePressEvent(self, event):
         button = event.buttons()
-        eventPos = event.pos()
-        # ignore any graphicsitems we don't care about, ie. containers
-        items = [i for i in self.items(eventPos) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                       graphnodes.NodeHeader))]
+        items = self.items(event.pos())
         if button == QtCore.Qt.LeftButton:
             if items:
                 item = items[0]
@@ -114,8 +133,7 @@ class View(graphicsview.GraphicsView):
                 self.scene().removeItem(self._interactiveEdge)
             self._interactiveEdge = None
             # ignore any graphics items we don't care about, ie. containers
-            items = [i for i in self.items(event.pos()) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                              graphnodes.NodeHeader))]
+            items = items = self.items(event.pos())
             if items:
                 item = items[0]
                 if isinstance(item, plugwidget.Plug):
@@ -222,6 +240,7 @@ class View(graphicsview.GraphicsView):
             # self.panelWidget.rightPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
             self.scene().panelWidget = self.panelWidget
             self.scene().addItem(self.panelWidget)
+            self.rescaleGraphWidget()
 
     def resizeEvent(self, event):
         super(View, self).resizeEvent(event)

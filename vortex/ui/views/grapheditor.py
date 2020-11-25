@@ -131,5 +131,6 @@ class GraphEditor(QtWidgets.QWidget):
     def _requestCompoundAsCurrent(self, model):
         self.breadCrumbWidget.setText("->".join(model.fullPathName().split("/")))
         self.scene.setModel(model)
+        self.view.showPanels(True)
         self.view.viewport().update()
 
