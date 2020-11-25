@@ -86,7 +86,7 @@ class Graph(vortexApi.GraphModel):
 
     def loadFromPath(self, filePath, parent=None):
         self._internalGraph.loadFromFile(filePath)
-        return self.translateSlitherToVortex(self._internalGraph.root, parent=parent)
+        return self.translateSlitherToVortex(self._internalGraph.root, parent=parent or self.rootNode)
 
     def loadFromDict(self, data, parent=None):
         return self.createNodeFromInfo(data, parent=parent)
@@ -98,7 +98,7 @@ class Graph(vortexApi.GraphModel):
             internalParent = None
         n = self._internalGraph.createNode(nodeType, nodeType, parent=internalParent)
         if n is not None:
-            nodes = self.translateSlitherToVortex(n, parent=parent)
+            nodes = self.translateSlitherToVortex(n, parent=parent or self.rootNode)
             self.application.events.modelNodesCreated.emit(nodes)
 
     def translateSlitherToVortex(self, node, parent=None):
@@ -111,7 +111,7 @@ class Graph(vortexApi.GraphModel):
             return nodes
 
         for child in node.children:
-            nodes.extend(self.translateSlitherToVortex(child, parent=model))
+            nodes.extend(self.translateSlitherToVortex(child, parent=model ))
         return nodes
 
     def customToolbarActions(self, parent):
@@ -121,7 +121,6 @@ class Graph(vortexApi.GraphModel):
     def _execute(self):
         selection = []
         for child in self.rootNode.children(recursive=True):
-            print(child, child.isSelected())
             if child.isSelected():
                 selection.append(child)
                 child.setBackgroundColour(QtGui.QColor(255, 0, 0, 1))
@@ -129,11 +128,11 @@ class Graph(vortexApi.GraphModel):
 
 class NodeModel(vortexApi.ObjectModel):
     def __init__(self, internalNode, config, properties=None, parent=None):
-        super(NodeModel, self).__init__(config, properties=properties or {}, parent=parent)
-        self.internalNode = internalNode  # type: api.ComputeNode
         # link the internal NodeUI dict to the UI properties
         # data is stored json compatible
-        self._properties = self.internalNode.nodeUI
+        properties = internalNode.nodeUI
+        super(NodeModel, self).__init__(config, properties=properties or {}, parent=parent)
+        self.internalNode = internalNode  # type: api.ComputeNode
         for attr in self.internalNode.attributes:
             model = TestModel(attr, self, properties={}, parent=None)
             self._attributes.append(model)
