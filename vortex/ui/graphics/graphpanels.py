@@ -16,8 +16,8 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         self.setZValue(1)
         self.model = model
-        self.leftPanel = Panel(model, ioType="Input", acceptsContextMenu=acceptsContextMenu, parent=self)
-        self.rightPanel = Panel(model, ioType="Output", acceptsContextMenu=acceptsContextMenu, parent=self)
+        self.leftPanel = Panel(model, ioType=plugwidget.Plug.INPUT_TYPE, acceptsContextMenu=acceptsContextMenu, parent=self)
+        self.rightPanel = Panel(model, ioType=plugwidget.Plug.OUTPUT_TYPE, acceptsContextMenu=acceptsContextMenu, parent=self)
         self.leftPanel.setMaximumWidth(model.config.panelWidth)
         self.rightPanel.setMaximumWidth(model.config.panelWidth)
         layout = elements.hGraphicsLinearLayout(parent=self)
@@ -57,7 +57,9 @@ class Panel(QtWidgets.QGraphicsWidget):
         self.setZValue(100)
         self.model = objectModel
         self.ioType = ioType
+        self._layout = graphicitems.layouts.vGraphicsLinearLayout(self)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
+        self._layout.addItem(self.attributeContainer)
         self.refresh()
 
     def refresh(self):
@@ -65,8 +67,8 @@ class Panel(QtWidgets.QGraphicsWidget):
         if currentModel is None:
             return
         self.attributeContainer.clear()
-        for attr in currentModel.attributes(True, True,
-                                            3):
+        for attr in currentModel.attributes(self.ioType == plugwidget.Plug.INPUT_TYPE,
+                                            self.ioType == plugwidget.Plug.OUTPUT_TYPE, 3):
             self.addAttribute(attr)
 
     def mouseDoubleClickEvent(self, event):
@@ -88,8 +90,11 @@ class Panel(QtWidgets.QGraphicsWidget):
         super(Panel, self).wheelEvent(event)
 
     def addAttribute(self, attribute):
-        plug = plugwidget.PlugContainer(attribute, parent=self)
-        self.attributeContainer.addItem(plug)
+        if attribute.isInput() and self.ioType == plugwidget.Plug.INPUT_TYPE:
+            container = plugwidget.CompoundAttributeInputContainer(attribute, parent=self)
+        else:
+            container = plugwidget.CompoundAttributeOutputContainer(attribute, parent=self)
+        self.attributeContainer.addItem(container)
 
     def attributeItem(self, attributeModel):
         for attr in iter(self.attributeContainer.items()):
@@ -102,7 +107,7 @@ class Panel(QtWidgets.QGraphicsWidget):
     def boundingRect(self):
         parent = self.parentItem()
         rect = parent.boundingRect()
-        if self.ioType == "Input":
+        if self.ioType == plugwidget.Plug.INPUT_TYPE:
             rect.setWidth(150)
             return rect
         rect.setWidth(150)

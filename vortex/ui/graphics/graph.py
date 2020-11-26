@@ -119,7 +119,7 @@ class View(graphicsview.GraphicsView):
                     self._plugSelected = item
                 elif isinstance(item, plugwidget.CrossSquare):
                     plug = item.plug()
-                    if item.ioType == "input":
+                    if item.ioType == plugwidget.Plug.INPUT_TYPE:
                         plug.onExpandInput()
                     else:
                         plug.onExpandOutput()
@@ -133,7 +133,7 @@ class View(graphicsview.GraphicsView):
                 self.scene().removeItem(self._interactiveEdge)
             self._interactiveEdge = None
             # ignore any graphics items we don't care about, ie. containers
-            items = items = self.items(event.pos())
+            items = self.items(event.pos())
             if items:
                 item = items[0]
                 if isinstance(item, plugwidget.Plug):

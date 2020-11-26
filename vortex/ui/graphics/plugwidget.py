@@ -11,18 +11,18 @@ class PlugContainer(graphicitems.ItemContainer):
         super(PlugContainer, self).__init__(QtCore.Qt.Horizontal, parent)
         self.model = attributeModel
         self.childContainers = []
-        self.inCrossItem = CrossSquare(ioType="input", parent=self)
-        self.outCrossItem = CrossSquare(ioType="output", parent=self)
+        self.inCrossItem = CrossSquare(ioType=Plug.INPUT_TYPE, parent=self)
+        self.outCrossItem = CrossSquare(ioType=Plug.OUTPUT_TYPE, parent=self)
         self.inCrossItem.hoverEventRequested.connect(self.onExpandInput)
         self.outCrossItem.hoverEventRequested.connect(self.onExpandOutput)
-        self.inCircle = Plug(self.model.backgroundColour(),
-                             self.model.edgeColour(),
-                             self.model.highlightColour(), "Input",
-                             parent=self)
-        self.outCircle = Plug(self.model.backgroundColour(),
-                              self.model.edgeColour(),
-                              self.model.highlightColour(), "Output",
-                              parent=self)
+        self.inCircle = InputPlug(self.model.backgroundColour(),
+                                  self.model.edgeColour(),
+                                  self.model.highlightColour(),
+                                  parent=self)
+        self.outCircle = OutputPlug(self.model.backgroundColour(),
+                                    self.model.edgeColour(),
+                                    self.model.highlightColour(),
+                                    parent=self)
         self.inCircle.setToolTip(attributeModel.toolTip())
         self.outCircle.setToolTip(attributeModel.toolTip())
 
@@ -30,22 +30,26 @@ class PlugContainer(graphicitems.ItemContainer):
         self.label.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
         self.label.colour = attributeModel.textColour()
         self.label.allowHoverHighlight = True
+        self.addItems()
 
+    def addItems(self):
+        """This method allows for overloading the layout of the items
+        """
         self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        self.addItem(self.label, attributeModel.textAlignment())
+        self.addItem(self.label, self.model.textAlignment())
         self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
 
-        if not attributeModel.isOutput():
+        if not self.model.isOutput():
             self.outCircle.hide()
         else:
-            if attributeModel.isArray() or attributeModel.isCompound():
+            if self.model.isArray() or self.model.isCompound():
                 self.outCrossItem.show()
-        if not attributeModel.isInput():
+        if not self.model.isInput():
             self.inCircle.hide()
         else:
-            if attributeModel.isArray() or attributeModel.isCompound():
+            if self.model.isArray() or self.model.isCompound():
                 self.inCrossItem.show()
 
     def setLabel(self, label):
@@ -89,25 +93,28 @@ class PlugContainer(graphicitems.ItemContainer):
         self.prepareGeometryChange()
         selfIndex = parentContainer.indexOf(self) + 1
         for element in children:
-            elementContainer = PlugContainer(attributeModel=element, parent=self)
-            elementContainer.inCrossItem.isElement = element.isElement()
-            elementContainer.inCrossItem.isChild = element.isChild()
-            elementContainer.inCrossItem.hasChildren = element.hasChildren()
-            elementContainer.outCrossItem.isElement = element.isElement()
-            elementContainer.outCrossItem.isChild = element.isChild()
-            elementContainer.outCrossItem.hasChildren = element.hasChildren()
-            parentContainer.insertItem(selfIndex, elementContainer)
-            elementContainer.expandedSig.connect(self.expandedSig.emit)
-            self.childContainers.append(elementContainer)
-            if element.isInput():
-                index = elementContainer.layout().count() - 2
-                if element.isArray() or element.isCompound():
-                    elementContainer.inCrossItem.show()
-            else:
-                if element.isArray() or element.isCompound():
-                    elementContainer.outCrossItem.show()
-                index = 2
-            elementContainer.layout().insertStretch(index, 1)
+            self.createChildContainer(element, selfIndex, parentContainer)
+
+    def createChildContainer(self, child, parentIndex, parentContainer):
+        elementContainer = PlugContainer(attributeModel=child, parent=self)
+        elementContainer.inCrossItem.isElement = child.isElement()
+        elementContainer.inCrossItem.isChild = child.isChild()
+        elementContainer.inCrossItem.hasChildren = child.hasChildren()
+        elementContainer.outCrossItem.isElement = child.isElement()
+        elementContainer.outCrossItem.isChild = child.isChild()
+        elementContainer.outCrossItem.hasChildren = child.hasChildren()
+        parentContainer.insertItem(parentIndex, elementContainer)
+        elementContainer.expandedSig.connect(self.expandedSig.emit)
+        self.childContainers.append(elementContainer)
+        if child.isInput():
+            index = elementContainer.layout().count() - 2
+            if child.isArray() or child.isCompound():
+                elementContainer.inCrossItem.show()
+        else:
+            if child.isArray() or child.isCompound():
+                elementContainer.outCrossItem.show()
+            index = 2
+        elementContainer.layout().insertStretch(index, 1)
 
     def onExpandInput(self):
         parentContainer = self.parentObject()
@@ -137,23 +144,109 @@ class PlugContainer(graphicitems.ItemContainer):
             super(PlugContainer, self).paint(painter, option, widget)
 
 
+class CompoundAttributeInputContainer(PlugContainer):
+    """Specialized Plug container for compound where the order of child items need to be reversed.
+
+    Output Order: Plug->crosshair->Text
+    Input Order: Text->crosshair->Plug
+    """
+
+    def addItems(self):
+        if self.model.isChild() or self.model.isElement():
+            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.layout().addStretch(1)
+            self.addItem(self.label, self.model.textAlignment())
+            self.addItem(self.inCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            showCross = True
+        else:
+            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.layout().addStretch(1)
+            self.addItem(self.label, self.model.textAlignment())
+            self.addItem(self.inCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            showCross=False
+
+        self.outCircle.hide()
+        self.outCrossItem.hide()
+        if self.model.isArray() or self.model.isCompound() or showCross:
+            self.inCrossItem.show()
+        else:
+            self.inCrossItem.hide()
+    def createChildContainer(self, child, parentIndex, parentContainer):
+        elementContainer = CompoundAttributeInputContainer(attributeModel=child, parent=self)
+        elementContainer.inCrossItem.isChild = child.isChild()
+        self.childContainers.append(elementContainer)
+        parentContainer.insertItem(parentIndex, elementContainer)
+        elementContainer.inCrossItem.isElement = child.isElement()
+        elementContainer.inCrossItem.hasChildren = child.hasChildren()
+        elementContainer.inCrossItem.isChild = child.isChild()
+        elementContainer.outCrossItem.isElement = child.isElement()
+        elementContainer.outCrossItem.isChild = child.isChild()
+        elementContainer.outCrossItem.hasChildren = child.hasChildren()
+        elementContainer.expandedSig.connect(self.expandedSig.emit)
+
+
+class CompoundAttributeOutputContainer(PlugContainer):
+    def addItems(self):
+        if self.model.isChild() or self.model.isElement():
+            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.label, self.model.textAlignment())
+            self.layout().addStretch(1)
+            self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            showCross = True
+
+        else:
+            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.label, self.model.textAlignment())
+            self.layout().addStretch(1)
+            self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            showCross = False
+
+        if self.model.isArray() or self.model.isCompound() or showCross:
+            self.outCrossItem.show()
+        else:
+            self.outCrossItem.hide()
+        self.inCircle.hide()
+        self.inCrossItem.hide()
+
+    def createChildContainer(self, child, parentIndex, parentContainer):
+        elementContainer = CompoundAttributeOutputContainer(attributeModel=child, parent=self)
+        elementContainer.inCrossItem.isChild = child.isChild()
+        self.childContainers.append(elementContainer)
+        parentContainer.insertItem(parentIndex, elementContainer)
+        elementContainer.inCrossItem.isElement = child.isElement()
+        elementContainer.inCrossItem.hasChildren = child.hasChildren()
+        elementContainer.inCrossItem.isChild = child.isChild()
+        elementContainer.outCrossItem.isElement = child.isElement()
+        elementContainer.outCrossItem.isChild = child.isChild()
+        elementContainer.outCrossItem.hasChildren = child.hasChildren()
+        elementContainer.expandedSig.connect(self.expandedSig.emit)
+
+
 class Plug(QtWidgets.QGraphicsWidget):
     _diameter = 2 * 6
     INPUT_TYPE = 0
     OUTPUT_TYPE = 1
+    ioType = ""
+    xPos = 0
 
-    def __init__(self, colour, edgeColour, highlightColour, ioType, parent=None):
+    def __init__(self, colour, edgeColour, highlightColour, parent=None):
         super(Plug, self).__init__(parent=parent)
         self.setAcceptHoverEvents(True)
         size = QtCore.QSizeF(self._diameter, self._diameter)
-        self.ioType = ioType
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed))
         self.setPreferredSize(size)
         self._defaultPen = QtGui.QPen(edgeColour, 2.5)
         self._hoverPen = QtGui.QPen(highlightColour, 3.0)
         self._defaultBrush = QtGui.QBrush(colour)
         self._currentBrush = QtGui.QBrush(colour)
-        self.xPos = 5.0 if self.ioType == "Input" else -5.0
         self.setPos(self.xPos, 0)
 
     def container(self):
@@ -179,7 +272,7 @@ class Plug(QtWidgets.QGraphicsWidget):
         for view in self.scene().views():
             rect = self.boundingRect()
             transform = self.deviceTransform(view.viewportTransform())
-            return view.mapToScene(transform.m31()+rect.width()*0.5, transform.m32()+rect.height()*0.5)
+            return view.mapToScene(transform.m31() + rect.width() * 0.5, transform.m32() + rect.height() * 0.5)
 
     def hoverEnterEvent(self, event):
         self.highlight()
@@ -221,6 +314,16 @@ class Plug(QtWidgets.QGraphicsWidget):
             self._diameter,
             self._diameter,
         )
+
+
+class InputPlug(Plug):
+    ioType = Plug.INPUT_TYPE
+    xPos = 5.0
+
+
+class OutputPlug(Plug):
+    ioType = Plug.OUTPUT_TYPE
+    xPos = -5.0
 
 
 class CrossSquare(QtWidgets.QGraphicsWidget):
