@@ -6,7 +6,7 @@ class AttributeModel(QtCore.QObject):
                      "description": "",
                      "isInput": True,
                      "isOutput": False,
-                     "type": "multi",
+                     "type": "kFloat",
                      "isArray": False,
                      "isCompound": False,
                      "default": 0.0,

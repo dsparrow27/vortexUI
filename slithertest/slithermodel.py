@@ -46,7 +46,7 @@ class Config(vortexApi.VortexConfig):
         self.attributeMapping = {
             'kQuaternion': {"colour": QtGui.QColor(230, 115, 115)},
             'kColour': {"colour": QtGui.QColor(130, 217, 159)},
-            'kMatrix4': {"color": QtGui.QColor(230, 115, 115)},
+            'kMatrix4': {"colour": QtGui.QColor(230, 115, 115)},
             'multi': {"colour": QtGui.QColor(230, 115, 115)},
             'kVector2D': {"colour": QtGui.QColor(130, 217, 159)},
             'kVector3D': {"colour": QtGui.QColor(130, 217, 159)},
@@ -111,7 +111,7 @@ class Graph(vortexApi.GraphModel):
             return nodes
 
         for child in node.children:
-            nodes.extend(self.translateSlitherToVortex(child, parent=model ))
+            nodes.extend(self.translateSlitherToVortex(child, parent=model))
         return nodes
 
     def customToolbarActions(self, parent):
@@ -152,6 +152,29 @@ class NodeModel(vortexApi.ObjectModel):
     def isCompound(self):
         return self.internalNode.isCompound()
 
+    def canCreateAttributes(self):
+        return self.isCompound()
+
+    def createAttribute(self, attributeDefinition):
+        attrDef = api.AttributeDefinition(name=attributeDefinition["label"],
+                                          input=attributeDefinition.get("isInput", False),
+                                          output=attributeDefinition.get("isOutput", False),
+                                          type_=self.internalNode.graph.application.registry.dataTypeClass(
+                                              attributeDefinition["type"]),
+                                          default=attributeDefinition.get("default"),
+                                          required=attributeDefinition.get("required", False),
+                                          doc=attributeDefinition.get("description", ""),
+                                          internal=attributeDefinition.get("internal", False),
+                                          array=attributeDefinition.get("isArray", False),
+                                          compound=attributeDefinition.get("isCompound", False))
+        internalAttr = self.internalNode.createAttribute(attrDef)
+        attr = TestModel(internalAttr, self, properties={}, parent=None)
+        self._attributes.append(attr)
+        self.sigAddAttribute.emit(attr)
+
+    def deleteAttribute(self, attribute):
+        pass
+
 
 class TestModel(vortexApi.AttributeModel):
 
@@ -167,7 +190,10 @@ class TestModel(vortexApi.AttributeModel):
         self.internalAttr.setName(str(text))
 
     def isChild(self):
-        return self.internalAttr.parent.isCompound
+        return self.parent is not None and self.parent.isCompound()
+
+    def isElement(self):
+        return self.parent is not None and self.parent.isArray()
 
     def isInput(self):
         return self.internalAttr.isInput()
@@ -190,7 +216,7 @@ class TestModel(vortexApi.AttributeModel):
     def backgroundColour(self):
         typeMap = self.objectModel.config.attributeMapping.get(self.internalAttr.type().Type)
         if typeMap:
-            return typeMap["colour"]
+            return typeMap.get("colour", QtGui.QColor(0, 0, 0))
         return QtGui.QColor(0, 0, 0)
 
     def value(self):
@@ -224,13 +250,18 @@ class TestModel(vortexApi.AttributeModel):
         upstream = self.internalAttr.upstream
         if not upstream:
             return []
-        if self.objectModel.isCompound():
-            model = self.objectModel
+        selfNode = self.objectModel
+        if upstream.isInput():  # dealing with the parent compound node
+            node = self.objectModel.parentObject()
+            model = None
+        elif self.isOutput():
+            model = selfNode
         else:
             model = self.objectModel.parentObject()
-        node = model.findChild(upstream.node.name, recursive=False)
+        if model:
+            node = model.findChild(upstream.node.name, recursive=False)
         if not node:
-            print("unable to find node: {} -> {}".format(self.text(), upstream.node.name))
+            print("Unable to find node: {} -> {}".format(self.text(), upstream.node.name))
             return []
         return [(node.attribute(upstream.name()), self)]
 

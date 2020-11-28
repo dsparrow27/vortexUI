@@ -234,12 +234,15 @@ class View(graphicsview.GraphicsView):
                                                                  graphnodes.NodeHeader))]
 
     def showPanels(self, state):
+        # todo, panel handling should be on the scene class instead of the view
         if state:
-            self.panelWidget = graphpanels.PanelWidget(self.scene().model, acceptsContextMenu=True)
-            # self.panelWidget.leftPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
-            # self.panelWidget.rightPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
-            self.scene().panelWidget = self.panelWidget
-            self.scene().addItem(self.panelWidget)
+            if self.panelWidget is None:
+                self.panelWidget = graphpanels.PanelWidget(self.scene().model, acceptsContextMenu=True)
+                # self.panelWidget.leftPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
+                # self.panelWidget.rightPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
+                self.scene().panelWidget = self.panelWidget
+                self.scene().addItem(self.panelWidget)
+                self.panelWidget.refresh()
             self.rescaleGraphWidget()
 
     def resizeEvent(self, event):
@@ -273,21 +276,31 @@ class Scene(graphicsscene.GraphicsScene):
     def __init__(self, graph, *args, **kwargs):
         super(Scene, self).__init__(*args, **kwargs)
         self.graph = graph
+        self.panelWidget = None
         self.model = None
         self.nodes = {}
         self.connections = []
         self.selectionChanged.connect(self._onSelectionChanged)
 
     def setModel(self, objectModel):
-        self.clear()
+        for item in self.nodes.values():
+            self.removeItem(item["qitem"])
+        for item in self.connections:
+            self.removeItem(item["qitem"])
+
         self.nodes = {}
         self.connections = []
         self.model = objectModel
         self.createNodes(objectModel.children())
+        if self.panelWidget is not None:
+            self.panelWidget.refresh()
         for n in objectModel.children():
             for attr in n.attributes():
                 connections = attr.connections()
                 self.createConnections(connections)
+        for attr in objectModel.attributes(inputs=False):
+            connections = attr.connections()
+            self.createConnections(connections)
 
         return True
 
@@ -353,12 +366,32 @@ class Scene(graphicsscene.GraphicsScene):
             conn["qitem"].updatePosition()
 
     def createConnection(self, source, destination):
-        src = source if source.model.isOutput() else destination
-        dest = destination if destination.model.isInput() else source
-        if src == dest:
+        srcNode = source.model.objectModel
+        destNode = destination.model.objectModel
+        destParent = destNode.parentObject()
+        srcParent = srcNode.parentObject()
+        srcModel = source.model
+        destModel = destination.model
+        src = source
+        dest = destination
+        if srcModel == destModel:
             logger.debug("source and destination is the same")
             return
+        if srcModel.isInput() and destModel.isOutput():
+            src = destination
+            dest = source
+        # compound input attribute to child input
+        elif srcModel.isInput() and destModel.isInput():
+            # if we connecting from the child attr to the compound input
+            if srcParent == destNode:
+                src = destination
+                dest = source
+        elif srcModel.isOutput() and destModel.isOutput():
+            if destParent == srcNode:
+                src = destination
+                dest = source
         if not src.model.canAcceptConnection(dest.model):
+            logger.debug("Model doesn't accept connection")
             return
         newConnection = src.model.createConnection(dest.model)
         if not newConnection:
@@ -394,6 +427,16 @@ class Scene(graphicsscene.GraphicsScene):
                     destinationItem = dest
                 if sourceItem and destinationItem:
                     break
+        if not sourceItem or not destinationItem and self.panelWidget:
+            # check the parent compound panels
+            leftPanel = self.panelWidget.leftPanel
+            rightPanel = self.panelWidget.rightPanel
+            src = leftPanel.attributeItem(source)
+            dest = rightPanel.attributeItem(destination)
+            if src:
+                sourceItem = src
+            if dest:
+                destinationItem = dest
         return sourceItem, destinationItem
 
     def connectionsForNodes(self, objectModels):

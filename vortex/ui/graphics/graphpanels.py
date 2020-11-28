@@ -15,9 +15,10 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
         self.setFlags(self.ItemIgnoresTransformations)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
         self.setZValue(1)
-        self.model = model
-        self.leftPanel = Panel(model, ioType=plugwidget.Plug.INPUT_TYPE, acceptsContextMenu=acceptsContextMenu, parent=self)
-        self.rightPanel = Panel(model, ioType=plugwidget.Plug.OUTPUT_TYPE, acceptsContextMenu=acceptsContextMenu, parent=self)
+        self.leftPanel = Panel(ioType=plugwidget.Plug.INPUT_TYPE, acceptsContextMenu=acceptsContextMenu,
+                               parent=self)
+        self.rightPanel = Panel(ioType=plugwidget.Plug.OUTPUT_TYPE, acceptsContextMenu=acceptsContextMenu,
+                                parent=self)
         self.leftPanel.setMaximumWidth(model.config.panelWidth)
         self.rightPanel.setMaximumWidth(model.config.panelWidth)
         layout = elements.hGraphicsLinearLayout(parent=self)
@@ -28,6 +29,10 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
         self.setLayout(layout)
         self.leftPanel.doubleClicked.connect(self.leftPanelDoubleClicked)
         self.rightPanel.doubleClicked.connect(self.rightPanelDoubleClicked)
+
+    def refresh(self):
+        self.leftPanel.refresh()
+        self.rightPanel.refresh()
 
     def geometry(self):
         return self.boundingRect()
@@ -49,18 +54,20 @@ class Panel(QtWidgets.QGraphicsWidget):
 
     color = QtGui.QColor(20, 20, 20, 125)
 
-    def __init__(self, objectModel, ioType, acceptsContextMenu=False, parent=None):
+    def __init__(self, ioType, acceptsContextMenu=False, parent=None):
         super(Panel, self).__init__(parent=parent)
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.acceptsContextMenu = acceptsContextMenu
         self.setAcceptDrops(True)
         self.setZValue(100)
-        self.model = objectModel
         self.ioType = ioType
         self._layout = graphicitems.layouts.vGraphicsLinearLayout(self)
         self.attributeContainer = graphicitems.ItemContainer(parent=self)
         self._layout.addItem(self.attributeContainer)
-        self.refresh()
+
+    @property
+    def model(self):
+        return self.scene().model
 
     def refresh(self):
         currentModel = self.model

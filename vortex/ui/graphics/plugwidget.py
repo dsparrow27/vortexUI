@@ -44,12 +44,12 @@ class PlugContainer(graphicitems.ItemContainer):
         if not self.model.isOutput():
             self.outCircle.hide()
         else:
-            if self.model.isArray() or self.model.isCompound():
+            if self.model.isArray() or self.model.isCompound() or self.model.isChild() or self.model.isElement():
                 self.outCrossItem.show()
         if not self.model.isInput():
             self.inCircle.hide()
         else:
-            if self.model.isArray() or self.model.isCompound():
+            if self.model.isArray() or self.model.isCompound() or self.model.isChild() or self.model.isElement():
                 self.inCrossItem.show()
 
     def setLabel(self, label):
@@ -153,28 +153,29 @@ class CompoundAttributeInputContainer(PlugContainer):
 
     def addItems(self):
         if self.model.isChild() or self.model.isElement():
-            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
             self.layout().addStretch(1)
             self.addItem(self.label, self.model.textAlignment())
-            self.addItem(self.inCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            self.addItem(self.inCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             showCross = True
         else:
-            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
             self.layout().addStretch(1)
             self.addItem(self.label, self.model.textAlignment())
-            self.addItem(self.inCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            self.addItem(self.inCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            showCross=False
+            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            showCross = False
 
-        self.outCircle.hide()
-        self.outCrossItem.hide()
+        self.inCircle.hide()
+        self.inCrossItem.hide()
         if self.model.isArray() or self.model.isCompound() or showCross:
-            self.inCrossItem.show()
+            self.outCrossItem.show()
         else:
-            self.inCrossItem.hide()
+            self.outCrossItem.hide()
+
     def createChildContainer(self, child, parentIndex, parentContainer):
         elementContainer = CompoundAttributeInputContainer(attributeModel=child, parent=self)
         elementContainer.inCrossItem.isChild = child.isChild()
@@ -192,29 +193,28 @@ class CompoundAttributeInputContainer(PlugContainer):
 class CompoundAttributeOutputContainer(PlugContainer):
     def addItems(self):
         if self.model.isChild() or self.model.isElement():
-            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            self.addItem(self.label, self.model.textAlignment())
-            self.layout().addStretch(1)
             self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
             self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            self.addItem(self.label, self.model.textAlignment())
+            self.layout().addStretch(1)
+            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             showCross = True
-
         else:
-            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
             self.addItem(self.label, self.model.textAlignment())
             self.layout().addStretch(1)
-            self.addItem(self.inCrossItem, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-            self.addItem(self.inCircle, QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCrossItem, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+            self.addItem(self.outCircle, QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
             showCross = False
 
         if self.model.isArray() or self.model.isCompound() or showCross:
-            self.outCrossItem.show()
+            self.inCrossItem.show()
         else:
-            self.outCrossItem.hide()
-        self.inCircle.hide()
-        self.inCrossItem.hide()
+            self.inCrossItem.hide()
+        self.outCircle.hide()
+        self.outCrossItem.hide()
 
     def createChildContainer(self, child, parentIndex, parentContainer):
         elementContainer = CompoundAttributeOutputContainer(attributeModel=child, parent=self)
