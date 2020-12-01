@@ -64,6 +64,7 @@ class Config(vortexApi.VortexConfig):
         self.registerAttributeWidget("kDirectory", attributewidgets.PathWidget)
         self.registerAttributeWidget("kFloat", attributewidgets.NumericAttributeWidget)
         self.registerAttributeWidget("kInt", attributewidgets.NumericAttributeWidget)
+        self.registerAttributeWidget("kBool", attributewidgets.BoolAttributeWidget)
 
     def registeredNodes(self):
         return self.types
@@ -143,7 +144,7 @@ class NodeModel(vortexApi.ObjectModel):
     def attributeWidget(self, parent):
         parentFrame = frame.QFrame(parent=parent)
         layout = elements.vBoxLayout(parentFrame)
-        for model in self.attributes(outputs=False):
+        for model in self.attributes():
             wid = self.config.attributeWidgetForType(model.type())
             if wid is not None:
                 layout.addWidget(wid(model, parent=parentFrame))

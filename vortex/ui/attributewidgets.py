@@ -78,3 +78,16 @@ class NumericAttributeWidget(QtWidgets.QFrame):
         ref = self.model()
         if ref is not None and ref.value() != value:
             ref.setValue(value)
+
+
+class BoolAttributeWidget(elements.CheckBox):
+    def __init__(self, model, parent=None):
+        super(BoolAttributeWidget, self).__init__(label=model.text(), checked=model.value(), parent=parent,
+                                                  toolTip=model.description(), enableMenu=False)
+        self.model = weakref.ref(model)
+        self.stateChanged.connect(self._updateModel)
+
+    def _updateModel(self, value):
+        ref = self.model()
+        if ref is not None and ref.value() != value:
+            ref.setValue(value)
