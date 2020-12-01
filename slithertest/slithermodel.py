@@ -228,6 +228,8 @@ class TestModel(vortexApi.AttributeModel):
 
     def elements(self):
         elements_ = []
+        if not self.isArray():
+            return elements_
         for element in self.internalAttr.elements:
             item = TestModel(element, objectModel=self.objectModel, properties={}, parent=self)
             elements_.append(item)
@@ -236,6 +238,8 @@ class TestModel(vortexApi.AttributeModel):
     def children(self):
 
         children = []
+        if not self.isCompound():
+            return children
         for child in self.internalAttr.children:
             item = TestModel(child, objectModel=self.objectModel, properties={}, parent=self)
             children.append(item)

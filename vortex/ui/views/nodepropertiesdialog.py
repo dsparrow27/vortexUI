@@ -1,3 +1,5 @@
+import weakref
+
 from Qt import QtWidgets
 from copy import deepcopy
 from zoo.libs.pyqt.widgets import elements
@@ -51,7 +53,10 @@ class NodePropertiesDialog(dialog.Dialog):
                 getattr(self.objectModel, "set" + k)(v)
 
         for child in self.attributeEditorWidget.treeModel.root.children:
-            self.objectModel.createAttribute(child.attribute)
+            attr = child.attribute
+            modelAttribute = self.objectModel.attribute(child["label"])
+            if not modelAttribute:
+                self.objectModel.createAttribute(attr)
         self.close()
 
 
@@ -130,6 +135,7 @@ class NodePropertiesWidget(QtWidgets.QWidget):
 class AttributeEditorWidget(QtWidgets.QWidget):
     def __init__(self, objectModel, parent=None):
         super(AttributeEditorWidget, self).__init__(parent=parent)
+        self.model = weakref.ref(objectModel)
         self.initUI()
 
     def initUI(self):
@@ -153,6 +159,18 @@ class AttributeEditorWidget(QtWidgets.QWidget):
         opLayout.addItem(QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum))
         addAttrBtn.clicked.connect(self.onCreate)
         removeAttrBtn.clicked.connect(self.onRemove)
+        for attribute in self.model().attributes():
+            self.createAttribute(attribute, parent=None)
+        self.treeModel.reload()
+
+    def createAttribute(self, attr, parent=None):
+        parent = parent or self.treeModel.root
+
+        newAttr = Root(attr.serialize(), parent=parent)
+        parent.addChild(newAttr)
+        if attr.isCompound():
+            for child in attr.children():
+                self.createAttribute(child, newAttr)
 
     def onCreate(self):
         attr = Root(deepcopy(attributemodel.AttributeModel.defaultFields))
@@ -189,7 +207,10 @@ class Root(datasources.BaseDataSource):
         self.attribute = attribute
 
     def data(self, index):
-        return self.attribute[self.headers[index]]
+        try:
+            return self.attribute[self.headers[index]]
+        except KeyError:
+            return ""
 
     def setData(self, index, value):
         self.attribute[self.headers[index]] = value

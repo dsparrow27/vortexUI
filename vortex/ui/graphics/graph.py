@@ -66,7 +66,8 @@ class View(graphicsview.GraphicsView):
         return [i for i in items if isinstance(i, (graphnodes.QBaseNode,
                                                    plugwidget.PlugContainer,
                                                    plugwidget.CrossSquare,
-                                                   plugwidget.Plug))]
+                                                   plugwidget.Plug,
+                                                   graphpanels.Panel))]
 
     def mouseDoubleClickEvent(self, event):
         items = self.items(event.pos())
@@ -77,9 +78,9 @@ class View(graphicsview.GraphicsView):
         modifiers = event.modifiers()
         button = event.buttons()
         model = None
-        if isinstance(item, (graphnodes.QBaseNode,)):
-            model = item.model
-        elif isinstance(item, plugwidget.PlugContainer):
+        if isinstance(item, (graphnodes.QBaseNode,
+                             plugwidget.PlugContainer,
+                             graphpanels.Panel)):
             model = item.model
         elif isinstance(item.parentObject(), graphnodes.QBaseNode):
             item = item.parentObject()
@@ -231,7 +232,8 @@ class View(graphicsview.GraphicsView):
 
     def itemsFromPos(self, pos):
         return [i for i in self.items(pos) if not isinstance(i, (graphicitems.ItemContainer,
-                                                                 graphnodes.NodeHeader))]
+                                                                 graphnodes.NodeHeader,
+                                                                 graphpanels.Panel))]
 
     def showPanels(self, state):
         # todo, panel handling should be on the scene class instead of the view
