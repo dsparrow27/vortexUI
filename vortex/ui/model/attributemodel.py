@@ -13,6 +13,7 @@ class AttributeModel(QtCore.QObject):
                      "value": 0.0,
                      "min": 0.0,
                      "max": 99999999,
+                     "isInternal": False
                      }
 
     def __init__(self, objectModel, properties, parent=None):
@@ -97,6 +98,9 @@ class AttributeModel(QtCore.QObject):
     def max(self):
         return self._properties.get("max", 9999)
 
+    def isInternal(self):
+        return self._properties.get("isInternal", False)
+
     def setType(self, value):
         self._properties["type"] = value
 
@@ -124,8 +128,7 @@ class AttributeModel(QtCore.QObject):
     def textAlignment(self):
         if self.isInput():
             return QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-        else:
-            return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
+        return QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter
 
     def elements(self):
         return []

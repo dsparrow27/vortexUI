@@ -69,6 +69,7 @@ def nodesAlignY(items, direction):
         for i in items:
             i.setPos(QtCore.QPointF(i.x(), minY))
 
+
 def eventKeySequence(event):
     key = event.key()
 
@@ -97,5 +98,5 @@ def eventKeySequence(event):
     if modifiers & QtCore.Qt.MetaModifier:
         key += QtCore.Qt.META
     seq = QtGui.QKeySequence(key)
-    print("New KeySequence:",seq.toString(QtGui.QKeySequence.NativeText))
+    print("New KeySequence:", seq.toString(QtGui.QKeySequence.NativeText))
     return seq

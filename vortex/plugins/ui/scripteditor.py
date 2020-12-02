@@ -25,7 +25,7 @@ class XStream(QtCore.QObject):
 
     def write(self, msg):
         if not self.signalsBlocked():
-            self.messageWritten.emit(str(msg.strip()))
+            self.messageWritten.emit(msg.strip()+"\n")
 
     @staticmethod
     def stdout():
@@ -46,7 +46,7 @@ class ScriptEditor(api.UIPlugin):
     autoLoad = False
     id = "ScriptEditor"
     creator = "David Sparrow"
-    dockArea = QtCore.Qt.BottomDockWidgetArea
+    dockArea = QtCore.Qt.RightDockWidgetArea
 
     def show(self, parent):
         self.editorParent = QtWidgets.QWidget(parent=parent)
@@ -80,7 +80,7 @@ class ScriptEditor(api.UIPlugin):
     def outputText(self, text):
         logger = self.logout
         if logger is not None:
-            logger.write(text)
+            logger.write(text+"\n")
 
     def uiInstance(self):
         try:

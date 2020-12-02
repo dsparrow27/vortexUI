@@ -20,8 +20,8 @@ class NodePropertiesDialog(dialog.Dialog):
                                                    parent=parent)
         self.application = application
         self.objectModel = objectModel
-        self.initUI()
         self.state = {}
+        self.initUI()
 
     def initUI(self):
         self.attributeEditorWidget = AttributeEditorWidget(objectModel=self.objectModel, parent=self)
@@ -54,7 +54,7 @@ class NodePropertiesDialog(dialog.Dialog):
 
         for child in self.attributeEditorWidget.treeModel.root.children:
             attr = child.attribute
-            modelAttribute = self.objectModel.attribute(child["label"])
+            modelAttribute = self.objectModel.attribute(attr["label"])
             if not modelAttribute:
                 self.objectModel.createAttribute(attr)
         self.close()
@@ -164,6 +164,8 @@ class AttributeEditorWidget(QtWidgets.QWidget):
         self.treeModel.reload()
 
     def createAttribute(self, attr, parent=None):
+        if attr.isInternal():
+            return
         parent = parent or self.treeModel.root
 
         newAttr = Root(attr.serialize(), parent=parent)

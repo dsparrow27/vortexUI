@@ -12,7 +12,7 @@ class UIPlugin(plugin.Plugin):
     to the MainWindow. To Initialize a widget you should overload initializeWidget()
     """
     dockArea = QtCore.Qt.LeftDockWidgetArea
-    autoLoad=False
+    autoLoad = False
     tabify = True
 
     def __init__(self, application, manager=None):

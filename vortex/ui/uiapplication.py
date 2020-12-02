@@ -22,7 +22,7 @@ class UIApplication(QtCore.QObject):
         super(UIApplication, self).__init__()
         self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin, variableName="id")
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
-        self.graphNoteBook = None
+        self.graphNoteBook = None # type: None or slither.ui.views.grapheditor.GraphEditor
         self.config = uiConfig
         self.graphType = None
         self.events = ApplicationEvents()
@@ -67,17 +67,11 @@ class UIApplication(QtCore.QObject):
         self.graphNoteBook.addGraph(newGraphInstance, newGraphInstance.rootNode)
 
     def createGraphFromPath(self, filePath, name=None, parent=None):
-        if self.graphNoteBook is None:
-            return
-        elif self.graphType is None:
+        if self.graphNoteBook is None or self.graphType is None:
             return
         newGraphInstance = self.graphType(self, name=name or "NewGraph")
         models = newGraphInstance.loadFromPath(filePath, parent=parent)
-        if models is not None:
+        if models:
+            newGraphInstance.rootNode = models[0]
             self.events.uiNodesCreated.emit(models)
-            for node in models:
-                if not node.parentObject():
-                    rootModel = node
-                    break
-            newGraphInstance.rootNode = rootModel
-            self.graphNoteBook.addGraph(newGraphInstance, rootModel)
+            self.graphNoteBook.addGraph(newGraphInstance, models[0])

@@ -58,8 +58,8 @@ class GraphEditor(QtWidgets.QWidget):
         self.editorLayout.addWidget(self.toolbar)
         # constructor view and set scene
         self.scene = graph.Scene(self.graph, parent=self)
-        self.view = graph.View(self.graph, parent=self)
-        self.view.setScene(self.scene)
+        self.view = graph.View(self.scene, self.graph, parent=self)
+
         self.view.contextMenuRequest.connect(self._onViewContextMenu)
         self.view.requestNodeProperties.connect(self.displayNodeProperties)
         self.view.nodeDoubleClicked.connect(self._requestCompoundAsCurrent)
@@ -68,8 +68,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.editorLayout.insertWidget(0, self.breadCrumbWidget)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
-        self.scene.setModel(objectModel)
-        self.view.showPanels(True)
+        self._requestCompoundAsCurrent(objectModel)
 
     def displayNodeProperties(self, objectModel):
         a = nodepropertiesdialog.NodePropertiesDialog(self.graph, objectModel, parent=self)
@@ -130,7 +129,7 @@ class GraphEditor(QtWidgets.QWidget):
 
     def _requestCompoundAsCurrent(self, model):
         self.breadCrumbWidget.setText("->".join(model.fullPathName().split("/")))
-        self.view.showPanels(True)
+        self.scene.showPanels(True)
         self.scene.setModel(model)
         self.view.viewport().update()
 

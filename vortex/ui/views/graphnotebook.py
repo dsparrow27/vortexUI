@@ -41,6 +41,7 @@ class GraphNotebook(tabwidget.TabWidget):
         editor = grapheditor.GraphEditor(self.application, graph, objectModel, parent=self)
         self.editors.append(editor)
         if self.hasWelcome:
+            logger.debug("Removing welcome tab")
             self.removeTab(0)
             self.hasWelcome = False
         self.onAddTab(editor, objectModel.text())

@@ -31,15 +31,15 @@ class View(graphicsview.GraphicsView):
     compoundExpansionSig = QtCore.Signal(object)
     compoundAsCurrentSig = QtCore.Signal(object)
 
-    def __init__(self, graph, parent=None, setAntialiasing=True):
-
+    def __init__(self, scene, graph, parent=None, setAntialiasing=True):
         super(View, self).__init__(graph.config, parent, setAntialiasing)
         self.graph = graph
         self.newScale = None
         self._plugSelected = None
         self._interactiveEdge = None
         self.pan_active = False
-        self.panelWidget = None
+        self.setScene(scene)
+        scene.sidePanelsToggled.connect(self.rescaleGraphWidget)
 
     @property
     def model(self):
@@ -235,35 +235,24 @@ class View(graphicsview.GraphicsView):
                                                                  graphnodes.NodeHeader,
                                                                  graphpanels.Panel))]
 
-    def showPanels(self, state):
-        # todo, panel handling should be on the scene class instead of the view
-        if state:
-            if self.panelWidget is None:
-                self.panelWidget = graphpanels.PanelWidget(self.scene().model, acceptsContextMenu=True)
-                # self.panelWidget.leftPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
-                # self.panelWidget.rightPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
-                self.scene().panelWidget = self.panelWidget
-                self.scene().addItem(self.panelWidget)
-                self.panelWidget.refresh()
-            self.rescaleGraphWidget()
-
     def resizeEvent(self, event):
         super(View, self).resizeEvent(event)
         self.rescaleGraphWidget()
 
     def rescaleGraphWidget(self):
-        if self.panelWidget is None:
+        panelWidget = self.scene().panelWidget
+        if panelWidget is None:
             return
 
         rect = self.viewport().rect()
         leftCorner = self.mapToScene(0, 0).toPoint()
-        self.panelWidget.setGeometry(leftCorner.x(),
-                                     leftCorner.y(),
-                                     rect.width(),
-                                     rect.height())
+        panelWidget.setGeometry(leftCorner.x(),
+                                leftCorner.y(),
+                                rect.width(),
+                                rect.height())
         # force the heights
-        self.panelWidget.rightPanel.setMinimumHeight(rect.height())
-        self.panelWidget.leftPanel.setMinimumHeight(rect.height())
+        panelWidget.rightPanel.setMinimumHeight(rect.height())
+        panelWidget.leftPanel.setMinimumHeight(rect.height())
 
 
 class Scene(graphicsscene.GraphicsScene):
@@ -274,15 +263,27 @@ class Scene(graphicsscene.GraphicsScene):
     :param parent:
     :type parent: :class:`:class:`vortex.ui.views.grapheditor.View``
     """
+    sidePanelsToggled = QtCore.Signal()
 
     def __init__(self, graph, *args, **kwargs):
         super(Scene, self).__init__(*args, **kwargs)
         self.graph = graph
-        self.panelWidget = None
+        self.panelWidget = graphpanels.PanelWidget(acceptsContextMenu=True)
         self.model = None
         self.nodes = {}
         self.connections = []
         self.selectionChanged.connect(self._onSelectionChanged)
+        self.addItem(self.panelWidget)
+
+    def showPanels(self, state):
+        if state:
+            if self.panelWidget is None:
+                self.panelWidget = graphpanels.PanelWidget(self.scene().model, acceptsContextMenu=True)
+                # self.panelWidget.leftPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
+                # self.panelWidget.rightPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
+                self.addItem(self.panelWidget)
+            self.panelWidget.refresh()
+            self.sidePanelsToggled.emit()
 
     def setModel(self, objectModel):
         for item in self.nodes.values():
@@ -429,7 +430,7 @@ class Scene(graphicsscene.GraphicsScene):
                     destinationItem = dest
                 if sourceItem and destinationItem:
                     break
-        if not sourceItem or not destinationItem and self.panelWidget:
+        if (not sourceItem or not destinationItem) and self.panelWidget:
             # check the parent compound panels
             leftPanel = self.panelWidget.leftPanel
             rightPanel = self.panelWidget.rightPanel

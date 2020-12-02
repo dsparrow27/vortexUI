@@ -10,7 +10,7 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
     leftPanelDoubleClicked = QtCore.Signal(str)
     rightPanelDoubleClicked = QtCore.Signal(str)
 
-    def __init__(self, model, acceptsContextMenu=True, parent=None):
+    def __init__(self, acceptsContextMenu=True, parent=None):
         super(PanelWidget, self).__init__(parent=parent)
         self.setFlags(self.ItemIgnoresTransformations)
         self.setAcceptedMouseButtons(QtCore.Qt.NoButton)
@@ -19,8 +19,7 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
                                parent=self)
         self.rightPanel = Panel(ioType=plugwidget.Plug.OUTPUT_TYPE, acceptsContextMenu=acceptsContextMenu,
                                 parent=self)
-        self.leftPanel.setMaximumWidth(model.config.panelWidth)
-        self.rightPanel.setMaximumWidth(model.config.panelWidth)
+
         layout = elements.hGraphicsLinearLayout(parent=self)
         layout.addItem(self.leftPanel)
         layout.addStretch(1)
@@ -33,6 +32,10 @@ class PanelWidget(QtWidgets.QGraphicsWidget):
     def refresh(self):
         self.leftPanel.refresh()
         self.rightPanel.refresh()
+        model = self.scene().model
+        if model is not None:
+            self.leftPanel.setMaximumWidth(model.config.panelWidth)
+            self.rightPanel.setMaximumWidth(model.config.panelWidth)
 
     def geometry(self):
         return self.boundingRect()
