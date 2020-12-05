@@ -9,7 +9,6 @@
 #             |- connections
 # """
 
-
 from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
 from vortex.ui import attributewidgets
