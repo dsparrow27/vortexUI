@@ -10,5 +10,6 @@ def initialize():
         zlogging.setGlobalDebug(True)
     from zoo.libs.utils import env
     vortexRoot = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    os.environ["VORTEX"] = vortexRoot
     env.addToEnv("ZOO_ICON_PATHS", [os.path.join(vortexRoot, "icons")])
     env.addToEnv("VORTEX_UI_PLUGINS", [os.path.join(vortexRoot, "vortex", "plugins", "ui")])

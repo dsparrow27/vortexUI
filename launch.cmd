@@ -1,9 +1,5 @@
-
+for %%i in ("%~dp0.") do SET "VORTEX=%%~fi"
 @echo off
 
-rem // Save value of CD variable (current directory)
-set ABS_PATH=%CD%
-call %ABS_PATH%/env.cmd
-echo %VORTEX%
-echo %VORTEX%/env.cmd
-py "./vortex/examples/boot.py"
+set ZOO_PACKAGE_VERSION_PATH=%VORTEX%\zoo\package_version.config
+call %ZOOTOOLS_ROOT%\install\core\bin\zoo_cmd.bat env -- py "%VORTEX%/vortex/examples/boot.py"

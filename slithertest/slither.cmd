@@ -12,9 +12,6 @@ set ABS_PATH=%CD%
 rem // Restore original directory
 popd
 
-call %ABS_PATH%/env.cmd
-set DEBUG=0
-set SLITHER=F:\code\python\personal\slither
-echo %SLITHER_PLUGIN_PATH%
-set PYTHONPATH=%PYTHONPATH%;%SLITHER%;%ZOOTOOLS_ROOT%\install\core\python
-call py "%VORTEX%\slithertest\slithermodel.py"
+set PYTHONPATH=%PYTHONPATH%;%SLITHER%;
+set ZOO_PACKAGE_VERSION_PATH=%ABS_PATH%\zoo\package_version.config
+call %ZOOTOOLS_ROOT%\install\core\bin\zoo_cmd.bat env -- py "%ABS_PATH%\slithertest\slithermodel.py"
