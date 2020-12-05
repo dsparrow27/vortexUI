@@ -28,7 +28,7 @@ class GraphNotebook(tabwidget.TabWidget):
         self.application.createNewGraph(text)
 
     def _onTabClose(self, index):
-        if self.onTabCloseRequested(index):
+        if self.onTabCloseRequested():
             self.deleteGraph(index)
 
     def addWelcomeTab(self):

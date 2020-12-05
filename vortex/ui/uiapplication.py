@@ -2,6 +2,7 @@ import os
 
 from Qt import QtCore, QtWidgets, QtGui
 from zoo.libs.plugin import pluginmanager
+from zoo.libs.pyqt import utils
 from vortex.ui import plugin
 
 
@@ -30,7 +31,11 @@ class UIApplication(QtCore.QObject):
     def currentGraph(self):
         if self.graphNoteBook is None:
             raise RuntimeError("No graph currently created")
-        return self.graphNoteBook.currentEditor().graph
+        editor = self.currentNetworkEditor()
+        if not editor:
+            return
+
+        return editor.graph
 
     def currentNetworkEditor(self):
         if self.graphNoteBook is None:
@@ -39,8 +44,9 @@ class UIApplication(QtCore.QObject):
 
     def mainWindow(self):
         for wid in QtWidgets.QApplication.topLevelWidgets():
-            if wid.objectName() == "Vortex":
-                return wid
+            for child in utils.iterChildren(wid):
+                if child.objectName() == "Vortex":
+                    return child
 
     def loadUIPlugin(self, pluginId, dock=True):
         # pass

@@ -326,6 +326,9 @@ class ObjectModel(QtCore.QObject):
     def attributeWidget(self, parent):
         pass
 
+    def graphicsWidget(self, parent):
+        pass
+
     def serialize(self):
         connections = []
         for attr in self._attributes:

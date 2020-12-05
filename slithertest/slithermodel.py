@@ -19,11 +19,11 @@ from vortex import startup
 startup.initialize()
 
 from Qt import QtGui, QtWidgets, QtCore
-from zoo.libs.pyqt.widgets import frame, elements
 from vortex import api as vortexApi
 from vortex.ui import attributewidgets
 from slither import api
 from zoo.libs.utils import zlogging
+from nodewidgets import pythonnode
 
 logger = zlogging.getLogger(__name__)
 
@@ -121,10 +121,12 @@ class Graph(vortexApi.GraphModel):
 
     def _execute(self):
         selection = []
-        for child in self.rootNode.children(recursive=True):
-            if child.isSelected():
-                selection.append(child)
-                child.setBackgroundColour(QtGui.QColor(255, 0, 0, 1))
+        self._internalGraph.execute(self.rootNode.internalNode, self.application.internalApp.STANDARDEXECUTOR)
+
+        # for child in self.rootNode.children(recursive=True):
+        #     if child.isSelected():
+        #         selection.append(child)
+        #         child.setBackgroundColour(QtGui.QColor(255, 0, 0, 1))
 
 
 class NodeModel(vortexApi.ObjectModel):
@@ -142,19 +144,19 @@ class NodeModel(vortexApi.ObjectModel):
         return self.internalNode.name
 
     def attributeWidget(self, parent):
-        parentFrame = frame.QFrame(parent=parent)
-        layout = elements.vBoxLayout(parentFrame)
-        for model in self.attributes():
-            wid = self.config.attributeWidgetForType(model.type())
-            if wid is not None:
-                layout.addWidget(wid(model, parent=parentFrame))
-        return parentFrame
+        nodeWidget = pythonnode.BaseNodeWidget(self, parent=parent)
+
+        return nodeWidget
+
+    def graphicsWidget(self, parent):
+        if self.image() != "":
+            return NodeImage(self, parent=parent)
 
     def isCompound(self):
         return self.internalNode.isCompound()
 
     def canCreateAttributes(self):
-        return self.isCompound()
+        return self.isCompound() or self.internalNode.type() == "python"
 
     def createAttribute(self, attributeDefinition):
         attrDef = api.AttributeDefinition(name=attributeDefinition["label"],
@@ -175,6 +177,12 @@ class NodeModel(vortexApi.ObjectModel):
 
     def deleteAttribute(self, attribute):
         pass
+
+    def image(self):
+        return ""
+
+    def delete(self):
+        super(NodeModel, self).delete()
 
 
 class TestModel(vortexApi.AttributeModel):
@@ -294,6 +302,25 @@ class TestModel(vortexApi.AttributeModel):
         elif attribute.isInput() and attribute.internalAttr.isConnectedTo(self.internalAttr):
             return attribute.deleteConnection(self)
         return False
+
+
+class NodeImage(QtWidgets.QGraphicsWidget):
+    def __init__(self, model, parent=None):
+        super(NodeImage, self).__init__(parent=parent)
+        self.objectModel = model
+        image = QtGui.QImage()
+        image.load(model.image())
+        self.image = image.scaledToWidth(model.width() - (model.edgeThickness() * 2))
+
+    def paint(self, painter, option, widget):
+        painter.drawImage(QtCore.QPoint(self.objectModel.edgeThickness(), 0), self.image)
+        super(NodeImage, self).paint(painter, option, widget)
+
+    def boundingRect(self):
+        return self.image.rect()
+
+    def geometry(self):
+        return self.boundingRect()
 
 
 def load():

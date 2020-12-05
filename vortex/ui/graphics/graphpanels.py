@@ -88,12 +88,7 @@ class Panel(QtWidgets.QGraphicsWidget):
         if event.button() == QtCore.Qt.RightButton and self.acceptsContextMenu:
             self._contextMenu(QtGui.QCursor.pos())
             return
-        print("click")
         super(Panel, self).mousePressEvent(event)
-
-    def dropEvent(self, event):
-        print("drop")
-        super(Panel, self).dropEvent(event)
 
     def wheelEvent(self, event):
         event.accept()
@@ -144,8 +139,3 @@ class Panel(QtWidgets.QGraphicsWidget):
         if menu:
             menu.exec_(pos)
             self.refresh()
-
-    def handleConnectionDrop(self, model):
-        if not model.objectModel.canCreateAttributes():
-            return
-        print("drop", self.ioType, model)

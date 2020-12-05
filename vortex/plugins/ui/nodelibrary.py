@@ -62,17 +62,22 @@ class View(treeviewplus.TreeViewPlus):
         super(View, self).keyPressEvent(event)
 
     def onDoubleClicked(self, index):
+        data = index.data(0)
+        if not data:
+            return
         self.createNode(index.data())
 
     def onEnterPressed(self):
         for item in self.selectedItems():
-            self.createNode(item.data(0))
+            data = item.data(0)
+            self.createNode(data)
 
     def createNode(self, nodeType):
         editor = self.application.currentNetworkEditor()
         graph = self.application.currentGraph()
-        graph.createNode(nodeType, parent=editor.model)
-        self.finished.emit()
+        if graph is not None:
+            graph.createNode(nodeType, parent=editor.model)
+            self.finished.emit()
 
 
 class NodeItem(datasources.BaseDataSource):

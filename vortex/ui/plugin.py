@@ -43,9 +43,11 @@ class UIPlugin(plugin.Plugin):
         :rtype:
         """
         if self._widget:
-            self._widget.show()
-            return
+            print("advsdvsdvdfbdb")
+            # self._widget.show()
+            # return
         window = self.application.mainWindow()
+        print(">>>>>>>>>>>>>>>>>>>>>>", window)
         widget = self.show(window)
         if dock and window:
             window.createDock(widget, self.dockArea, tabify=self.tabify)

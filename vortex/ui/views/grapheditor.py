@@ -6,6 +6,7 @@ from functools import partial
 
 from Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets import elements
+from zoo.libs import iconlib
 from vortex.ui import utils
 from vortex.ui.graphics import graphnodes, graph
 from vortex.ui.views import nodepropertiesdialog
@@ -92,17 +93,17 @@ class GraphEditor(QtWidgets.QWidget):
         self.createAlignmentActions(alignment)
 
     def createAlignmentActions(self, parent):
-        icons = os.environ["VORTEX_ICONS"]
         iconsData = {
-            "horizontalAlignCenter.png": ("Aligns the selected nodes to the horizontal center", utils.CENTER | utils.X),
-            "horizontalAlignLeft.png": ("Aligns the selected nodes to the Left", utils.LEFT),
-            "horizontalAlignRight.png": ("Aligns the selected nodes to the Right", utils.RIGHT),
-            "verticalAlignBottom.png": ("Aligns the selected nodes to the bottom", utils.BOTTOM),
-            "verticalAlignCenter.png": ("Aligns the selected nodes to the vertical center", utils.CENTER | utils.Y),
-            "verticalAlignTop.png": ("Aligns the selected nodes to the Top", utils.TOP)}
+            "horizontalAlignCenter": ("Aligns the selected nodes to the horizontal center", utils.CENTER | utils.X),
+            "horizontalAlignLeft": ("Aligns the selected nodes to the Left", utils.LEFT),
+            "horizontalAlignRight": ("Aligns the selected nodes to the Right", utils.RIGHT),
+            "verticalAlignBottom": ("Aligns the selected nodes to the bottom", utils.BOTTOM),
+            "verticalAlignCenter": ("Aligns the selected nodes to the vertical center", utils.CENTER | utils.Y),
+            "verticalAlignTop": ("Aligns the selected nodes to the Top", utils.TOP)}
 
         for name, tip in iconsData.items():
-            act = QtWidgets.QAction(QtGui.QIcon(os.path.join(icons, name)), "", self)
+            icon = iconlib.icon(name, size=64)
+            act = QtWidgets.QAction(icon, "", self)
             act.setStatusTip(tip[0])
             act.setToolTip(tip[0])
             act.triggered.connect(partial(self.alignSelectedNodes, tip[1]))

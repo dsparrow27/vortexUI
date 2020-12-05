@@ -1,0 +1,23 @@
+{
+    "author": "David Sparrow",
+    "authorEmail": "dsparrow27@gmail.com",
+    "description": "Execution engine GUI",
+    "displayName": "Vortex",
+    "environment": {
+        "PYTHONPATH": [
+            "{self}"
+        ], 
+        "ZOO_BASE_PATHS": [
+            "{self}"
+        ], 
+        "ZOO_ICON_PATHS": [
+            "{self}/icons"
+        ]
+    }, 
+    "name": "Vortex",
+    "requirements": ["zoo_core", "zoo_pyside", "slither"],
+    "tests": [
+        "{self}/tests"
+    ], 
+    "version": "0.0.1"
+}

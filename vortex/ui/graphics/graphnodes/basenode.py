@@ -121,6 +121,9 @@ class NodeHeader(graphicitems.ItemContainer):
     def boundingRect(self):
         return QtCore.QRectF(0, 0, self.model.width(), 25)
 
+    def geometry(self):
+        return self.boundingRect()
+
     if os.environ.get("DEBUG", "0") == "1":
         def paint(self, painter, option, widget):
             painter.setBrush(QtCore.Qt.NoBrush)
@@ -143,6 +146,10 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
         self.setMinimumSize(objectModel.minimumWidth(), objectModel.minimumHeight())
         self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.setToolTip(self.model.toolTip())
+        self.shad = QtWidgets.QGraphicsDropShadowEffect(self)
+        self.shad.setColor(QtGui.QColor(10,10,10))
+        self.shad.setOffset(4)
+        self.setGraphicsEffect(self.shad)
 
     def setPos(self, pos):
         self.model.setPosition((pos.x(), pos.y()))
@@ -160,7 +167,7 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
         return QtCore.QRectF(0, 0, self.model.width(), self.model.height())
 
     def geometry(self):
-        return QtCore.QRectF(0, 0, self.model.width(), self.model.height())
+        return self.boundingRect()
 
     def setSelected(self, selected):
         self.model.setSelected(True)

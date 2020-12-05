@@ -41,10 +41,10 @@ class PathWidget(QtWidgets.QFrame):
             fileName = QtWidgets.QFileDialog.getExistingDirectory(parent=self, dir=currentPath)
         if fileName:
             self.edit.setText(fileName)
-            self.model.setValue(fileName)
+            self.model().setValue(fileName)
 
     def onEditChanged(self):
-        self.model.setValue(str(self.edit.text()))
+        self.model().setValue(str(self.edit.text()))
 
 
 class DirectoryWidget(PathWidget):
@@ -89,5 +89,9 @@ class BoolAttributeWidget(elements.CheckBox):
 
     def _updateModel(self, value):
         ref = self.model()
-        if ref is not None and ref.value() != value:
-            ref.setValue(value)
+
+        if ref is not None:
+            currentValue = ref.value()
+            value = bool(value)
+            if currentValue != value:
+                ref.setValue(value)

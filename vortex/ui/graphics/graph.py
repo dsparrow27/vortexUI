@@ -139,6 +139,8 @@ class View(graphicsview.GraphicsView):
                 item = items[0]
                 if isinstance(item, plugwidget.Plug):
                     self.scene().createConnection(self._plugSelected.container(), item.container())
+                elif isinstance(item, graphpanels.Panel):
+                    print("panel connection drop", self._plugSelected.container())
             self._plugSelected = None
             return super(View, self).mouseReleaseEvent(event)
 

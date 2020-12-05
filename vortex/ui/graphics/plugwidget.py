@@ -271,8 +271,14 @@ class Plug(QtWidgets.QGraphicsWidget):
     def center(self):
         for view in self.scene().views():
             rect = self.boundingRect()
+            center = rect.center()
+            # get the real viewport transform for the item, takes into account of scaling
             transform = self.deviceTransform(view.viewportTransform())
-            return view.mapToScene(transform.m31() + rect.width() * 0.5, transform.m32() + rect.height() * 0.5)
+            # now translate the transform by the rect center, which will give us
+            # a new transform which matches the items center.
+            mat = transform.translate(center.x(), center.y())
+            # map from the viewport back into scene coordinates.
+            return view.mapToScene(mat.dx(), mat.dy())
 
     def hoverEnterEvent(self, event):
         self.highlight()
