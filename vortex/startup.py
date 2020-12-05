@@ -8,3 +8,7 @@ def initialize():
         cfg.resolver.resolveFromPath(cfg.resolver.environmentPath())
         from zoo.libs.utils import zlogging
         zlogging.setGlobalDebug(True)
+    from zoo.libs.utils import env
+    vortexRoot = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    env.addToEnv("ZOO_ICON_PATHS", [os.path.join(vortexRoot, "icons")])
+    env.addToEnv("VORTEX_UI_PLUGINS", [os.path.join(vortexRoot, "vortex", "plugins", "ui")])

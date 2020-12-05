@@ -8,15 +8,7 @@
 #         |- attribute
 #             |- connections
 # """
-import os
 
-from zoo.core import api
-
-cfg = api.zooFromPath(os.environ["ZOOTOOLS_ROOT"])
-cfg.resolver.resolveFromPath(cfg.resolver.environmentPath())
-from vortex import startup
-
-startup.initialize()
 
 from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
@@ -24,6 +16,7 @@ from vortex.ui import attributewidgets
 from slither import api
 from zoo.libs.utils import zlogging
 from nodewidgets import pythonnode
+
 
 logger = zlogging.getLogger(__name__)
 

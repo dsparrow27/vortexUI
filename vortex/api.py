@@ -1,3 +1,8 @@
+import sys
+from vortex import startup
+startup.initialize()
+del startup
+
 from .ui.model.graphmodel import GraphModel
 from .ui.model.objectmodel import ObjectModel
 from .ui.model.attributemodel import AttributeModel
@@ -5,9 +10,8 @@ from .ui.config import VortexConfig
 from .ui.plugin import UIPlugin
 from .ui.mainwindow import ApplicationWindow
 from .ui.uiapplication import UIApplication
-from Qt import QtWidgets, QtCore
 from zoo.libs.pyqt import stylesheet
-import sys
+from Qt import QtWidgets, QtCore
 
 
 def createWindow(application, graphType, config, parent=None):
