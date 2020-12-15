@@ -14,16 +14,19 @@ class ObjectModel(QtCore.QObject):
     ATTRIBUTE_VIS_LEVEL_TWO = 2
 
     # subclass should emit these signals to update the GUI from the core
-    sigAddAttribute = QtCore.Signal(object)  # attributeModel
-    sigRemoveAttribute = QtCore.Signal(object)  # attributeModel
-    sigSelectionChanged = QtCore.Signal(bool)  # bool
+    sigAttributeCreated = QtCore.Signal(object)  # attributeModel
+    sigAttributeRemoved = QtCore.Signal(object)  # attributeModel
+    # sigSelectionChanged = QtCore.Signal(bool)  # bool
     sigAttributeNameChanged = QtCore.Signal(object, str)
+    sigAttributeValueChanged = QtCore.Signal(object)
+    # Node level signals
+    sigNodeNameChanged = QtCore.Signal(str)
+    sigBackgroundColourChanged = QtCore.Signal(object)
+    sigEdgeColourChanged = QtCore.Signal(object)
 
-    # # connected by the GraphicsNode
-    sigNodeNameChanged = QtCore.Signal(str)  # objectModel
-
-    def __init__(self, config, properties, parent=None):
+    def __init__(self, graph, config, properties, parent=None):
         super(ObjectModel, self).__init__()
+        self.graph = graph
         self.config = config
         self._parent = parent
         self._children = []  # type: list[ObjectModel]
@@ -110,7 +113,6 @@ class ObjectModel(QtCore.QObject):
 
     def setText(self, value):
         self._properties["label"] = str(value)
-        self.sigNodeNameChanged.emit(str(value))
 
     def secondaryText(self):
         """The Secondary text to display just under the primary text (self.text()).
@@ -259,6 +261,7 @@ class ObjectModel(QtCore.QObject):
 
     def setBackgroundColour(self, colour):
         self._properties["backgroundColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+        self.sigBackgroundColourChanged.emit(colour)
 
     def headerColour(self):
         return QtGui.QColor(*self._properties.get("headerColour", (71, 115, 149, 255)))
@@ -286,6 +289,10 @@ class ObjectModel(QtCore.QObject):
 
     def edgeColour(self):
         return QtGui.QColor(*self._properties.get("edgeColour", (0.0, 0.0, 0.0, 255)))
+
+    def setEdgeColour(self, colour):
+        self._properties["edgeColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+        self.sigEdgeColourChanged.emit(colour)
 
     def headerButtonColour(self):
         return QtGui.QColor(255, 255, 255)

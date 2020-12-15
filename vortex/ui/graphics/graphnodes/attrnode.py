@@ -32,6 +32,9 @@ class GraphicsNode(basenode.QBaseNode):
         self.attributeContainer.setPos(self.header.y(), 0)
         self.layout = None
         self.customWidget = None
+        self._backgroundColour = objectModel.backgroundColour()
+        self._edgeColour = objectModel.edgeColour()
+
         self.init()
 
     def init(self):
@@ -69,12 +72,18 @@ class GraphicsNode(basenode.QBaseNode):
         layout.addItem(customWidget)
 
     def _connections(self):
-        # bind the objectModel signals to this qNode
-        self.model.sigAddAttribute.connect(self.addAttribute)
-        self.model.sigAttributeNameChanged.connect(self.setAttributeName)
-        self.model.sigNodeNameChanged.connect(self.header.setText)
-        self.model.sigRemoveAttribute.connect(self.removeAttribute)
-        self.model.sigSelectionChanged.connect(self.setSelected)
+        self.model.sigAttributeCreated.connect(self.addAttribute)
+        self.model.sigEdgeColourChanged.connect(self.setEdgeColour)
+        self.model.sigBackgroundColourChanged.connect(self.setBackgroundColour)
+
+    def setEdgeColour(self, colour):
+        if self._edgeColour != colour:
+            self._edgeColour = colour
+            self.update()
+    def setBackgroundColour(self, colour):
+        if self._backgroundColour != colour:
+            self._backgroundColour = colour
+            self.update()
 
     def onHeaderTextChanged(self, text):
         self.model.setText(text)
@@ -85,6 +94,7 @@ class GraphicsNode(basenode.QBaseNode):
             attr.setText(name)
 
     def addAttribute(self, attribute):
+
         container = plugwidget.PlugContainer(attribute, parent=self.attributeContainer)
         if attribute.isInput():
             index = container.layout().count() - 2
@@ -132,7 +142,7 @@ class GraphicsNode(basenode.QBaseNode):
             # main rounded rect
             rect = self.boundingRect()
             thickness = self.model.edgeThickness()
-            backgroundColour = self.model.backgroundColour()
+            backgroundColour = self._backgroundColour
             self.header.setTextColour(self.model.textColour())
             titleHeight = self.header.size().height()
             rounding = self.cornerRounding
@@ -176,7 +186,7 @@ class GraphicsNode(basenode.QBaseNode):
             if self.isSelected():
                 standardPen = QtGui.QPen(self.model.selectedNodeColour(), thickness + 1)
             else:
-                standardPen = QtGui.QPen(self.model.edgeColour(), thickness)
+                standardPen = QtGui.QPen(self._edgeColour, thickness)
             # # outer node edge
             painter.strokePath(roundedPath,
                                standardPen)

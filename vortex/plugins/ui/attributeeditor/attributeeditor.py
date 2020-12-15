@@ -1,7 +1,7 @@
 from functools import partial
 
 from zoo.libs.pyqt.widgets import groupedtreewidget
-from zoo.libs.pyqt.widgets import stackwidget
+from zoo.libs.pyqt.widgets import stackwidget, elements
 from vortex import api
 from Qt import QtCore, QtWidgets
 

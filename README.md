@@ -1,16 +1,17 @@
 To run 
 update the zoo/package_version.config for your local zootools
 
-update to zootools_root variable in the launch.cmd # mainly temp 
+update to zootools_root variable in the launch.cmd 
 set ZOOTOOLS_ROOT=F:\code\python\personal\zootoolspro
-set PYTHON_INTERPRETER=%APPDATA%\..\Local\Programs\Python\Python37\python.exe
+
 ./launch.cmd
+
 
 
  - [ ] attribute model background to live update qplug
  - [X] initial edge generation creates edge in wrong location
  - [ ] client to support refresh signal
- - [ ] compound i/o
+ - [x] compound i/o
  - [X] overlay widget when no graphs have been created
  - [ ] connections to be reflected in both directions
  - [ ] attributeEditor widgets 

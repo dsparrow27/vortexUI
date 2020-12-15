@@ -6,18 +6,18 @@ from Qt import QtCore, QtWidgets, QtGui
 class GraphModel(QtCore.QObject):
     """High Level Application object, handles node plugins, UI Plugins, global events
 
-
+    :param application:
+    :type application: :class:`vortex.ui.uiApplication.UIApplication`
+    :param name:
+    :type name: str
     """
+    sigNodesCreated = QtCore.Signal(list)
 
     def __init__(self, application, name):
-        """
-        :param application:
-        :type application:
-        """
         super(GraphModel, self).__init__()
         self.name = name
         self.config = application.config
-        self.application = application
+        self.application = application  # type: vortex.ui.uiApplication.UIApplication
         self._rootNode = None
 
     @property

@@ -103,7 +103,8 @@ class NodeHeader(graphicitems.ItemContainer):
 
     def _createLabels(self, primary):
         self._titleWidget = graphicitems.GraphicsText(primary, parent=self)
-        self._titleWidget.textChanged.connect(self.headerTextChanged)
+        self._titleWidget.multiLineSupported = False
+        self._titleWidget.textEditFinished.connect(self.headerTextChanged)
         self.addItem(self._titleWidget, QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
         fontmetrics = QtGui.QFontMetrics(self._titleWidget.font)
         height = fontmetrics.height() * 2

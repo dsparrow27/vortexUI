@@ -23,6 +23,10 @@ class GraphNotebook(tabwidget.TabWidget):
         self.editors = []
         self.hasWelcome = True
         self.addWelcomeTab()
+        application.sigGraphCreated.connect(self._onGraphModelCreated)
+
+    def _onGraphModelCreated(self, graphModel):
+        self.addGraph(graphModel, graphModel.rootNode)
 
     def _onNewGraph(self, wid, text):
         self.application.createNewGraph(text)
@@ -45,6 +49,7 @@ class GraphNotebook(tabwidget.TabWidget):
             self.removeTab(0)
             self.hasWelcome = False
         self.onAddTab(editor, objectModel.text())
+        self.application.events.uiGraphCreated.emit(graph)
         return editor
 
     def setCurrentGraphLabel(self, label):

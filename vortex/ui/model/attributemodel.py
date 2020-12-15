@@ -54,7 +54,6 @@ class AttributeModel(QtCore.QObject):
 
     def setText(self, text):
         self._properties["label"] = text
-        self.objectModel.sigAttributeNameChanged.emit(self, text)
 
     def description(self):
         return self._properties.get("description", "")

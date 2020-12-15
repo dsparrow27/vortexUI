@@ -44,7 +44,7 @@ class GraphEditor(QtWidgets.QWidget):
     def connections(self):
         self.view.deletePress.connect(self.scene.onDelete)
         self.view.tabPress.connect(self.showNodeLibrary)
-        self.application.events.modelNodesCreated.connect(self.scene.createNodes)
+        self.graph.sigNodesCreated.connect(self.scene.createNodes)
 
     def showNodeLibrary(self, point):
         self.nodeLibraryWidget.initUI(dock=False)
@@ -129,8 +129,10 @@ class GraphEditor(QtWidgets.QWidget):
         self.scene.updateAllConnections()
 
     def _requestCompoundAsCurrent(self, model):
+        logger.debug("Starting graph model change")
         self.breadCrumbWidget.setText("->".join(model.fullPathName().split("/")))
         self.scene.showPanels(True)
         self.scene.setModel(model)
+        logger.debug("Updating viewport")
         self.view.viewport().update()
 

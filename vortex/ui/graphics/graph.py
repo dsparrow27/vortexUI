@@ -279,6 +279,7 @@ class Scene(graphicsscene.GraphicsScene):
 
     def showPanels(self, state):
         if state:
+            logger.debug("Showing side graph panels")
             if self.panelWidget is None:
                 self.panelWidget = graphpanels.PanelWidget(self.scene().model, acceptsContextMenu=True)
                 # self.panelWidget.leftPanelDoubleClicked.connect(self.panelWidgetDoubleClicked.emit)
@@ -288,6 +289,7 @@ class Scene(graphicsscene.GraphicsScene):
             self.sidePanelsToggled.emit()
 
     def setModel(self, objectModel):
+        logger.debug("Set current graph model to : {}".format(objectModel))
         for item in self.nodes.values():
             self.removeItem(item["qitem"])
         for item in self.connections:
@@ -296,17 +298,20 @@ class Scene(graphicsscene.GraphicsScene):
         self.nodes = {}
         self.connections = []
         self.model = objectModel
+        logger.debug("Creating UI child nodes")
         self.createNodes(objectModel.children())
         if self.panelWidget is not None:
             self.panelWidget.refresh()
+        logger.debug("Creating UI connections")
         for n in objectModel.children():
             for attr in n.attributes():
                 connections = attr.connections()
                 self.createConnections(connections)
+
         for attr in objectModel.attributes(inputs=False):
             connections = attr.connections()
             self.createConnections(connections)
-
+        logger.debug("Completed model change")
         return True
 
     def _onSelectionChanged(self):
@@ -401,6 +406,7 @@ class Scene(graphicsscene.GraphicsScene):
         newConnection = src.model.createConnection(dest.model)
         if not newConnection:
             return
+        # todo: the above would signal an event, this part should be replaced
         newConnection = self.createConnectionItem(src, dest)
         return newConnection
 
@@ -487,16 +493,18 @@ class Scene(graphicsscene.GraphicsScene):
 
         for sel in selection:
             if isinstance(sel, graphicitems.ConnectionEdge):
+                # todo: should be event driven
                 if sel.sourcePlug.parentObject().model.deleteConnection(sel.destinationPlug.parentObject().model):
                     self.deleteConnection(sel)
                 continue
             elif isinstance(sel, graphnodes.QBaseNode):
                 nodesToDelete.append(sel.model)
                 deleted = sel.model.delete()
+                # todo: should be event driven
                 del self.nodes[hash(sel.model)]
             else:
                 continue
-
+            # todo: should be event driven
             if deleted:
                 self.removeItem(sel)
 

@@ -8,6 +8,7 @@
 #         |- attribute
 #             |- connections
 # """
+import pprint
 
 from Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
@@ -15,7 +16,6 @@ from vortex.ui import attributewidgets
 from slither import api
 from zoo.libs.utils import zlogging
 from nodewidgets import pythonnode
-
 
 logger = zlogging.getLogger(__name__)
 
@@ -27,6 +27,23 @@ class Application(vortexApi.UIApplication):
         self.internalApp = api.Application()
         for nType, obj in self.internalApp.registry.nodes.items():
             uiConfig.types[nType] = obj["info"]["category"]
+        self.internalApp.events.graphCreated.connect(self._onGraphCreate)
+
+    def _onGraphCreate(self, _, graph):
+        newGraphInstance = Graph(self, graph.name, graph=graph)
+        newGraphInstance.rootNode = NodeModel(graph.root, newGraphInstance, self.config,
+                                              properties={},
+                                              parent=None
+                                              )
+        self.sigGraphCreated.emit(newGraphInstance)
+
+    def createNewGraph(self, name=None):
+        self.internalApp.createGraph(name)
+
+    def createGraphFromPath(self, filePath, name=None, parent=None):
+        if self.graphNoteBook is None or self.graphType is None:
+            return
+        self.internalApp.createGraphFromPath(name, filePath)
 
 
 class Config(vortexApi.VortexConfig):
@@ -64,18 +81,30 @@ class Config(vortexApi.VortexConfig):
 
 class Graph(vortexApi.GraphModel):
 
-    def __init__(self, application, name):
+    def __init__(self, application, name, graph):
         super(Graph, self).__init__(application, name)
-        self._internalGraph = application.internalApp.createGraph(name)
-        self.rootNode = NodeModel(self._internalGraph.root, self.config,
-                                  properties={},
-                                  parent=None
-                                  )
+        self._internalGraph = graph
+        self.rootNode = None
+        self.application.internalApp.events.nodeCreated.connect(self._onCreateNode, sender=self._internalGraph)
+        self.application.internalApp.events.nodeDeleted.connect(self._onDeleteNode, sender=self._internalGraph)
+
+    def _onCreateNode(self, _, node):
+        if node is not None:
+            parent = node.parent
+            if self.rootNode and self.rootNode.internalNode != parent:
+                parent = self.rootNode.findChild(parent.name)
+            else:
+                parent = self.rootNode
+            newNodes = self.translateSlitherToVortex(node, parent=parent)
+            self.sigNodesCreated.emit(newNodes)
+
+    def _onDeleteNode(self, _, node):
+        print("deleteNodeSig", node)
 
     def saveGraph(self, filePath=None):
         outputPath = self._internalGraph.saveToFile(filePath)
         if outputPath:
-            self.application.events.modelGraphSaved.emit(outputPath)
+            self.application.sigGraphSaved.emit(outputPath)
 
     def loadFromPath(self, filePath, parent=None):
         self._internalGraph.loadFromFile(filePath)
@@ -89,13 +118,10 @@ class Graph(vortexApi.GraphModel):
             internalParent = parent.internalNode
         else:
             internalParent = None
-        n = self._internalGraph.createNode(nodeType, nodeType, parent=internalParent)
-        if n is not None:
-            nodes = self.translateSlitherToVortex(n, parent=parent or self.rootNode)
-            self.application.events.modelNodesCreated.emit(nodes)
+        self._internalGraph.createNode(nodeType, nodeType, parent=internalParent)
 
     def translateSlitherToVortex(self, node, parent=None):
-        model = NodeModel(node, self.config,
+        model = NodeModel(node, self, self.config,
                           properties={},
                           parent=parent
                           )
@@ -112,28 +138,58 @@ class Graph(vortexApi.GraphModel):
         action.triggered.connect(self._execute)
 
     def _execute(self):
-        selection = []
+        # pprint.pprint(self._internalGraph.serialize())
         self._internalGraph.execute(self.rootNode.internalNode, self.application.internalApp.STANDARDEXECUTOR)
-
-        # for child in self.rootNode.children(recursive=True):
-        #     if child.isSelected():
-        #         selection.append(child)
-        #         child.setBackgroundColour(QtGui.QColor(255, 0, 0, 1))
 
 
 class NodeModel(vortexApi.ObjectModel):
-    def __init__(self, internalNode, config, properties=None, parent=None):
+    def __init__(self, internalNode, graph, config, properties=None, parent=None):
         # link the internal NodeUI dict to the UI properties
         # data is stored json compatible
         properties = internalNode.nodeUI
-        super(NodeModel, self).__init__(config, properties=properties or {}, parent=parent)
+        super(NodeModel, self).__init__(graph, config, properties=properties or {}, parent=parent)
         self.internalNode = internalNode  # type: api.ComputeNode
         for attr in self.internalNode.attributes:
             model = TestModel(attr, self, properties={}, parent=None)
             self._attributes.append(model)
+        internalNode.graph.application.events.nodeNameChanged.connect(self._onNodeNameChanged, sender=internalNode)
+        internalNode.graph.application.events.nodeDirtyChanged.connect(self._onNodeDirtyChanged, sender=internalNode)
+        internalNode.graph.application.events.attributeCreated.connect(self._onAttributeCreated, sender=internalNode)
+        internalNode.graph.application.events.attributeDeleted.connect(self._onAttributeDeleted, sender=internalNode)
+
+    def _onNodeNameChanged(self, sender, node, oldName, name):
+        self.sigNodeNameChanged.emit(name)
+
+    def _onNodeDirtyChanged(self, sender, node, state):
+        self.setEdgeColour(QtGui.QColor(255, 0, 0) if state else QtGui.QColor(0.0, 0.0, 0.0, 255))
+
+    def _onAttributeCreated(self, sender, node, attribute):
+        parent = attribute.parent
+        if parent is not None:
+            parent = self.attribute(parent.name)
+        attr = TestModel(attribute, self, properties={}, parent=parent)
+        self._attributes.append(attr)
+        self.sigAttributeCreated.emit(attr)
+
+    def _onAttributeDeleted(self, sender, node, attribute):
+        for index in range(self.attributes()):
+            if self._attributes[index].internalAttr == attribute:
+                del self._attributes[index]
+                break
+
+    def _attributeNameChanged(self, sender, attribute, oldName, name):
+        for attrModel in self.attributes():
+            if attrModel.internalAttr == attribute:
+                self.sigAttributeNameChanged.emit(attrModel, name)
+
+    def _attributeValueChanged(self, sender, attribute, value):
+        self.sigAttributeValueChanged.emit(attribute, value)
 
     def text(self):
         return self.internalNode.name
+
+    def setText(self, text):
+        self.internalNode.setName(str(text))
 
     def attributeWidget(self, parent):
         nodeWidget = pythonnode.BaseNodeWidget(self, parent=parent)
@@ -162,10 +218,7 @@ class NodeModel(vortexApi.ObjectModel):
                                           internal=attributeDefinition.get("internal", False),
                                           array=attributeDefinition.get("isArray", False),
                                           compound=attributeDefinition.get("isCompound", False))
-        internalAttr = self.internalNode.createAttribute(attrDef)
-        attr = TestModel(internalAttr, self, properties={}, parent=None)
-        self._attributes.append(attr)
-        self.sigAddAttribute.emit(attr)
+        self.internalNode.createAttribute(attrDef)
 
     def deleteAttribute(self, attribute):
         pass
@@ -319,7 +372,6 @@ def load():
     return vortexApi.standalone(Application,
                                 Graph,
                                 Config)
-    # filePath=r"C:\Users\dave\Desktop\test.slgraph")
 
 
 if __name__ == "__main__":
