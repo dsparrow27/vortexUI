@@ -149,9 +149,10 @@ class NodeModel(vortexApi.ObjectModel):
         properties = internalNode.nodeUI
         super(NodeModel, self).__init__(graph, config, properties=properties or {}, parent=parent)
         self.internalNode = internalNode  # type: api.ComputeNode
-        for attr in self.internalNode.attributes:
-            model = TestModel(attr, self, properties={}, parent=None)
-            self._attributes.append(model)
+        if hasattr(self.internalNode, "attributes"):
+            for attr in self.internalNode.attributes:
+                model = TestModel(attr, self, properties={}, parent=None)
+                self._attributes.append(model)
         internalNode.graph.application.events.nodeNameChanged.connect(self._onNodeNameChanged, sender=internalNode)
         internalNode.graph.application.events.nodeDirtyChanged.connect(self._onNodeDirtyChanged, sender=internalNode)
         internalNode.graph.application.events.attributeCreated.connect(self._onAttributeCreated, sender=internalNode)
