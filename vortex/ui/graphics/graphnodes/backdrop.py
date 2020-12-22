@@ -1,6 +1,6 @@
 from vortex.ui.graphics.graphnodes import comment
 from vortex.ui.graphics.graphnodes import basenode
-from Qt import QtCore
+from zoovendor.Qt import QtCore
 
 
 class Backdrop(comment.Comment):

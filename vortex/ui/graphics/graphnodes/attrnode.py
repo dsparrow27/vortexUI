@@ -5,7 +5,7 @@ from zoo.libs.pyqt.widgets import elements
 from vortex.ui.graphics import plugwidget
 from vortex.ui.graphics.graphnodes import basenode
 
-from Qt import QtWidgets, QtCore, QtGui
+from zoovendor.Qt import QtWidgets, QtCore, QtGui
 
 
 class Container(graphicitems.ItemContainer):

@@ -1,5 +1,5 @@
 from vortex import api
-from Qt import QtCore, QtWidgets
+from zoovendor.Qt import QtCore, QtWidgets
 from zoo.libs.pyqt.widgets import elements
 
 

@@ -1,4 +1,4 @@
-from Qt import QtWidgets, QtGui, QtCore
+from zoovendor.Qt import QtWidgets, QtGui, QtCore
 
 from vortex.ui.graphics.graphnodes import basenode
 from zoo.libs.pyqt.widgets import elements

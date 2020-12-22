@@ -3,7 +3,7 @@ from functools import partial
 from zoo.libs.pyqt.widgets import groupedtreewidget
 from zoo.libs.pyqt.widgets import stackwidget, elements
 from vortex import api
-from Qt import QtCore, QtWidgets
+from zoovendor.Qt import QtCore, QtWidgets
 
 
 class AttributeEditorPlugin(api.UIPlugin):

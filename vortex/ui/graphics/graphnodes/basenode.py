@@ -1,7 +1,7 @@
 import os
 
 from zoo.libs.pyqt.widgets.graphics import graphicitems
-from Qt import QtWidgets, QtCore, QtGui
+from zoovendor.Qt import QtWidgets, QtCore, QtGui
 
 ATTRIBUTE_VIS_LEVEL_ZERO = 0
 ATTRIBUTE_VIS_LEVEL_ONE = 1

@@ -4,7 +4,7 @@ Each editor houses a graphicsview and graphicsScene.
 import os, logging
 from functools import partial
 
-from Qt import QtWidgets, QtCore, QtGui
+from zoovendor.Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets import elements
 from zoo.libs import iconlib
 from vortex.ui import utils

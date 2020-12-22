@@ -1,6 +1,6 @@
 import os
 
-from Qt import QtCore, QtWidgets, QtGui
+from zoovendor.Qt import QtCore, QtWidgets, QtGui
 from zoo.libs.plugin import pluginmanager
 from zoo.libs.pyqt import utils
 from vortex.ui import plugin

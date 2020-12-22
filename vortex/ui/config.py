@@ -1,4 +1,4 @@
-from Qt import QtCore, QtGui
+from zoovendor.Qt import QtCore, QtGui
 from zoo.libs.pyqt.widgets.graphics import graphviewconfig
 from zoo.libs.utils import zlogging
 logger = zlogging.getLogger(__name__)

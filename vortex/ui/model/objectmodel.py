@@ -1,4 +1,4 @@
-from Qt import QtGui, QtCore
+from zoovendor.Qt import QtGui, QtCore
 
 
 class ObjectModel(QtCore.QObject):

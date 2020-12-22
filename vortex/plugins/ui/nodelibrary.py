@@ -1,5 +1,5 @@
 from collections import defaultdict
-from Qt import QtWidgets, QtCore, QtGui
+from zoovendor.Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.extended import treeviewplus
 from zoo.libs.pyqt.models import datasources, treemodel
 from vortex import api

@@ -7,7 +7,7 @@ from vortex.ui.views import grapheditor
 from zoo.libs.pyqt.extended import tabwidget
 from zoo.libs.pyqt.widgets import frame
 from zoo.libs.pyqt.widgets import elements
-from Qt import QtCore
+from zoovendor.Qt import QtCore
 import logging
 
 logger = logging.getLogger(__name__)

@@ -1,4 +1,4 @@
-from Qt import QtCore, QtGui
+from zoovendor.Qt import QtCore, QtGui
 import warnings
 
 TOP = 0

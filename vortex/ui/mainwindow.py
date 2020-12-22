@@ -2,7 +2,7 @@ from functools import partial
 
 from vortex.ui.views import graphnotebook
 
-from Qt import QtWidgets, QtCore
+from zoovendor.Qt import QtWidgets, QtCore
 from zoo.libs.pyqt.widgets import mainwindow
 from zoo.libs.pyqt.widgets import elements
 from zoo.libs import iconlib

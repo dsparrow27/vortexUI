@@ -1,6 +1,6 @@
 import os
 
-from Qt import QtWidgets, QtCore, QtGui
+from zoovendor.Qt import QtWidgets, QtCore, QtGui
 from zoo.libs.pyqt.widgets.graphics import graphicitems
 from zoo.libs.pyqt.widgets import elements
 from vortex.ui.graphics import plugwidget

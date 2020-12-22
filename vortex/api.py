@@ -11,7 +11,7 @@ from .ui.plugin import UIPlugin
 from .ui.mainwindow import ApplicationWindow
 from .ui.uiapplication import UIApplication
 from zoo.libs.pyqt import stylesheet
-from Qt import QtWidgets, QtCore
+from zoovendor.Qt import QtWidgets, QtCore
 
 
 def createWindow(application, graphType, config, parent=None):

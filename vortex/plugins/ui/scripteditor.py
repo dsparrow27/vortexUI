@@ -7,7 +7,7 @@ from zoo.libs.pyqt.widgets import logoutput
 from zoo.libs.pyqt.widgets import elements
 from zoo.libs.pyqt.syntaxhighlighter import highlighter
 from vortex import api
-from Qt import QtCore, QtWidgets
+from zoovendor.Qt import QtCore, QtWidgets
 
 
 class XStream(QtCore.QObject):

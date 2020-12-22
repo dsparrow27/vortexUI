@@ -12,7 +12,7 @@ import os
 
 import logging
 
-from Qt import QtGui, QtWidgets, QtCore
+from zoovendor.Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
 from zoo.libs.pyqt.widgets import frame, elements
 from zoo.libs.utils import filesystem

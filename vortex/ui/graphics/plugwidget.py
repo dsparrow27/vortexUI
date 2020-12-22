@@ -1,7 +1,7 @@
 import os
 
 from zoo.libs.pyqt.widgets.graphics import graphicitems
-from Qt import QtWidgets, QtCore, QtGui
+from zoovendor.Qt import QtWidgets, QtCore, QtGui
 
 
 class PlugContainer(graphicitems.ItemContainer):

@@ -1,4 +1,4 @@
-from Qt import QtWidgets, QtCore
+from zoovendor.Qt import QtWidgets, QtCore
 from zoo.libs.pyqt.widgets import elements
 
 

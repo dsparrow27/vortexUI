@@ -1,6 +1,6 @@
 from functools import partial
 
-from Qt import QtCore, QtWidgets, QtGui
+from zoovendor.Qt import QtCore, QtWidgets, QtGui
 
 
 class GraphModel(QtCore.QObject):

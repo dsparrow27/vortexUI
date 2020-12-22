@@ -1,6 +1,6 @@
 import weakref
 
-from Qt import QtWidgets
+from zoovendor.Qt import QtWidgets
 from copy import deepcopy
 from zoo.libs.pyqt.widgets import elements
 from zoo.libs.pyqt.widgets import dialog

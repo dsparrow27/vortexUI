@@ -10,7 +10,7 @@
 # """
 import pprint
 
-from Qt import QtGui, QtWidgets, QtCore
+from zoovendor.Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
 from vortex.ui import attributewidgets
 from slither import api

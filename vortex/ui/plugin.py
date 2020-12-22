@@ -4,7 +4,7 @@ Class: UIPlugin()
 """
 
 from zoo.libs.plugin import plugin
-from Qt import QtCore
+from zoovendor.Qt import QtCore
 
 
 class UIPlugin(plugin.Plugin):
