@@ -160,11 +160,14 @@ class AttributeModel(QtCore.QObject):
     def toolTip(self):
         return self.properties.get("description")
 
+    def addConnection(self, source, destination):
+        self.properties.setdefault("connections", []).append((source, destination))
+
     def createConnection(self, attribute):
         if self.isInput():
-            self.properties.setdefault("connections", []).append((attribute, self))
+            self.addConnection(attribute, self)
         else:
-            self.properties.setdefault("connections", []).append((self, attribute))
+            self.addConnection(self, attribute)
         return True
 
     def deleteConnection(self, attribute):

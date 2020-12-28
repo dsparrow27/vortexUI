@@ -25,14 +25,13 @@ class Application(vortexApi.UIApplication):
     def __init__(self, uiConfig):
         super(Application, self).__init__(uiConfig)
         self.internalApp = api.Application()
-        for nType, obj in self.internalApp.registry.nodes.items():
+        for nType, obj in self.internalApp.registry.nodeTypes.items():
             uiConfig.types[nType] = obj["info"]["category"]
         self.internalApp.events.graphCreated.connect(self._onGraphCreate)
 
     def _onGraphCreate(self, _, graph):
         newGraphInstance = Graph(self, graph.name, graph=graph)
         newGraphInstance.rootNode = NodeModel(graph.root, newGraphInstance, self.config,
-                                              properties={},
                                               parent=None
                                               )
         self.sigGraphCreated.emit(newGraphInstance)
@@ -87,6 +86,10 @@ class Graph(vortexApi.GraphModel):
         self.rootNode = None
         self.application.internalApp.events.nodeCreated.connect(self._onCreateNode, sender=self._internalGraph)
         self.application.internalApp.events.nodeDeleted.connect(self._onDeleteNode, sender=self._internalGraph)
+        self.application.internalApp.events.connectionCreated.connect(self._onConnectionCreated,
+                                                                      sender=self._internalGraph)
+        self.application.internalApp.events.connectionDeleted.connect(self._onConnectionDeleted,
+                                                                      sender=self._internalGraph)
 
     def _onCreateNode(self, _, node):
         if node is not None:
@@ -100,6 +103,19 @@ class Graph(vortexApi.GraphModel):
 
     def _onDeleteNode(self, _, node):
         print("deleteNodeSig", node)
+
+    def _onConnectionCreated(self, _, sourcePlug, destinationPlug):
+        sourceNode = self.rootNode.findChild(sourcePlug.node.name)
+        destinationNode = self.rootNode.findChild(destinationPlug.node.name)
+        if sourceNode is not None and destinationNode is not None:
+            sourceModel = sourceNode.attribute(sourcePlug.name())
+            destinationModel = destinationNode.attribute(destinationPlug.name())
+            if sourceModel is not None and destinationModel is not None:
+                sourceModel.addConnection(sourceModel, destinationModel)
+                self.sigConnectionCreated.emit(sourceModel, destinationModel)
+
+    def _onConnectionDeleted(self, _, sourcePlug, destinationPlug):
+        print("delete connection", sourcePlug, destinationPlug)
 
     def saveGraph(self, filePath=None):
         outputPath = self._internalGraph.saveToFile(filePath)
@@ -122,7 +138,6 @@ class Graph(vortexApi.GraphModel):
 
     def translateSlitherToVortex(self, node, parent=None):
         model = NodeModel(node, self, self.config,
-                          properties={},
                           parent=parent
                           )
         nodes = [model]
@@ -143,11 +158,10 @@ class Graph(vortexApi.GraphModel):
 
 
 class NodeModel(vortexApi.ObjectModel):
-    def __init__(self, internalNode, graph, config, properties=None, parent=None):
+    def __init__(self, internalNode, graph, config, parent=None):
         # link the internal NodeUI dict to the UI properties
         # data is stored json compatible
-        properties = internalNode.nodeUI
-        super(NodeModel, self).__init__(graph, config, properties=properties or {}, parent=parent)
+        super(NodeModel, self).__init__(graph, config, parent=parent)
         self.internalNode = internalNode  # type: api.ComputeNode
         if hasattr(self.internalNode, "attributes"):
             for attr in self.internalNode.attributes:
@@ -185,6 +199,14 @@ class NodeModel(vortexApi.ObjectModel):
 
     def _attributeValueChanged(self, sender, attribute, value):
         self.sigAttributeValueChanged.emit(attribute, value)
+
+    @property
+    def properties(self):
+        return self.internalNode.nodeUI
+
+    @properties.setter
+    def properties(self, properties):
+        self.internalNode.nodeUI = properties
 
     def text(self):
         return self.internalNode.name
@@ -327,13 +349,16 @@ class TestModel(vortexApi.AttributeModel):
     def toolTip(self):
         return self.properties.get("description")
 
+    def addConnection(self, source, destination):
+        self._connections.append((source, destination))
+
     def createConnection(self, attribute):
         if self.isInput():
             self.internalAttr.connect(attribute.internalAttr)
-            self._connections.append((attribute, self))
+            self.addConnection(attribute, self)
         else:
             attribute.internalAttr.connect(self.internalAttr)
-            self._connections.append((self, attribute))
+            self.addConnection(self, attribute)
         return True
 
     def deleteConnection(self, attribute):

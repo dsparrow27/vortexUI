@@ -80,6 +80,7 @@ class GraphicsNode(basenode.QBaseNode):
         if self._edgeColour != colour:
             self._edgeColour = colour
             self.update()
+
     def setBackgroundColour(self, colour):
         if self._backgroundColour != colour:
             self._backgroundColour = colour

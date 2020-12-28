@@ -24,7 +24,7 @@ class ObjectModel(QtCore.QObject):
     sigBackgroundColourChanged = QtCore.Signal(object)
     sigEdgeColourChanged = QtCore.Signal(object)
 
-    def __init__(self, graph, config, properties, parent=None):
+    def __init__(self, graph, config, parent=None):
         super(ObjectModel, self).__init__()
         self.graph = graph
         self.config = config
@@ -32,22 +32,19 @@ class ObjectModel(QtCore.QObject):
         self._children = []  # type: list[ObjectModel]
         self._icon = ""
         self._attributes = []
-        self._properties = properties.get("properties", {})
         if parent is not None and self not in parent.children():
             parent.children().append(self)
-        for attr in properties.get("attributes", []):
-            self.createAttribute(attr)
 
     def __repr__(self):
         return "<{}-{}>".format(self.__class__.__name__, self.text())
 
     @property
     def properties(self):
-        return self._properties
+        return {}
 
     @properties.setter
     def properties(self, properties):
-        self._properties = properties
+        pass
 
     def fullPathName(self):
         path = self.text()
@@ -60,14 +57,14 @@ class ObjectModel(QtCore.QObject):
 
         :rtype: str
         """
-        return self._properties.get("icon", "")
+        return self.properties.get("icon", "")
 
     def isSelected(self):
         """Returns if the node is currently selected
 
         :rtype: bool
         """
-        return self._properties.get("selected", False)
+        return self.properties.get("selected", False)
 
     def setSelected(self, value):
         """Sets the nodes selection state, gets called from the nodeEditor each time a node is selected.
@@ -75,23 +72,23 @@ class ObjectModel(QtCore.QObject):
         :param value: True if the node has been selected in the UI
         :type value: bool
         """
-        self._properties["selected"] = value
+        self.properties["selected"] = value
 
     def isCompound(self):
         """Returns True if the node is a compound, Compounds a treated as special entities, Eg. Expansion
 
         :rtype: bool
         """
-        return self._properties.get("isCompound", False)
+        return self.properties.get("isCompound", False)
 
     def isPin(self):
-        return self._properties.get("isPin", False)
+        return self.properties.get("isPin", False)
 
     def isComment(self):
-        return self._properties.get("isComment", False)
+        return self.properties.get("isComment", False)
 
     def isBackdrop(self):
-        return self._properties.get("isBackdrop", False)
+        return self.properties.get("isBackdrop", False)
 
     def category(self):
         """This method returns the node category, each node should be associated with one category the default is
@@ -101,7 +98,7 @@ class ObjectModel(QtCore.QObject):
         :return: This node category
         :rtype: str
         """
-        return self._properties.get("category", "Unknown")
+        return self.properties.get("category", "Unknown")
 
     def text(self):
         """The primary node text usually the node name.
@@ -109,24 +106,24 @@ class ObjectModel(QtCore.QObject):
         :return: The Text to display
         :rtype: str
         """
-        return self._properties.get("label", "")
+        return self.properties.get("label", "")
 
     def setText(self, value):
-        self._properties["label"] = str(value)
+        self.properties["label"] = str(value)
 
     def secondaryText(self):
         """The Secondary text to display just under the primary text (self.text()).
 
         :rtype: str
         """
-        return self._properties.get("secondaryLabel", "")
+        return self.properties.get("secondaryLabel", "")
 
     def canCreateAttributes(self):
         """Determines if the user can create attributes on this node.
 
         :rtype: bool
         """
-        return self._properties.get("canCreateAttributes", True)
+        return self.properties.get("canCreateAttributes", True)
 
     def parentObject(self):
         """Parent Object Model, should be a compound node.
@@ -226,25 +223,25 @@ class ObjectModel(QtCore.QObject):
         :return: The tooltip which will be display when hovering over the node.
         :rtype: str
         """
-        return self._properties.get("toolTip", "")
+        return self.properties.get("toolTip", "")
 
     def position(self):
-        return self._properties.get("position", (0.0, 0.0))
+        return self.properties.get("position", (0.0, 0.0))
 
     def setPosition(self, position):
-        self._properties["position"] = position
+        self.properties["position"] = position
 
     def width(self):
-        return self._properties.get("width", self.minimumWidth())
+        return self.properties.get("width", self.minimumWidth())
 
     def setWidth(self, width):
-        self._properties["width"] = width
+        self.properties["width"] = width
 
     def height(self):
-        return self._properties.get("height", self.minimumHeight())
+        return self.properties.get("height", self.minimumHeight())
 
     def setHeight(self, height):
-        self._properties["height"] = height
+        self.properties["height"] = height
 
     def minimumHeight(self):
         return 50
@@ -257,41 +254,41 @@ class ObjectModel(QtCore.QObject):
 
     # colors
     def backgroundColour(self):
-        return QtGui.QColor(*self._properties.get("backgroundColour", (40, 40, 40, 255)))
+        return QtGui.QColor(*self.properties.get("backgroundColour", (40, 40, 40, 255)))
 
     def setBackgroundColour(self, colour):
-        self._properties["backgroundColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+        self.properties["backgroundColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
         self.sigBackgroundColourChanged.emit(colour)
 
     def headerColour(self):
-        return QtGui.QColor(*self._properties.get("headerColour", (71, 115, 149, 255)))
+        return QtGui.QColor(*self.properties.get("headerColour", (71, 115, 149, 255)))
 
     def textColour(self):
-        color = self._properties.get("textColour")
+        color = self.properties.get("textColour")
         if color is None:
             return QtGui.QColor(225, 225, 225)
         return QtGui.QColor(*color)
 
     def setTextColour(self, colour):
-        self._properties["textColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+        self.properties["textColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
 
     def setSecondaryTextColour(self, colour):
-        self._properties["secondaryTextColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+        self.properties["secondaryTextColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
 
     def secondaryTextColour(self):
-        color = self._properties.get("secondaryTextColour")
+        color = self.properties.get("secondaryTextColour")
         if color is None:
             return QtGui.QColor(225, 225, 225)
         return QtGui.QColor(*color)
 
     def setHeaderColour(self, colour):
-        self._properties["headerColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+        self.properties["headerColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
 
     def edgeColour(self):
-        return QtGui.QColor(*self._properties.get("edgeColour", (0.0, 0.0, 0.0, 255)))
+        return QtGui.QColor(*self.properties.get("edgeColour", (0.0, 0.0, 0.0, 255)))
 
     def setEdgeColour(self, colour):
-        self._properties["edgeColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
+        self.properties["edgeColour"] = colour.red(), colour.green(), colour.blue(), colour.alpha()
         self.sigEdgeColourChanged.emit(colour)
 
     def headerButtonColour(self):
@@ -349,7 +346,7 @@ class ObjectModel(QtCore.QObject):
             children.append(childInfo)
             if self.isCompound():
                 del childInfo["connections"]
-        return {"properties": self._properties,
+        return {"properties": self.properties,
                 "attributes": [attr.serialize() for attr in self._attributes],
                 "children": children,
                 "connections": connections

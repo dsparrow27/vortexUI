@@ -12,6 +12,8 @@ class GraphModel(QtCore.QObject):
     :type name: str
     """
     sigNodesCreated = QtCore.Signal(list)
+    sigConnectionCreated = QtCore.Signal(object, object)
+    sigConnectionDeleted = QtCore.Signal(object, object)
 
     def __init__(self, application, name):
         super(GraphModel, self).__init__()

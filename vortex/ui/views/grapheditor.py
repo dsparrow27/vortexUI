@@ -45,6 +45,8 @@ class GraphEditor(QtWidgets.QWidget):
         self.view.deletePress.connect(self.scene.onDelete)
         self.view.tabPress.connect(self.showNodeLibrary)
         self.graph.sigNodesCreated.connect(self.scene.createNodes)
+        self.graph.sigConnectionCreated.connect(self.scene.onModelCreateConnections)
+        # self.graph.sigConnectionDeleted.connect(self.scene.createNodes)
 
     def showNodeLibrary(self, point):
         self.nodeLibraryWidget.initUI(dock=False)

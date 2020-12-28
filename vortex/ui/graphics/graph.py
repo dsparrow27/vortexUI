@@ -353,7 +353,8 @@ class Scene(graphicsscene.GraphicsScene):
     def createNodes(self, objectModels):
         for model in objectModels:
             self.createNode(model)
-
+    def onModelCreateConnections(self, sourceModel, destinationModel):
+        self.createConnections([(sourceModel, destinationModel)])
     def createConnections(self, connections):
         for connection in connections:
             sourceItem, destinationItem = self.plugItemsForModels(*connection)
