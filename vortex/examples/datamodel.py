@@ -41,6 +41,30 @@ class Config(vortexApi.VortexConfig):
                 "backdrop": "organization", "compound": "organization"}
 
 
+class Application(vortexApi.UIApplication):
+
+    def __init__(self, uiConfig):
+        super(Application, self).__init__(uiConfig)
+
+    def createNewGraph(self, name=None):
+        self._onGraphCreate(name=name)
+
+    def createGraphFromPath(self, filePath, name=None, parent=None):
+        graphData = filesystem.loadJson(filePath)
+        newGraphInstance = Graph(self, name or "NEWGRAPH")
+        newGraphInstance.loadFromDict(graphData, parent=parent)
+        self._onGraphCreate(name, newGraphInstance)
+
+    def _onGraphCreate(self, name, graph=None):
+        if graph is None:
+            graph = Graph(self, name or "NEWGRAPH")
+            graph.rootNode = NodeModel(graph, self.config,
+                                       properties={},
+                                       parent=None
+                                       )
+        self.sigGraphCreated.emit(graph)
+
+
 class Graph(vortexApi.GraphModel):
 
     def __init__(self, application, name):
@@ -83,11 +107,11 @@ class Graph(vortexApi.GraphModel):
         connections = info.get("connections", [])
         if parent is None:
             parent = self._rootNode
-        parent = NodeModel(self.config, data, parent=parent)
+        parent = NodeModel(self, self.config, data, parent=parent)
         createdNodes = [parent]
         remappedNodes = {data["properties"]["label"]: parent}
         for child in info.get("children", []):
-            childModel = NodeModel(self.config, child, parent=parent)
+            childModel = NodeModel(self, self.config, child, parent=parent)
             createdNodes.append(childModel)
             name = child["properties"].get("label")
             remappedNodes[name] = childModel
@@ -118,8 +142,9 @@ class Graph(vortexApi.GraphModel):
 
 
 class NodeModel(vortexApi.ObjectModel):
-    def __init__(self, config, properties, parent=None):
-        super(NodeModel, self).__init__(config, properties=properties, parent=parent)
+    def __init__(self, graph, config, properties, parent=None):
+        super(NodeModel, self).__init__(graph, config, parent=parent)
+        self.properties = properties
 
     def createAttribute(self, kwargs):
         attr = TestModel(self, kwargs)
