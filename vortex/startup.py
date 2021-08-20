@@ -6,7 +6,7 @@ def initialize():
     if api.currentConfig() is None:
         cfg = api.zooFromPath(os.environ["ZOOTOOLS_ROOT"])
         cfg.resolver.resolveFromPath(cfg.resolver.environmentPath())
-        from zoo.libs.utils import zlogging
+        from zoo.core.util import zlogging
         zlogging.setGlobalDebug(True)
     from zoo.libs.utils import env
     vortexRoot = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

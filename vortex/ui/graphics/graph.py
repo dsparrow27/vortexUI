@@ -7,7 +7,7 @@ from zoo.libs.pyqt.widgets.graphics import graphicsscene
 from vortex.ui.graphics import plugwidget
 from vortex.ui.graphics import graphnodes
 from vortex.ui.graphics import graphpanels
-from zoo.libs.utils import zlogging
+from zoo.core.util import zlogging
 from zoo.libs.pyqt.widgets.graphics import graphbackdrop, graphicitems
 
 logger = zlogging.getLogger(__name__)

@@ -3,7 +3,7 @@
 Class: UIPlugin()
 """
 
-from zoo.libs.plugin import plugin
+from zoo.core.plugin import plugin
 from zoovendor.Qt import QtCore
 
 
@@ -21,7 +21,7 @@ class UIPlugin(plugin.Plugin):
         :param application: The Vortex Application handler
         :type application: ::class:`Vortex.graph.ModehModel`
         :param manager: The manager object for plugins
-        :type manager: ::class:`zoo.libs.plugin.pluginmanager.PluginManager`
+        :type manager: ::class:`zoo.core.plugin.pluginmanager.PluginManager`
         """
         super(UIPlugin, self).__init__(manager=manager)
         self.application = application

@@ -14,7 +14,7 @@ from zoovendor.Qt import QtGui, QtWidgets, QtCore
 from vortex import api as vortexApi
 from vortex.ui import attributewidgets
 from slither import api
-from zoo.libs.utils import zlogging
+from zoo.core.util import zlogging
 from nodewidgets import pythonnode
 
 logger = zlogging.getLogger(__name__)
@@ -325,26 +325,27 @@ class TestModel(vortexApi.AttributeModel):
         return self.internalAttr.isConnected()
 
     def canAcceptConnection(self, plug):
-        return self.internalAttr.canConnect(plug.internalAttr)
+        return self.internalAttr.canConnect(self.internalAttr, plug.internalAttr)
 
     def connections(self):
-        upstream = self.internalAttr.upstream
-        if not upstream:
-            return []
-        selfNode = self.objectModel
-        if upstream.isInput():  # dealing with the parent compound node
-            node = self.objectModel.parentObject()
-            model = None
-        elif self.isOutput():
-            model = selfNode
-        else:
-            model = self.objectModel.parentObject()
-        if model:
-            node = model.findChild(upstream.node.name, recursive=False)
-        if not node:
-            print("Unable to find node: {} -> {}".format(self.text(), upstream.node.name))
-            return []
-        return [(node.attribute(upstream.name()), self)]
+        connections = []
+        for upstream in self.internalAttr.upstream():
+            selfNode = self.objectModel
+            node = None
+            if upstream.isInput():  # dealing with the parent compound node
+                node = self.objectModel.parentObject()
+                model = None
+            elif self.isOutput():
+                model = selfNode
+            else:
+                model = self.objectModel.parentObject()
+            if model:
+                node = model.findChild(upstream.node.name, recursive=False)
+            if not node:
+                print("Unable to find node: {} -> {}".format(self.text(), upstream.node.name))
+                continue
+            connections.append((node.attribute(upstream.name()), self))
+        return connections
 
     def toolTip(self):
         return self.properties.get("description")
