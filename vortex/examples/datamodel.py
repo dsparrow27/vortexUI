@@ -67,9 +67,6 @@ class Application(vortexApi.UIApplication):
 
 class Graph(vortexApi.GraphModel):
 
-    def __init__(self, application, name):
-        super(Graph, self).__init__(application, name)
-
     def saveGraph(self, filePath=None):
         model = self.rootNode
         filePath = os.path.expanduser(filePath)
@@ -99,7 +96,7 @@ class Graph(vortexApi.GraphModel):
                                        "description": ""}
                         }
             nodes = self.createNodeFromInfo(nodeInfo, parent=parent)
-            self.application.events.modelNodesCreated.emit(nodes)
+            self.application.events.uiNodesCreated.emit(nodes)
 
     def createNodeFromInfo(self, info, parent=None):
         data = dict(properties=info["properties"],

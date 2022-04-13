@@ -22,7 +22,7 @@ class UIApplication(QtCore.QObject):
 
     def __init__(self, uiConfig):
         super(UIApplication, self).__init__()
-        self.pluginManager = pluginmanager.PluginManager(plugin.UIPlugin, variableName="id")
+        self.pluginManager = pluginmanager.PluginManager([plugin.UIPlugin], variableName="id")
         self.pluginManager.registerPaths(os.environ["VORTEX_UI_PLUGINS"].split(os.pathsep))
         self.graphNoteBook = None  # type: None or vortex.ui.views.grapheditor.GraphEditor
         self.config = uiConfig

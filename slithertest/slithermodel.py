@@ -86,10 +86,10 @@ class Graph(vortexApi.GraphModel):
         self.rootNode = None
         self.application.internalApp.events.nodeCreated.connect(self._onCreateNode, sender=self._internalGraph)
         self.application.internalApp.events.nodeDeleted.connect(self._onDeleteNode, sender=self._internalGraph)
-        self.application.internalApp.events.connectionCreated.connect(self._onConnectionCreated,
-                                                                      sender=self._internalGraph)
-        self.application.internalApp.events.connectionDeleted.connect(self._onConnectionDeleted,
-                                                                      sender=self._internalGraph)
+        self.application.internalApp.events.connectionsCreated.connect(self._onConnectionCreated,
+                                                                       sender=self._internalGraph)
+        self.application.internalApp.events.connectionsDeleted.connect(self._onConnectionDeleted,
+                                                                       sender=self._internalGraph)
 
     def _onCreateNode(self, _, node):
         if node is not None:

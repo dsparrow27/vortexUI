@@ -6,17 +6,14 @@ from zoovendor.Qt import QtWidgets, QtCore
 from zoo.libs.pyqt.widgets import mainwindow
 from zoo.libs.pyqt.widgets import elements
 from zoo.libs import iconlib
-from zoo.libs.pyqt.widgets import flowtoolbar, iconmenu
+from zoo.libs.pyqt.widgets import flowtoolbar
 
 
-class ApplicationWindow(elements.FramelessWindow):
+class ApplicationWindow(elements.ZooWindow):
 
-    def __init__(self, application, title="Vortex v0.0.1", parent=None, width=800, height=600, framelessChecked=True,
-                 titleBarClass=None,
-                 titleShrinksFirst=True, alwaysShowAllTitle=False):
-        super(ApplicationWindow, self).__init__(title, parent, width, height, framelessChecked, titleBarClass,
-                                                titleShrinksFirst,
-                                                alwaysShowAllTitle)
+    def __init__(self, application, title="Vortex v0.0.1", parent=None, width=800, height=600):
+        super(ApplicationWindow, self).__init__(title=title, parent=parent, width=width, height=height,
+                                                minButton=True, maxButton=True, show=False)
         layout = elements.vBoxLayout()
         self.setMainLayout(layout)
         self.win = VortexApplicationWindow(application, parent=self)
@@ -28,8 +25,7 @@ class ApplicationWindow(elements.FramelessWindow):
         self.exitAction = titleBtn.addAction("Close", icon=iconlib.icon("close"), connect=self.close)
         self.exitAction.setShortcut("Ctrl+Q")
         self.exitAction.setToolTip("Closes application")
-        self.toggleMaximized()
-        self.setShadowEffectEnabled(False)  # disabling shadow effect as it's shit slow
+
         self._menuBar = Toolbar(parent=self)
         self.titleBar.contentsLayout.addWidget(self._menuBar)
         actions = []
@@ -39,6 +35,7 @@ class ApplicationWindow(elements.FramelessWindow):
         self._menuBar.addToolMenu("displayOptions", "Views",
                                   actions=actions,
                                   iconColor=(192, 192, 192))
+        self.show()
 
     def _onLoadView(self, pluginId):
         self.win.uiApplication.loadUIPlugin(pluginId)
