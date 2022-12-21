@@ -31,10 +31,12 @@ def standalone(application, graphType, config, filePath=None):
     win, vortexApplication = createWindow(application, graphType, config, parent=None)
     if filePath:
         vortexApplication.createGraphFromPath(filePath)
+    win.show()
     sys.exit(app.exec_())
 
 
 def maya(application, graphType, config, parent=None):
     from zoo.libs.maya.qt import mayaui
     ui, _ = createWindow(application, graphType, config, parent=parent or mayaui.getMayaWindow())
+    ui.show()
     return ui

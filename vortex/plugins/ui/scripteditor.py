@@ -1,11 +1,9 @@
 import logging
-import os
 import sys
 
-from zoo.libs.pyqt.extended import pythoneditor
+from zoo.libs.pyqt.extended.sourcecodeeditor import pythoneditor
 from zoo.libs.pyqt.widgets import logoutput
 from zoo.libs.pyqt.widgets import elements
-from zoo.libs.pyqt.syntaxhighlighter import highlighter
 from vortex import api
 from zoovendor.Qt import QtCore, QtWidgets
 
@@ -54,14 +52,10 @@ class ScriptEditor(api.UIPlugin):
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         self.layout = elements.vBoxLayout(parent=self.editorParent)
         self.layout.addWidget(self.splitter)
-        self.editor = pythoneditor.TabbedEditor(parent=parent)
-        self.editor.setObjectName("Script Editor")
-        self.editor.addNewEditor("New Tab", variables={"app": self.application})
+        self.editor = pythoneditor.TabbedEditor("Script Editor",parent=parent)
+        self.editor.addNewEditor(name="New Tab", language="python")
         self.logout = logoutput.OutputLogDialog("History", parent=parent)
 
-        self.pythonHighlighter = highlighter.highlighterFromJson(os.path.join(os.path.dirname(highlighter.__file__),
-                                                                              "highlightdata.json"),
-                                                                 self.logout.document())
         handler = logoutput.QWidgetHandler()
         handler.addWidget(self.logout)
         for logger in logging.Logger.manager.loggerDict.values():

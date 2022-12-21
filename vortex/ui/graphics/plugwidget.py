@@ -15,6 +15,7 @@ class PlugContainer(graphicitems.ItemContainer):
         self.outCrossItem = CrossSquare(ioType=Plug.OUTPUT_TYPE, parent=self)
         self.inCrossItem.hoverEventRequested.connect(self.onExpandInput)
         self.outCrossItem.hoverEventRequested.connect(self.onExpandOutput)
+
         self.inCircle = InputPlug(self.model.backgroundColour(),
                                   self.model.edgeColour(),
                                   self.model.highlightColour(),
@@ -303,7 +304,11 @@ class Plug(QtWidgets.QGraphicsWidget):
             super(Plug, self).paint(painter, option, widget)
     else:
         def paint(self, painter, options, widget=None):
-            rect = self.boundingRect()
+            rect = QtCore.QRectF(
+                0.0,
+                0.0,
+                self._diameter,
+                self._diameter)
             painter.setBrush(self._currentBrush)
 
             painter.setPen(self._defaultPen)
@@ -317,8 +322,8 @@ class Plug(QtWidgets.QGraphicsWidget):
         return QtCore.QRectF(
             0.0,
             0.0,
-            self._diameter,
-            self._diameter,
+            self._diameter + 2.5,
+            self._diameter + 2.5,
         )
 
 

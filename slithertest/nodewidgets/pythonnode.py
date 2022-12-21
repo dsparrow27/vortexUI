@@ -9,7 +9,7 @@ class BaseNodeWidget(QtWidgets.QWidget):
         layout = elements.vBoxLayout(self)
         self.mainLayout = layout
 
-        for model in objectModel.attributes():
+        for model in objectModel.attributes(outputs=False):
             wid = objectModel.config.attributeWidgetForType(model.type())
             if wid is not None:
-                layout.addWidget(wid(model, parent=self))
+                layout.addWidget(wid(model, parent=self),alignment=QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter )

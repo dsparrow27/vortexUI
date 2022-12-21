@@ -7,13 +7,15 @@ from zoo.libs.pyqt.widgets import mainwindow
 from zoo.libs.pyqt.widgets import elements
 from zoo.libs import iconlib
 from zoo.libs.pyqt.widgets import flowtoolbar
+from zoo.libs.pyqt import utils
 
 
 class ApplicationWindow(elements.ZooWindow):
 
-    def __init__(self, application, title="Vortex v0.0.1", parent=None, width=800, height=600):
-        super(ApplicationWindow, self).__init__(title=title, parent=parent, width=width, height=height,
-                                                minButton=True, maxButton=True, show=False)
+    def __init__(self, application, title="Vortex v0.0.1", parent=None, width=1920, height=1080):
+        super(ApplicationWindow, self).__init__(title=title, parent=parent, width=utils.dpiScale(width), height=utils.dpiScale(height),
+                                                overlay=False,
+                                                minButton=True, maxButton=True)
         layout = elements.vBoxLayout()
         self.setMainLayout(layout)
         self.win = VortexApplicationWindow(application, parent=self)

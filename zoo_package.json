@@ -5,19 +5,23 @@
     "displayName": "Vortex",
     "environment": {
         "PYTHONPATH": [
-            "{self}"
-        ], 
+            "{self}",
+            "{self}/slithertest"
+        ],
         "ZOO_BASE_PATHS": [
             "{self}"
-        ], 
+        ],
         "ZOO_ICON_PATHS": [
             "{self}/icons"
-        ]
+        ],
+        "ZOO_SHELF_LAYOUTS": [
+      "{self}/zoo/apps/integration/maya/vortex_shelf.layout"
+    ],
+    "ZOO_TOOLDEFINITION_MODULES": [
+      "{self}/zoo/apps/integration/maya/vortextools_tooldefinitions.py"
+    ]
     }, 
-    "name": "Vortex",
+    "name": "vortex",
     "requirements": ["zoo_core", "zoo_pyside", "slither"],
-    "tests": [
-        "{self}/tests"
-    ], 
     "version": "0.0.1"
 }

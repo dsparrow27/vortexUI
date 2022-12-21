@@ -65,7 +65,9 @@ class Config(vortexApi.VortexConfig):
             "kFloat": {"colour": QtGui.QColor(168, 217, 119)},
             "integer": {"colour": QtGui.QColor(98, 207, 217)},
             "kList": {"colour": QtGui.QColor(56.000040000000006, 47.99992500000001, 45.00010500000001)},
-            "kString": {"colour": QtGui.QColor(217, 190, 108)}
+            "kString": {"colour": QtGui.QColor(217, 190, 108)},
+            "kExec": {"colour": QtGui.QColor(200, 200, 200)},
+            "kInt": {"colour": QtGui.QColor(30, 206, 159)}
         }
         self.registerAttributeWidget("kString", attributewidgets.StringWidget)
         self.registerAttributeWidget("kFile", attributewidgets.PathWidget)
@@ -153,8 +155,9 @@ class Graph(vortexApi.GraphModel):
         action.triggered.connect(self._execute)
 
     def _execute(self):
-        # pprint.pprint(self._internalGraph.serialize())
+
         self._internalGraph.execute(self.rootNode.internalNode, self.application.internalApp.STANDARDEXECUTOR)
+        pprint.pprint(self._internalGraph.serialize())
 
 
 class NodeModel(vortexApi.ObjectModel):
@@ -164,13 +167,17 @@ class NodeModel(vortexApi.ObjectModel):
         super(NodeModel, self).__init__(graph, config, parent=parent)
         self.internalNode = internalNode  # type: api.ComputeNode
         if hasattr(self.internalNode, "attributes"):
-            for attr in self.internalNode.attributes:
+            for attr in self.internalNode.attributes():
                 model = TestModel(attr, self, properties={}, parent=None)
                 self._attributes.append(model)
         internalNode.graph.application.events.nodeNameChanged.connect(self._onNodeNameChanged, sender=internalNode)
         internalNode.graph.application.events.nodeDirtyChanged.connect(self._onNodeDirtyChanged, sender=internalNode)
         internalNode.graph.application.events.attributeCreated.connect(self._onAttributeCreated, sender=internalNode)
         internalNode.graph.application.events.attributeDeleted.connect(self._onAttributeDeleted, sender=internalNode)
+        if self.internalNode.isCompound():
+
+            for child in self.internalNode:
+                graph._onCreateNode(None, child)
 
     def _onNodeNameChanged(self, sender, node, oldName, name):
         self.sigNodeNameChanged.emit(name)
@@ -233,7 +240,7 @@ class NodeModel(vortexApi.ObjectModel):
         attrDef = api.AttributeDefinition(name=attributeDefinition["label"],
                                           input=attributeDefinition.get("isInput", False),
                                           output=attributeDefinition.get("isOutput", False),
-                                          type_=self.internalNode.graph.application.registry.dataTypeClass(
+                                          type=self.internalNode.graph.application.registry.dataTypeClass(
                                               attributeDefinition["type"]),
                                           default=attributeDefinition.get("default"),
                                           required=attributeDefinition.get("required", False),

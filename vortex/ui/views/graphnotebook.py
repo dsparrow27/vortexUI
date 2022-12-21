@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class GraphNotebook(tabwidget.TabWidget):
     def __init__(self, application, parent=None):
-        super(GraphNotebook, self).__init__("NoteBook", showNewTab=True, parent=parent)
+        super(GraphNotebook, self).__init__("NoteBook", parent=parent)
         self.newTabRequested.connect(self._onNewGraph)
         self.tabCloseRequested.connect(self._onTabClose)
         self.application = application
@@ -38,7 +38,7 @@ class GraphNotebook(tabwidget.TabWidget):
     def addWelcomeTab(self):
         wel = WelcomeWidget(self.application, parent=self)
         wel.createSig.connect(self.application.createNewGraph)
-        self.onAddTab(wel, "Welcome")
+        self.addTab(wel, "Welcome")
         self.hasWelcome = True
 
     def addGraph(self, graph, objectModel):
@@ -48,7 +48,7 @@ class GraphNotebook(tabwidget.TabWidget):
             logger.debug("Removing welcome tab")
             self.removeTab(0)
             self.hasWelcome = False
-        self.onAddTab(editor, objectModel.text())
+        self.addTab(editor, objectModel.text())
         self.application.events.uiGraphCreated.emit(graph)
         return editor
 

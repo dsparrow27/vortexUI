@@ -190,3 +190,4 @@ class QBaseNode(QtWidgets.QGraphicsWidget):
             i.setPos(pos)
 
         self.scene().updateAllConnections()
+        event.accept()

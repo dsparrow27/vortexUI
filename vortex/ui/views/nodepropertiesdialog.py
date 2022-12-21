@@ -6,7 +6,7 @@ from zoo.libs.pyqt.widgets import elements
 from zoo.libs.pyqt.widgets import dialog
 from zoo.libs.pyqt.extended import tabwidget
 from zoo.libs.pyqt.extended import treeviewplus
-from zoo.libs.pyqt.extended import pythoneditor
+from zoo.libs.pyqt.extended.sourcecodeeditor import pythoneditor
 from zoo.libs.pyqt.models import treemodel, datasources
 from vortex.ui.model import attributemodel
 

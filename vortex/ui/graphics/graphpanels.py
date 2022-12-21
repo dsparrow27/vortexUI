@@ -87,6 +87,7 @@ class Panel(QtWidgets.QGraphicsWidget):
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.RightButton and self.acceptsContextMenu:
             self._contextMenu(QtGui.QCursor.pos())
+            event.accept()
             return
         super(Panel, self).mousePressEvent(event)
 
@@ -134,7 +135,7 @@ class Panel(QtWidgets.QGraphicsWidget):
             super(Panel, self).paint(painter, option, widget)
 
     def _contextMenu(self, pos):
-        app = self.scene().uiApplication
+        app = self.scene().graph.application
         menu = app.createContextMenu(app.currentModel)
         if menu:
             menu.exec_(pos)

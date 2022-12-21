@@ -24,12 +24,13 @@ class NodeLibraryPlugin(api.UIPlugin):
 class View(treeviewplus.TreeViewPlus):
     finished = QtCore.Signal()
 
-    def __init__(self, application, searchable=True, parent=None, expand=True, sorting=True,
-                 labelVisible=False, comboVisible=False):
-        super(View, self).__init__(searchable, parent, expand, sorting, labelVisible, comboVisible)
+    def __init__(self, application, parent=None, expand=True, sorting=True):
+        super(View, self).__init__(title="", parent=parent, expand=expand, sorting=sorting)
         self.application = application
         self.setObjectName("NodeLibrary")
         self.setAlternatingColorEnabled(False)
+        self.treeView.setHeaderHidden(True)
+
         root = NodeItem("")
         self.setModel(treemodel.TreeModel(root))
         self.treeView.doubleClicked.connect(self.onDoubleClicked)

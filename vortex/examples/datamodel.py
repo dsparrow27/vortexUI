@@ -209,4 +209,5 @@ class TestModel(vortexApi.AttributeModel):
         typeMap = self.objectModel.config.attributeMapping.get(self.properties["type"])
         if typeMap:
             return typeMap["colour"]
+
         return QtGui.QColor(0, 0, 0)

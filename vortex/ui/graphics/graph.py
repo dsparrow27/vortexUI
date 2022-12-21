@@ -1,5 +1,8 @@
 import json
 
+import PySide2
+
+from zoo.libs.pyqt import keyboardmouse
 from zoovendor.Qt import QtWidgets, QtCore, QtGui
 
 from zoo.libs.pyqt.widgets.graphics import graphicsview
@@ -89,8 +92,12 @@ class View(graphicsview.GraphicsView):
             if button == QtCore.Qt.LeftButton:
                 if modifiers == QtCore.Qt.ControlModifier:
                     self.requestNodeProperties.emit(model)
+                    event.accept()
+                    return
                 elif model.isCompound():
                     self.nodeDoubleClicked.emit(model)
+                    event.accept()
+                    return
 
         super(View, self).mouseDoubleClickEvent(event)
 
@@ -103,7 +110,7 @@ class View(graphicsview.GraphicsView):
                 self.onTempConnectionRequested(self._plugSelected, event)
             else:
                 self._interactiveEdge.destinationPoint = self.mapToScene(event.pos())
-        self.scene().updateAllConnections()
+        # self.scene().updateAllConnections()
 
     def wheelEvent(self, event):
         super(View, self).wheelEvent(event)
@@ -227,6 +234,7 @@ class View(graphicsview.GraphicsView):
                                                              curveType=self.config.defaultConnectionShape,
                                                              colour=plug.colour)
         self._interactiveEdge.destinationPoint = plug.center()
+        print(self.config.defaultConnectionStyle)
         self._interactiveEdge.setLineStyle(self.config.defaultConnectionStyle)
         self._interactiveEdge.setWidth(self.config.connectionLineWidth)
         self._interactiveEdge.setCurveType(self.config.defaultConnectionShape)
@@ -353,8 +361,10 @@ class Scene(graphicsscene.GraphicsScene):
     def createNodes(self, objectModels):
         for model in objectModels:
             self.createNode(model)
+
     def onModelCreateConnections(self, sourceModel, destinationModel):
         self.createConnections([(sourceModel, destinationModel)])
+
     def createConnections(self, connections):
         for connection in connections:
             sourceItem, destinationItem = self.plugItemsForModels(*connection)
@@ -418,6 +428,7 @@ class Scene(graphicsscene.GraphicsScene):
         newConnection.setLineStyle(self.graph.config.defaultConnectionStyle)
         newConnection.setWidth(self.graph.config.connectionLineWidth)
         newConnection.setCurveType(self.graph.config.defaultConnectionShape)
+        newConnection.setZValue(-100)
         self.addItem(newConnection)
         self.connections.append({"srcModel": srcItem, "destModel": destinationItem, "qitem": newConnection})
         newConnection.updatePosition()
@@ -514,13 +525,28 @@ class Scene(graphicsscene.GraphicsScene):
     def onSetConnectionStyle(self):
         style = self.sender().text()
         styleValue = self.graph.config.connectionStyles.get(style)
-        self.graph.config.defaultConnectionStyle = style
-        if styleValue == "Linear":
+
+        if styleValue in ("Linear", "Cubic"):
             for conn in self.connections:
-                conn.setAsLinearPath()
-        elif styleValue == "Cubic":
-            for conn in self.connections:
-                conn.setAsCubicPath()
+                conn["qitem"].setCurveType(styleValue)
         else:
+            self.graph.config.defaultConnectionStyle = styleValue
             for conn in self.connections:
-                conn.setLineStyle(styleValue)
+                conn["qitem"].setCurveType(styleValue)
+        self.update()
+
+    def drawForeground(self, painter: QtGui.QPainter, rect: QtCore.QRectF) -> None:
+        # draw the current compound path in the top left corner
+        path = self.model.fullPathName() + "/"
+        painterPath = QtGui.QPainterPath()
+        painterPath.addText(
+            rect.x() + self.panelWidget.leftPanel.boundingRect().width(),
+            rect.y() + 10,
+            QtGui.QFont("Roboto", 12),
+            path,
+        )
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setBrush(QtGui.QBrush(QtCore.Qt.darkGray))
+        painter.drawPath(painterPath)
+
+        super(Scene, self).drawForeground(painter, rect)

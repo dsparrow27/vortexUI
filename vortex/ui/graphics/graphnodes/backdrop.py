@@ -24,3 +24,4 @@ class Backdrop(comment.Comment):
             pos = item.pos() + item.mapToParent(eventPos) - item.mapToParent(lastPos)
             item.setPos(pos)
         self.scene().updateAllConnections()
+        event.accept()

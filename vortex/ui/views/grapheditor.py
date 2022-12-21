@@ -10,6 +10,7 @@ from zoo.libs import iconlib
 from vortex.ui import utils
 from vortex.ui.graphics import graphnodes, graph
 from vortex.ui.views import nodepropertiesdialog
+from zoo.libs.pyqt import uiconstants
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,7 @@ class GraphEditor(QtWidgets.QWidget):
         self.nodeLibraryWidget.widget.move(self.mapFromGlobal(point))
 
     def init(self, objectModel):
-        self.editorLayout = elements.vBoxLayout(parent=self)
+        self.editorLayout = elements.vBoxLayout(parent=self, margins=(uiconstants.MARGINS))
         self.toolbar = QtWidgets.QToolBar(parent=self)
         self.createAlignmentActions(self.toolbar)
         self.toolbar.addSeparator()
@@ -67,8 +68,6 @@ class GraphEditor(QtWidgets.QWidget):
         self.view.requestNodeProperties.connect(self.displayNodeProperties)
         self.view.nodeDoubleClicked.connect(self._requestCompoundAsCurrent)
         self.view.compoundAsCurrentSig.connect(self._requestCompoundAsCurrent)
-        self.breadCrumbWidget = QtWidgets.QLabel("", parent=self)
-        self.editorLayout.insertWidget(0, self.breadCrumbWidget)
         # add the view to the layout
         self.editorLayout.addWidget(self.view)
         self._requestCompoundAsCurrent(objectModel)
@@ -105,7 +104,7 @@ class GraphEditor(QtWidgets.QWidget):
 
         for name, tip in iconsData.items():
             icon = iconlib.icon(name, size=64)
-            act = QtWidgets.QAction(icon, "", self)
+            act = QtWidgets.QAction(icon, name, self)
             act.setStatusTip(tip[0])
             act.setToolTip(tip[0])
             act.triggered.connect(partial(self.alignSelectedNodes, tip[1]))
@@ -132,7 +131,7 @@ class GraphEditor(QtWidgets.QWidget):
 
     def _requestCompoundAsCurrent(self, model):
         logger.debug("Starting graph model change")
-        self.breadCrumbWidget.setText("->".join(model.fullPathName().split("/")))
+        # self.breadCrumbWidget.setText("->".join(model.fullPathName().split("/")))
         self.scene.showPanels(True)
         self.scene.setModel(model)
         logger.debug("Updating viewport")
